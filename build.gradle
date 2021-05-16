@@ -28,9 +28,6 @@ minecraft {
     version = project.forgeVersion
 }
 
-dependencies {
-}
-
 processResources
 {
     inputs.property "version", project.version
@@ -47,10 +44,11 @@ processResources
 }
 
 task deobfJar(type: Jar) {
-        from sourceSets.main.output
-        appendix = 'deobf'
+    from sourceSets.main.output
+    classifier = 'deobf'
 }
 
 artifacts {
-        archives deobfJar
+    archives deobfJar
+    archives jar
 }
