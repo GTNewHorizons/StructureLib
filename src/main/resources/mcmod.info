@@ -1,0 +1,16 @@
+[
+{
+  "modid": "structurelib",
+  "name": "StructureLib",
+  "description": "Multiblocks with ease",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["glee8e"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": ["Thaumcraft"]
+}
+]
