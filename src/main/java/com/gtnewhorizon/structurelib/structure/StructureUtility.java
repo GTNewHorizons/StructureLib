@@ -27,8 +27,6 @@ import static java.lang.Integer.MIN_VALUE;
  */
 public class StructureUtility {
 	private static final String NICE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz=|!@#$%&()[]{};:<>/?_,.*^'`";
-	// TODO make it an actual block
-	private static final Block sHintCasingsTT = Blocks.air;
 	@SuppressWarnings("rawtypes")
 	private static final Map<Vec3Impl, IStructureNavigate> STEP = new HashMap<>();
 	@SuppressWarnings("rawtypes")
@@ -40,7 +38,7 @@ public class StructureUtility {
 
 		@Override
 		public boolean spawnHint(Object o, World world, int x, int y, int z, ItemStack trigger) {
-			StructureLib.proxy.hint_particle(world, x, y, z, sHintCasingsTT, 13);
+			StructureLib.proxy.hintParticle(world, x, y, z, StructureLib.blockHint, 13);
 			return true;
 		}
 
@@ -59,13 +57,13 @@ public class StructureUtility {
 
 		@Override
 		public boolean spawnHint(Object o, World world, int x, int y, int z, ItemStack trigger) {
-			StructureLib.proxy.hint_particle(world, x, y, z, sHintCasingsTT, 14);
+			StructureLib.proxy.hintParticle(world, x, y, z, StructureLib.blockHint, 14);
 			return true;
 		}
 
 		@Override
 		public boolean placeBlock(Object o, World world, int x, int y, int z, ItemStack trigger) {
-			world.setBlock(x, y, z, sHintCasingsTT, 14, 2);
+			world.setBlock(x, y, z, StructureLib.blockHint, 14, 2);
 			return true;
 		}
 	};
@@ -78,7 +76,7 @@ public class StructureUtility {
 
 		@Override
 		public boolean spawnHint(Object o, World world, int x, int y, int z, ItemStack trigger) {
-			StructureLib.proxy.hint_particle(world, x, y, z, sHintCasingsTT, 15);
+			StructureLib.proxy.hintParticle(world, x, y, z, StructureLib.blockHint, 15);
 			return true;
 		}
 
@@ -129,7 +127,7 @@ public class StructureUtility {
 
 			@Override
 			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-				StructureLib.proxy.hint_particle(world, x, y, z, sHintCasingsTT, meta);
+				StructureLib.proxy.hintParticle(world, x, y, z, StructureLib.blockHint, meta);
 				return false;
 			}
 		};
@@ -148,7 +146,7 @@ public class StructureUtility {
 
 			@Override
 			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-				StructureLib.proxy.hint_particle(world, x, y, z, icons.get());
+				StructureLib.proxy.hintParticle(world, x, y, z, icons.get());
 				return false;
 			}
 		};
@@ -167,7 +165,7 @@ public class StructureUtility {
 
 			@Override
 			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-				StructureLib.proxy.hint_particle_tinted(world, x, y, z, icons.get(), RGBa);
+				StructureLib.proxy.hintParticleTinted(world, x, y, z, icons.get(), RGBa);
 				return false;
 			}
 		};
@@ -193,7 +191,7 @@ public class StructureUtility {
 
 			@Override
 			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-				StructureLib.proxy.hint_particle(world, x, y, z, hintBlock, hintMeta);
+				StructureLib.proxy.hintParticle(world, x, y, z, hintBlock, hintMeta);
 				return true;
 			}
 		};
@@ -220,7 +218,7 @@ public class StructureUtility {
 
 			@Override
 			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-				StructureLib.proxy.hint_particle(world, x, y, z, hintBlock, hintMeta);
+				StructureLib.proxy.hintParticle(world, x, y, z, hintBlock, hintMeta);
 				return true;
 			}
 		};
@@ -239,7 +237,7 @@ public class StructureUtility {
 
 			@Override
 			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-				StructureLib.proxy.hint_particle(world, x, y, z, hintBlock, hintMeta);
+				StructureLib.proxy.hintParticle(world, x, y, z, hintBlock, hintMeta);
 				return true;
 			}
 		};
@@ -262,7 +260,7 @@ public class StructureUtility {
 
 			@Override
 			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-				StructureLib.proxy.hint_particle(world, x, y, z, hintBlock, hintMeta);
+				StructureLib.proxy.hintParticle(world, x, y, z, hintBlock, hintMeta);
 				return true;
 			}
 		};
@@ -291,7 +289,7 @@ public class StructureUtility {
 
 				@Override
 				public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-					StructureLib.proxy.hint_particle(world, x, y, z, defaultBlock, defaultMeta);
+					StructureLib.proxy.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
 					return true;
 				}
 			};
@@ -311,7 +309,7 @@ public class StructureUtility {
 
 				@Override
 				public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-					StructureLib.proxy.hint_particle(world, x, y, z, defaultBlock, defaultMeta);
+					StructureLib.proxy.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
 					return true;
 				}
 			};
@@ -346,7 +344,7 @@ public class StructureUtility {
 
 				@Override
 				public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-					StructureLib.proxy.hint_particle(world, x, y, z, defaultBlock, defaultMeta);
+					StructureLib.proxy.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
 					return true;
 				}
 			};
@@ -366,7 +364,7 @@ public class StructureUtility {
 
 				@Override
 				public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-					StructureLib.proxy.hint_particle(world, x, y, z, defaultBlock, defaultMeta);
+					StructureLib.proxy.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
 					return true;
 				}
 			};
@@ -393,7 +391,7 @@ public class StructureUtility {
 
 				@Override
 				public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-					StructureLib.proxy.hint_particle(world, x, y, z, defaultBlock, defaultMeta);
+					StructureLib.proxy.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
 					return true;
 				}
 			};
@@ -413,7 +411,7 @@ public class StructureUtility {
 
 				@Override
 				public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-					StructureLib.proxy.hint_particle(world, x, y, z, defaultBlock, defaultMeta);
+					StructureLib.proxy.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
 					return true;
 				}
 			};
@@ -442,7 +440,7 @@ public class StructureUtility {
 
 				@Override
 				public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-					StructureLib.proxy.hint_particle(world, x, y, z, defaultBlock, defaultMeta);
+					StructureLib.proxy.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
 					return true;
 				}
 			};
@@ -461,7 +459,7 @@ public class StructureUtility {
 
 				@Override
 				public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-					StructureLib.proxy.hint_particle(world, x, y, z, defaultBlock, defaultMeta);
+					StructureLib.proxy.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
 					return true;
 				}
 			};
@@ -510,7 +508,7 @@ public class StructureUtility {
 
 				@Override
 				public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-					StructureLib.proxy.hint_particle(world, x, y, z, defaultBlock, defaultMeta);
+					StructureLib.proxy.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
 					return true;
 				}
 			};
@@ -530,7 +528,7 @@ public class StructureUtility {
 
 				@Override
 				public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-					StructureLib.proxy.hint_particle(world, x, y, z, defaultBlock, defaultMeta);
+					StructureLib.proxy.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
 					return true;
 				}
 			};
@@ -538,7 +536,7 @@ public class StructureUtility {
 	}
 
 	public static <T> IStructureElement<T> ofBlockAdder(IBlockAdder<T> iBlockAdder, int dots) {
-		return ofBlockAdder(iBlockAdder, sHintCasingsTT, dots - 1);
+		return ofBlockAdder(iBlockAdder, StructureLib.blockHint, dots - 1);
 	}
 
 	public static <T> IStructureElementNoPlacement<T> ofTileAdder(ITileAdder<T> iTileAdder, Block hintBlock, int hintMeta) {
@@ -555,7 +553,7 @@ public class StructureUtility {
 
 			@Override
 			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-				StructureLib.proxy.hint_particle(world, x, y, z, hintBlock, hintMeta);
+				StructureLib.proxy.hintParticle(world, x, y, z, hintBlock, hintMeta);
 				return true;
 			}
 		};
