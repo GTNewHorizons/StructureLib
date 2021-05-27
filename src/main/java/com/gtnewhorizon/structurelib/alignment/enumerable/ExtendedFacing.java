@@ -116,6 +116,7 @@ public enum ExtendedFacing {
     public static final ExtendedFacing DEFAULT=NORTH_NORMAL_NONE;
     public static final ExtendedFacing[] VALUES = values();
     public static final Map<ForgeDirection, List<ExtendedFacing>> FOR_FACING=new HashMap<>();
+    public static final int STATES_COUNT = VALUES.length;
     static {
         stream(values()).forEach(extendedFacing ->
                 FOR_FACING.compute(extendedFacing.direction, ((forgeDirection, extendedFacings) -> {

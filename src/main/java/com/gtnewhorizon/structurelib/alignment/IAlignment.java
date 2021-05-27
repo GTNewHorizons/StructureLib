@@ -10,7 +10,7 @@ public interface IAlignment extends IAlignmentLimits,IAlignmentProvider {
     int DIRECTIONS_COUNT= Direction.VALUES.length;
     int ROTATIONS_COUNT= Rotation.VALUES.length;
     int FLIPS_COUNT= Flip.VALUES.length;
-    int STATES_COUNT = ExtendedFacing.VALUES.length;
+    int STATES_COUNT = ExtendedFacing.STATES_COUNT;
 
     ExtendedFacing getExtendedFacing();
 
