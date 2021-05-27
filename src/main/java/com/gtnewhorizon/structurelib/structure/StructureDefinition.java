@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib.structure;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.*;
@@ -138,28 +139,16 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
 
 		@SuppressWarnings("unchecked")
 		private Map<String, IStructureElement<T>[]> compileElementSetMap() {
-			Set<Integer> missing = new HashSet<>();
-			shapes.values().stream().map(CharSequence::chars).forEach(intStream -> intStream.forEach(c -> {
-				IStructureElement<T> iStructureElement = elements.get((char) c);
-				if (iStructureElement == null) {
-					missing.add(c);
-				}
-			}));
+			Set<Integer> missing = findMissing();
 			if (missing.isEmpty()) {
-				Map<String, IStructureElement<T>[]> map = new HashMap<>();
-				shapes.forEach((key, value) -> {
-					Set<Character> chars = new HashSet<>();
-					for (char c : value.toCharArray()) {
-						chars.add(c);
-					}
-					IStructureElement<T>[] compiled = new IStructureElement[chars.size()];
-					int i = 0;
-					for (Character aChar : chars) {
-						compiled[i++] = elements.get(aChar);
-					}
-					map.put(key, compiled);
-				});
-				return map;
+				return shapes.entrySet().stream()
+						.collect(Collectors.toMap(Map.Entry::getKey,
+								e -> e.getValue().chars()
+										.mapToObj(c -> (char) c)
+										.distinct()
+										.map(elements::get)
+										.toArray(IStructureElement[]::new)
+						));
 			} else {
 				throw new RuntimeException("Missing Structure Element bindings for (chars as integers): " +
 						Arrays.toString(missing.toArray()));
@@ -168,27 +157,24 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
 
 		@SuppressWarnings("unchecked")
 		private Map<String, IStructureElement<T>[]> compileStructureMap() {
-			Set<Integer> mising = new HashSet<>();
-			shapes.values().stream().map(CharSequence::chars).forEach(intStream -> intStream.forEach(c -> {
-				IStructureElement<T> iStructureElement = elements.get((char) c);
-				if (iStructureElement == null) {
-					mising.add(c);
-				}
-			}));
-			if (mising.isEmpty()) {
-				Map<String, IStructureElement<T>[]> map = new HashMap<>();
-				shapes.forEach((key, value) -> {
-					IStructureElement<T>[] compiled = new IStructureElement[value.length()];
-					for (int i = 0; i < value.length(); i++) {
-						compiled[i] = elements.get(value.charAt(i));
-					}
-					map.put(key, compiled);
-				});
-				return map;
+			Set<Integer> missing = findMissing();
+			if (missing.isEmpty()) {
+				return shapes.entrySet().stream()
+						.collect(Collectors.toMap(Map.Entry::getKey,
+								e -> e.getValue().chars().mapToObj(c -> elements.get((char) c)).toArray(IStructureElement[]::new)
+						));
 			} else {
 				throw new RuntimeException("Missing Structure Element bindings for (chars as integers): " +
-						Arrays.toString(mising.toArray()));
+						Arrays.toString(missing.toArray()));
 			}
+		}
+
+		private Set<Integer> findMissing() {
+			return shapes.values().stream()
+					.flatMapToInt(CharSequence::chars)
+					.filter(i -> !elements.containsKey((char) i))
+					.boxed()
+					.collect(Collectors.toSet());
 		}
 	}
 
