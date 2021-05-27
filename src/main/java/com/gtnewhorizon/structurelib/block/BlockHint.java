@@ -20,7 +20,7 @@ public class BlockHint extends Block {
 	public BlockHint() {
 		super(Material.iron);
 		setBlockName("structurelib.blockhint");
-		setCreativeTab(CreativeTabs.tabBlock);
+		setCreativeTab(StructureLib.creativeTab);
 	}
 
 	@Override

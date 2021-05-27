@@ -52,3 +52,7 @@ artifacts {
     archives deobfJar
     archives jar
 }
+
+sourceSets {
+    main { output.resourcesDir = output.classesDir }
+}

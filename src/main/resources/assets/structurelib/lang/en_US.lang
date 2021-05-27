@@ -37,3 +37,4 @@ structurelib.blockhint.14.name=Hint no air
 structurelib.blockhint.desc.4=Make sure it does not contain Air material.
 structurelib.blockhint.15.name=Hint error
 structurelib.blockhint.desc.5=ERROR, what did u expect?
+itemGroup.structurelib=StructureLib
