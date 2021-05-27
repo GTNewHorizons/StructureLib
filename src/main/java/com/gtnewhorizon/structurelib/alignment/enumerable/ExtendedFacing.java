@@ -1,5 +1,6 @@
 package com.gtnewhorizon.structurelib.alignment.enumerable;
 
+import com.google.common.collect.ImmutableSet;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.IntegerAxisSwap;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
@@ -12,7 +13,7 @@ import static com.gtnewhorizon.structurelib.alignment.IAlignment.FLIPS_COUNT;
 import static com.gtnewhorizon.structurelib.alignment.IAlignment.ROTATIONS_COUNT;
 import static java.lang.Math.abs;
 import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.*;
 
 public enum ExtendedFacing {
     DOWN_NORMAL_NONE("down normal none"),
@@ -117,18 +118,21 @@ public enum ExtendedFacing {
     public static final Map<ForgeDirection, List<ExtendedFacing>> FOR_FACING=new HashMap<>();
     static {
         stream(values()).forEach(extendedFacing ->
-                FOR_FACING.compute(extendedFacing.direction,((forgeDirection, extendedFacings) -> {
-                    if(extendedFacings==null){
+                FOR_FACING.compute(extendedFacing.direction, ((forgeDirection, extendedFacings) -> {
+                    if (extendedFacings == null) {
                         extendedFacings = new ArrayList<>();
                     }
                     extendedFacings.add(extendedFacing);
                     return extendedFacings;
                 })));
     }
-    private static final Map<String, ExtendedFacing> NAME_LOOKUP = stream(VALUES).collect(toMap(ExtendedFacing::getName2, (extendedFacing) -> extendedFacing));
 
+    private static final Map<String, ExtendedFacing> NAME_LOOKUP = stream(VALUES).collect(toMap(ExtendedFacing::getName2, (extendedFacing) -> extendedFacing));
+    private static final EnumMap<ForgeDirection, ImmutableSet<ExtendedFacing>> LOOKUP_BY_DIRECTION = stream(VALUES).collect(groupingBy(ExtendedFacing::getDirection, () -> new EnumMap<>(ForgeDirection.class), collectingAndThen(toSet(), ImmutableSet::copyOf)));
+    private static final EnumMap<Rotation, ImmutableSet<ExtendedFacing>> LOOKUP_BY_ROTATION = stream(VALUES).collect(groupingBy(ExtendedFacing::getRotation, () -> new EnumMap<>(Rotation.class), collectingAndThen(toSet(), ImmutableSet::copyOf)));
+    private static final EnumMap<Flip, ImmutableSet<ExtendedFacing>> LOOKUP_BY_FLIP = stream(VALUES).collect(groupingBy(ExtendedFacing::getFlip, () -> new EnumMap<>(Flip.class), collectingAndThen(toSet(), ImmutableSet::copyOf)));
     private final ForgeDirection direction;
-    private final ForgeDirection a,b,c;
+    private final ForgeDirection a, b, c;
     private final Rotation rotation;
     private final Flip flip;
 
@@ -226,6 +230,10 @@ public enum ExtendedFacing {
         }
         return VALUES[IAlignment.getAlignmentIndex(direction, Rotation.NORMAL, Flip.NONE)];
     }
+
+    public static ImmutableSet<ExtendedFacing> getAllWith(ForgeDirection direction) { return LOOKUP_BY_DIRECTION.get(direction);}
+    public static ImmutableSet<ExtendedFacing> getAllWith(Rotation rotation) { return LOOKUP_BY_ROTATION.get(rotation);}
+    public static ImmutableSet<ExtendedFacing> getAllWith(Flip flip) { return LOOKUP_BY_FLIP.get(flip);}
 
     public ExtendedFacing with(ForgeDirection direction){
         return of(direction,rotation,flip);
