@@ -1,11 +1,18 @@
 package com.gtnewhorizon.structurelib.alignment;
 
+import com.gtnewhorizon.structurelib.StructureLib;
+import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.World;
+import net.minecraftforge.common.DimensionManager;
 
-public class AlignmentMessage implements IMessage {
+public abstract class AlignmentMessage implements IMessage {
     int mPosX;
     int mPosY;
     int mPosZ;
@@ -36,34 +43,39 @@ public class AlignmentMessage implements IMessage {
 
         ByteBufUtils.writeTag(pBuffer, tFXTag);
     }
-/*
-    private AlignmentMessage(GT_MetaTileEntity_MultiblockBase_EM metaTile) {
-        IGregTechTileEntity base=metaTile.getBaseMetaTileEntity();
-        mPosX=base.getXCoord();
-        mPosY=base.getYCoord();
-        mPosZ=base.getZCoord();
-        mPosD=base.getWorld().provider.dimensionId;
-        mAlign =metaTile.getExtendedFacing().getIndex();
+
+    private AlignmentMessage(IAlignmentProvider provider) {
+        if (!(provider instanceof TileEntity))
+            throw new IllegalArgumentException("Provider must be a TileEntity");
+        IAlignment alignment = provider.getAlignment();
+        if (alignment == null)
+            throw new IllegalArgumentException("Passed in provider does not provide an alignment!");
+        TileEntity base = (TileEntity) provider;
+        mPosX = base.xCoord;
+        mPosY = base.yCoord;
+        mPosZ = base.zCoord;
+        mPosD = base.getWorldObj().provider.dimensionId;
+        mAlign = alignment.getExtendedFacing().getIndex();
     }
 
     private AlignmentMessage(World world, int x, int y, int z, IAlignment front) {
-        mPosX=x;
-        mPosY=y;
-        mPosZ=z;
-        mPosD=world.provider.dimensionId;
-        mAlign =front.getExtendedFacing().getIndex();
+        mPosX = x;
+        mPosY = y;
+        mPosZ = z;
+        mPosD = world.provider.dimensionId;
+        mAlign = front.getExtendedFacing().getIndex();
     }
 
     public static class AlignmentQuery extends AlignmentMessage {
         public AlignmentQuery() {
         }
 
-        public AlignmentQuery(GT_MetaTileEntity_MultiblockBase_EM metaTile) {
-            super(metaTile);
+        public AlignmentQuery(IAlignmentProvider provider) {
+            super(provider);
         }
 
         public AlignmentQuery(World world, int x, int y, int z, IAlignment front) {
-            super(world,x,y,z,front);
+            super(world, x, y, z, front);
         }
     }
 
@@ -71,60 +83,54 @@ public class AlignmentMessage implements IMessage {
         public AlignmentData() {
         }
 
-        private AlignmentData(AlignmentQuery query){
-            mPosX=query.mPosX;
-            mPosY=query.mPosY;
-            mPosZ=query.mPosZ;
-            mPosD=query.mPosD;
-            mAlign =query.mAlign;
+        private AlignmentData(AlignmentQuery query) {
+            mPosX = query.mPosX;
+            mPosY = query.mPosY;
+            mPosZ = query.mPosZ;
+            mPosD = query.mPosD;
+            mAlign = query.mAlign;
         }
 
-        public AlignmentData(GT_MetaTileEntity_MultiblockBase_EM metaTile) {
-            super(metaTile);
+        public AlignmentData(IAlignmentProvider provider) {
+            super(provider);
         }
 
         public AlignmentData(World world, int x, int y, int z, IAlignment front) {
-            super(world,x,y,z,front);
+            super(world, x, y, z, front);
         }
     }
 
-    public static class ClientHandler extends AbstractClientMessageHandler<AlignmentData> {
+    public static class ClientHandler implements IMessageHandler<AlignmentData, IMessage> {
         @Override
-        public IMessage handleClientMessage(EntityPlayer pPlayer, AlignmentData pMessage, MessageContext pCtx) {
-            if(pPlayer.worldObj.provider.dimensionId==pMessage.mPosD){
-                TileEntity te=pPlayer.worldObj.getTileEntity(pMessage.mPosX,pMessage.mPosY,pMessage.mPosZ);
-                if(te instanceof IGregTechTileEntity){
-                    IMetaTileEntity meta = ((IGregTechTileEntity) te).getMetaTileEntity();
-                    if(meta instanceof IAlignment){
-                        ((IAlignment) meta).setExtendedFacing(ExtendedFacing.byIndex(pMessage.mAlign));
+        public IMessage onMessage(AlignmentData pMessage, MessageContext pCtx) {
+            if (StructureLib.getCurrentPlayer().worldObj.provider.dimensionId == pMessage.mPosD) {
+                TileEntity te = StructureLib.getCurrentPlayer().worldObj.getTileEntity(pMessage.mPosX, pMessage.mPosY, pMessage.mPosZ);
+                if (te instanceof IAlignmentProvider) {
+                    IAlignment alignment = ((IAlignmentProvider) te).getAlignment();
+                    if (alignment != null) {
+                        alignment.setExtendedFacing(ExtendedFacing.byIndex(pMessage.mAlign));
                     }
-                }else if (te instanceof IAlignment){
-                    ((IAlignment) te).setExtendedFacing(ExtendedFacing.byIndex(pMessage.mAlign));
                 }
             }
             return null;
         }
     }
 
-    public static class ServerHandler extends AbstractServerMessageHandler<AlignmentQuery> {
+    public static class ServerHandler implements IMessageHandler<AlignmentQuery, AlignmentData> {
         @Override
-        public IMessage handleServerMessage(EntityPlayer pPlayer, AlignmentQuery pMessage, MessageContext pCtx) {
-            World world= DimensionManager.getWorld(pMessage.mPosD);
-            if(world!=null) {
+        public AlignmentData onMessage(AlignmentQuery pMessage, MessageContext pCtx) {
+            World world = DimensionManager.getWorld(pMessage.mPosD);
+            if (world != null) {
                 TileEntity te = world.getTileEntity(pMessage.mPosX, pMessage.mPosY, pMessage.mPosZ);
-                if (te instanceof IGregTechTileEntity) {
-                    IMetaTileEntity meta = ((IGregTechTileEntity) te).getMetaTileEntity();
-                    if (meta instanceof IAlignment) {
-                        pMessage.mAlign =((IAlignment) meta).getExtendedFacing().getIndex();
-                        return new AlignmentData(pMessage);
-                    }
-                } else if (te instanceof IAlignment) {
-                    pMessage.mAlign =((IAlignment) te).getExtendedFacing().getIndex();
+                if (te instanceof IAlignmentProvider) {
+                    IAlignment alignment = ((IAlignmentProvider) te).getAlignment();
+                    if (alignment == null)
+                        return null;
+                    pMessage.mAlign = alignment.getExtendedFacing().getIndex();
                     return new AlignmentData(pMessage);
                 }
             }
             return null;
         }
     }
- */
 }

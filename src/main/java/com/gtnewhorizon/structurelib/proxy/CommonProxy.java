@@ -10,6 +10,9 @@ public class CommonProxy {
 	public void hintParticleTinted(World w, int x, int y, int z, Block block, int meta, short[] RGBa){}
 	public void hintParticle(World w, int x, int y, int z, IIcon[] icons){}
 	public void hintParticle(World w, int x, int y, int z, Block block, int meta){}
+	public EntityPlayer getCurrentPlayer() {
+		return null;
+	}
 	public boolean isCurrentPlayer(EntityPlayer player) {
 		return false;
 	}

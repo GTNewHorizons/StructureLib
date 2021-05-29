@@ -55,6 +55,11 @@ public class ClientProxy extends CommonProxy {
 	}
 
 	@Override
+	public EntityPlayer getCurrentPlayer() {
+		return Minecraft.getMinecraft().thePlayer;
+	}
+
+	@Override
 	public boolean isCurrentPlayer(EntityPlayer player) {
 		return player == Minecraft.getMinecraft().thePlayer;
 	}

@@ -43,18 +43,18 @@ public class ConstructableUtility {
                 }
             }
             return true;
-        } else if (StructureLib.proxy.isCurrentPlayer(aPlayer)) {//particles and text client side
+        } else if (StructureLib.isCurrentPlayer(aPlayer)) {//particles and text client side
             //if ((!aPlayer.isSneaking() || !aPlayer.capabilities.isCreativeMode)) {
             if (tTileEntity instanceof IConstructableProvider) {
                 IConstructable constructable = ((IConstructableProvider) tTileEntity).getConstructable();
                 if (constructable != null) {
                     constructable.construct(aStack, true);
-                    StructureLib.proxy.addClientSideChatMessages(constructable.getStructureDescription(aStack));
+                    StructureLib.addClientSideChatMessages(constructable.getStructureDescription(aStack));
                 }
             } else if (tTileEntity instanceof IConstructable) {
                 IConstructable constructable = (IConstructable) tTileEntity;
                 constructable.construct(aStack, true);
-                StructureLib.proxy.addClientSideChatMessages(constructable.getStructureDescription(aStack));
+                StructureLib.addClientSideChatMessages(constructable.getStructureDescription(aStack));
                 return false;
             } else if (IMultiblockInfoContainer.contains(tTileEntity.getClass())) {
                 IMultiblockInfoContainer<TileEntity> iMultiblockInfoContainer = IMultiblockInfoContainer.get(tTileEntity.getClass());
@@ -65,7 +65,7 @@ public class ConstructableUtility {
                     iMultiblockInfoContainer.construct(aStack, true, tTileEntity,
                             ExtendedFacing.of(ForgeDirection.getOrientation(aSide)));
                 }
-                StructureLib.proxy.addClientSideChatMessages(IMultiblockInfoContainer.get(tTileEntity.getClass()).getDescription(aStack));
+                StructureLib.addClientSideChatMessages(IMultiblockInfoContainer.get(tTileEntity.getClass()).getDescription(aStack));
                 return false;
             }
         }
