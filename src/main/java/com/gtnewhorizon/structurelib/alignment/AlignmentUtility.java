@@ -12,27 +12,15 @@ public class AlignmentUtility {
 
     public static boolean handle(EntityPlayer aPlayer, World aWorld, int aX, int aY, int aZ){
         TileEntity tTileEntity = aWorld.getTileEntity(aX, aY, aZ);
-        if(tTileEntity==null || aPlayer instanceof FakePlayer) {
+        if (tTileEntity == null || aPlayer instanceof FakePlayer) {
             return aPlayer instanceof EntityPlayerMP;
         }
-        if (aPlayer instanceof EntityPlayerMP) {
-            /* TODO Make GT tile entity implement this interface and delegate all functionality to MTE
-            if (tTileEntity instanceof IGregTechTileEntity) {
-                IMetaTileEntity metaTE = ((IGregTechTileEntity) tTileEntity).getMetaTileEntity();
-                if (metaTE instanceof IAlignmentProvider) {
-                    IAlignment alignment = ((IAlignmentProvider) metaTE).getAlignment();
-                    if(aPlayer.isSneaking()){
-                        alignment.toolSetFlip(null);
-                    }else {
-                        alignment.toolSetRotation(null);
-                    }
-                    return true;
-                }
-            } else */ if (tTileEntity instanceof IAlignmentProvider) {
-                IAlignment alignment = ((IAlignmentProvider) tTileEntity).getAlignment();
-                if(aPlayer.isSneaking()){
+        if (aPlayer instanceof EntityPlayerMP && tTileEntity instanceof IAlignmentProvider) {
+            IAlignment alignment = ((IAlignmentProvider) tTileEntity).getAlignment();
+            if (alignment != null) {
+                if (aPlayer.isSneaking()) {
                     alignment.toolSetFlip(null);
-                }else {
+                } else {
                     alignment.toolSetRotation(null);
                 }
                 return true;

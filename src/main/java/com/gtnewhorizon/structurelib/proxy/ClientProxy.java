@@ -4,7 +4,10 @@ import com.gtnewhorizon.structurelib.entity.fx.BlockHint;
 import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.particle.EntityFX;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
@@ -43,4 +46,16 @@ public class ClientProxy extends CommonProxy {
 		return ret;
 	}
 
+	@Override
+	public void addClientSideChatMessages(String... messages) {
+		GuiNewChat chat = Minecraft.getMinecraft().ingameGUI.getChatGUI();
+		for (String s : messages) {
+			chat.printChatMessage(new ChatComponentText(s));
+		}
+	}
+
+	@Override
+	public boolean isCurrentPlayer(EntityPlayer player) {
+		return player == Minecraft.getMinecraft().thePlayer;
+	}
 }
