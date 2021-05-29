@@ -18,8 +18,6 @@ public interface IAlignment extends IAlignmentLimits,IAlignmentProvider {
 
     IAlignmentLimits getAlignmentLimits();
 
-    void setAlignmentLimits(IAlignmentLimits limits);
-
     @Override
     default IAlignment getAlignment(){
         return this;
