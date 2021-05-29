@@ -11,5 +11,5 @@ public interface IBlockAdder<T> {
 	 * @param meta  meta of block attempted to add
 	 * @return is structure still valid
 	 */
-	boolean apply(T t, Block block, Integer meta);
+	boolean apply(T t, Block block, int meta);
 }
