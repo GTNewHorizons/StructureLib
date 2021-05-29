@@ -23,8 +23,26 @@ public interface IAlignmentLimits {
                 alignment.getFlip());
     }
 
+    static IAlignmentLimits allowOnly(ExtendedFacing... allowedFacings) {
+        Builder builder = Builder.denyAll();
+        for (ExtendedFacing allowedFacing : allowedFacings) {
+            builder.allow(allowedFacing);
+        }
+        return builder.build();
+    }
+
+    static IAlignmentLimits denyOnly(ExtendedFacing... allowedFacings) {
+        Builder builder = Builder.allowAll();
+        for (ExtendedFacing allowedFacing : allowedFacings) {
+            builder.deny(allowedFacing);
+        }
+        return builder.build();
+    }
+
     class Builder {
         protected final boolean[] validStates = new boolean[STATES_COUNT];
+
+        private Builder() {}
 
         public static Builder allowAll() {
             Builder b = new Builder();
