@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib;
 import com.gtnewhorizon.structurelib.alignment.AlignmentMessage;
 import com.gtnewhorizon.structurelib.block.BlockHint;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
+import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
 import com.gtnewhorizon.structurelib.proxy.CommonProxy;
 import com.gtnewhorizon.structurelib.util.XSTR;
 import cpw.mods.fml.common.Mod;
@@ -33,6 +34,7 @@ public class StructureLib {
 	@SidedProxy(serverSide = "com.gtnewhorizon.structurelib.proxy.CommonProxy", clientSide = "com.gtnewhorizon.structurelib.proxy.ClientProxy")
 	static CommonProxy proxy;
 	static SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel(MOD_ID);
+
 	static {
 		net.registerMessage(AlignmentMessage.ServerHandler.class, AlignmentMessage.AlignmentQuery.class, 0, Side.SERVER);
 		net.registerMessage(AlignmentMessage.ClientHandler.class, AlignmentMessage.AlignmentData.class, 1, Side.CLIENT);
@@ -42,6 +44,7 @@ public class StructureLib {
 
 	static Block blockHint;
 	static Item itemBlockHint;
+	static Item itemFrontRotationTool;
 	public static final CreativeTabs creativeTab = new CreativeTabs("structurelib") {
 		@Override
 		@SideOnly(Side.CLIENT)
@@ -54,6 +57,7 @@ public class StructureLib {
 	public void preInit(FMLPreInitializationEvent e) {
 		GameRegistry.registerBlock(blockHint = new BlockHint(), ItemBlockHint.class, "blockhint");
 		itemBlockHint = ItemBlock.getItemFromBlock(StructureLibAPI.getBlockHint());
+		GameRegistry.registerItem(itemFrontRotationTool = new ItemFrontRotationTool(), itemFrontRotationTool.getUnlocalizedName());
 	}
 
 	public static void addClientSideChatMessages(String... messages) {
