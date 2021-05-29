@@ -59,7 +59,7 @@ artifacts {
 idea {
     module {
         inheritOutputDirs = false
-        outputDir = compileJava.destinationDir
-        testOutputDir = compileTestJava.destinationDir
+        outputDir = new File(compileJava.destinationDir.parentFile.parentFile, "idea")
+        testOutputDir = new File(compileTestJava.destinationDir.parentFile.parentFile, "ideaTest")
     }
 }

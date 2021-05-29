@@ -51,7 +51,8 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
 
 		/**
 		 * Adds shape
-		 * +- is air/no air checks
+		 * + is anything but air
+		 * - is air checks
 		 * space bar is skip
 		 * ~ is also skip (but marks controller position, optional and logically it is a space...)
 		 * rest needs to be defined
