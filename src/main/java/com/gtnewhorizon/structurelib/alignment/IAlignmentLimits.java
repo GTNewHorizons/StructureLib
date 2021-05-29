@@ -48,6 +48,16 @@ public interface IAlignmentLimits {
             return this;
         }
 
+        public Builder deny(ExtendedFacing o) {
+            validStates[o.getIndex()] = false;
+            return this;
+        }
+
+        public Builder allow(ExtendedFacing o) {
+            validStates[o.getIndex()] = true;
+            return this;
+        }
+
         public Builder deny(Rotation fd) {
             ExtendedFacing.getAllWith(fd).stream().mapToInt(ExtendedFacing::getIndex).forEach(v -> validStates[v] = false);
             return this;
