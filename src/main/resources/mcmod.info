@@ -8,9 +8,9 @@
   "url": "",
   "updateUrl": "",
   "authorList": ["glee8e"],
-  "credits": "",
+  "credits": "Technus, for the original implementation of this mod as part of TecTech",
   "logoFile": "",
   "screenshots": [],
-  "dependencies": ["Thaumcraft"]
+  "dependencies": []
 }
 ]

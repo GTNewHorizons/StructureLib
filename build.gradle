@@ -26,6 +26,9 @@ targetCompatibility = 1.8
 
 minecraft {
     version = project.forgeVersion
+    replaceIn "TC4Tweak.java"
+    replace '${version}', project.version
+    runDir = "run"
 }
 
 processResources
