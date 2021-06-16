@@ -54,7 +54,7 @@ public interface IAlignment extends IAlignmentLimits,IAlignmentProvider {
     default boolean toolSetDirection(ForgeDirection direction){
         if(direction==null || direction==ForgeDirection.UNKNOWN){
             for (int i = 0,j=getDirection().ordinal()+1, valuesLength = Direction.VALUES.length; i < valuesLength; i++) {
-                if(toolSetDirection(Direction.VALUES[j%valuesLength].getForgeDirection())){
+                if (toolSetDirection(Direction.VALUES[(j + i) % valuesLength].getForgeDirection())) {
                     return true;
                 }
             }
@@ -90,8 +90,8 @@ public interface IAlignment extends IAlignmentLimits,IAlignmentProvider {
             int flips = Flip.VALUES.length;
             int rotations = Rotation.VALUES.length;
             for (int ii = 0,jj=getFlip().ordinal(); ii < flips; ii++) {
-                for (int i = 0,j=getRotation().ordinal()+1; i < rotations; i++) {
-                    if(checkedSetExtendedFacing(ExtendedFacing.of(getDirection(),Rotation.VALUES[j%rotations],Flip.VALUES[jj%flips]))){
+                for (int i = 1, j = getRotation().ordinal(); i < rotations; i++) {
+                    if (checkedSetExtendedFacing(ExtendedFacing.of(getDirection(), Rotation.VALUES[(j + i) % rotations], Flip.VALUES[(jj + ii) % flips]))) {
                         return true;
                     }
                 }
@@ -112,8 +112,8 @@ public interface IAlignment extends IAlignmentLimits,IAlignmentProvider {
 
     default boolean toolSetFlip(Flip flip){
         if(flip==null){
-            for (int i = 0,j=getFlip().ordinal()+1, valuesLength = Flip.VALUES.length; i < valuesLength; i++) {
-                if(toolSetFlip(Flip.VALUES[j%valuesLength])){
+            for (int i = 1, j = getFlip().ordinal(), valuesLength = Flip.VALUES.length; i < valuesLength; i++) {
+                if (checkedSetFlip(Flip.VALUES[(j + i) % valuesLength])) {
                     return true;
                 }
             }
@@ -134,7 +134,7 @@ public interface IAlignment extends IAlignmentLimits,IAlignmentProvider {
     default boolean toolSetExtendedFacing(ExtendedFacing extendedFacing){
         if(extendedFacing==null){
             for (int i = 0,j=getExtendedFacing().ordinal()+1, valuesLength = ExtendedFacing.VALUES.length; i < valuesLength; i++) {
-                if(toolSetExtendedFacing(ExtendedFacing.VALUES[j%valuesLength])){
+                if (checkedSetExtendedFacing(ExtendedFacing.VALUES[(j + i)%valuesLength])){
                     return true;
                 }
             }
