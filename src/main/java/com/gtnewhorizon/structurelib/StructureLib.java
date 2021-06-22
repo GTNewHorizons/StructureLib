@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib;
 import com.gtnewhorizon.structurelib.alignment.AlignmentMessage;
 import com.gtnewhorizon.structurelib.block.BlockHint;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
 import com.gtnewhorizon.structurelib.proxy.CommonProxy;
 import com.gtnewhorizon.structurelib.util.XSTR;
@@ -45,6 +46,7 @@ public class StructureLib {
 	static Block blockHint;
 	static Item itemBlockHint;
 	static Item itemFrontRotationTool;
+	static Item itemConstructableTrigger;
 	public static final CreativeTabs creativeTab = new CreativeTabs("structurelib") {
 		@Override
 		@SideOnly(Side.CLIENT)
@@ -58,6 +60,7 @@ public class StructureLib {
 		GameRegistry.registerBlock(blockHint = new BlockHint(), ItemBlockHint.class, "blockhint");
 		itemBlockHint = ItemBlock.getItemFromBlock(StructureLibAPI.getBlockHint());
 		GameRegistry.registerItem(itemFrontRotationTool = new ItemFrontRotationTool(), itemFrontRotationTool.getUnlocalizedName());
+		GameRegistry.registerItem(itemConstructableTrigger = new ItemConstructableTrigger(), itemConstructableTrigger.getUnlocalizedName());
 	}
 
 	public static void addClientSideChatMessages(String... messages) {

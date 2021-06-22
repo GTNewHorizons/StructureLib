@@ -13,10 +13,7 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 import static java.lang.Integer.MIN_VALUE;
 
@@ -558,6 +555,26 @@ public class StructureUtility {
 			}
 		};
 	}
+
+	public static <T, E> IStructureElementNoPlacement<T> ofSpecificTileAdder(BiPredicate<T, E> iTileAdder, Class<E> tileClass, Block hintBlock, int hintMeta) {
+		if (iTileAdder == null || hintBlock == null || tileClass == null) {
+			throw new IllegalArgumentException();
+		}
+		return new IStructureElementNoPlacement<T>() {
+			@Override
+			public boolean check(T t, World world, int x, int y, int z) {
+				TileEntity tileEntity = world.getTileEntity(x, y, z);
+				// This used to check if it's a GT tile. Since this is now an standalone mod we no longer do this
+				return tileClass.isInstance(tileEntity) && iTileAdder.test(t, tileClass.cast(tileEntity));
+			}
+
+			@Override
+			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+				StructureLibAPI.hintParticle(world, x, y, z, hintBlock, hintMeta);
+				return true;
+			}
+		};
+	}
 	// No more hatch adder. Implement it via tile adder. We could of course add a wrapper around it in gregtech, but not any more in this standalone mod.
 
 	//endregion
@@ -639,6 +656,27 @@ public class StructureUtility {
 	public static <T> IStructureElementChain<T> ofChain(List<IStructureElement<T>> elementChain) {
 		return ofChain(elementChain.toArray(new IStructureElement[0]));
 	}
+
+	// region context
+	public static <CTX, T extends IWithExtendedContext<CTX>, E extends IStructureElement<CTX>> IStructureElement<T> withContext(E elem) {
+		return new IStructureElement<T>() {
+			@Override
+			public boolean check(T t, World world, int x, int y, int z) {
+				return elem.check(t.getCurrentContext(), world, x, y, z);
+			}
+
+			@Override
+			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+				return elem.spawnHint(t.getCurrentContext(), world, x, y, z, trigger);
+			}
+
+			@Override
+			public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+				return elem.placeBlock(t.getCurrentContext(), world, x, y, z, trigger);
+			}
+		};
+	}
+	//endregion
 
 	//region defer
 
