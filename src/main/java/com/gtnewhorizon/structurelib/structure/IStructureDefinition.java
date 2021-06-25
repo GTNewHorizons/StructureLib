@@ -165,4 +165,8 @@ public interface IStructureDefinition<T> {
 		}
 		return true;
 	}
+
+	static <T> StructureDefinition.Builder<T> builder() {
+		return StructureDefinition.builder();
+	}
 }
