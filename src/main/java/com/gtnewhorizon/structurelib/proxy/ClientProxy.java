@@ -41,7 +41,7 @@ public class ClientProxy extends CommonProxy {
 	private static IIcon[] createIIconFromBlock(Block block, int meta) {
 		IIcon[] ret = new IIcon[6];
 		for (int i = 0; i < 6; i++) {
-			block.getIcon(i, meta);
+			ret[i] = block.getIcon(i, meta);
 		}
 		return ret;
 	}
