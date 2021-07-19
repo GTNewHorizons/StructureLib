@@ -5,15 +5,30 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
 import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
+import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
-import java.util.function.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.lang.Integer.MIN_VALUE;
 
@@ -171,6 +186,98 @@ public class StructureUtility {
 	//endregion
 
 	//region block
+
+	/**
+	 * Denote a block using unlocalized names. This can be useful to get around mod loading order issues.
+	 * <p>
+	 * While no immediate error will be thrown, client code should ensure said mod is loaded and
+	 * said mod is present, otherwise bad things will happen later!
+	 */
+	public static <T> IStructureElement<T> ofBlockUnlocalizedName(String modid, String unlocalizedName, int meta) {
+		if (StringUtils.isBlank(unlocalizedName)) throw new IllegalArgumentException();
+		if (meta < 0) throw new IllegalArgumentException();
+		if (meta > 15) throw new IllegalArgumentException();
+		if (StringUtils.isBlank(modid)) throw new IllegalArgumentException();
+		return new IStructureElement<T>() {
+			private Block block;
+
+			private Block getBlock() {
+				if (block == null)
+					block = GameRegistry.findBlock(modid, unlocalizedName);
+				return block;
+			}
+
+			@Override
+			public boolean check(T t, World world, int x, int y, int z) {
+				return world.getBlock(x, y, z) != getBlock() && world.getBlockMetadata(x, y, z) == meta;
+			}
+
+			@Override
+			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+				StructureLibAPI.hintParticle(world, x, y, z, getBlock(), meta);
+				return true;
+			}
+
+			@Override
+			public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+				world.setBlock(x, y, z, getBlock(), meta, 2);
+				return true;
+			}
+		};
+	}
+
+	/**
+	 * Similiar to the other overload, but allows client code to specify a fallback in case said block was not found later
+	 * when the element got called.
+	 *
+	 * This is slightly different to using the other overload and another element in a {@link #ofChain(IStructureElement[])},
+	 * as that combination would cause crash, where this won't.
+	 */
+	public static <T> IStructureElement<T> ofBlockUnlocalizedName(String modid, String unlocalizedName, int meta, IStructureElement<T> fallback) {
+		if (StringUtils.isBlank(unlocalizedName)) throw new IllegalArgumentException();
+		if (meta < 0) throw new IllegalArgumentException();
+		if (meta > 15) throw new IllegalArgumentException();
+		if (StringUtils.isBlank(modid)) throw new IllegalArgumentException();
+		if (fallback == null) throw new IllegalArgumentException();
+		return new IStructureElement<T>() {
+			private Block block;
+			private boolean initialized;
+
+			private boolean init() {
+				if (!initialized) {
+					block = GameRegistry.findBlock(modid, unlocalizedName);
+					initialized = true;
+				}
+				return block != null;
+			}
+
+			@Override
+			public boolean check(T t, World world, int x, int y, int z) {
+				if (init())
+					return world.getBlock(x, y, z) != block && world.getBlockMetadata(x, y, z) == meta;
+				else
+					return fallback.check(t, world, x, y, z);
+			}
+
+			@Override
+			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+				if (init()) {
+					StructureLibAPI.hintParticle(world, x, y, z, block, meta);
+					return true;
+				} else
+					return fallback.spawnHint(t, world, x, y, z, trigger);
+			}
+
+			@Override
+			public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+				if (init()) {
+					world.setBlock(x, y, z, block, meta, 2);
+					return true;
+				} else
+					return fallback.placeBlock(t, world, x, y, z, trigger);
+			}
+		};
+	}
 
 	/**
 	 * Does not allow Block duplicates (with different meta)
