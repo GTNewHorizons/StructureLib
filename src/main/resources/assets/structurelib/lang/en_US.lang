@@ -15,12 +15,12 @@ tile.structurelib.blockhint.13.name=Hint air
 tile.structurelib.blockhint.14.name=Hint no air
 tile.structurelib.blockhint.15.name=Hint error
 
-item.structurelib.frontRotationTool.name=Front Rotation Tool
+item.structurelib.frontRotationTool.name=Front Rotation Tool (Standalone)
 item.structurelib.frontRotationTool.desc.0=Triggers Front Rotation Interface
 item.structurelib.frontRotationTool.desc.1=Rotates only the front panel,
 item.structurelib.frontRotationTool.desc.2=which allows structure rotation.
 
-item.structurelib.constructableTrigger.name=Multiblock Machine Blueprint
+item.structurelib.constructableTrigger.name=Multiblock Machine Blueprint (Standalone)
 item.structurelib.constructableTrigger.desc.0=Triggers Constructable Interface
 item.structurelib.constructableTrigger.desc.1=Shows multiblock construction details,
 item.structurelib.constructableTrigger.desc.2=just Use on a multiblock controller.
