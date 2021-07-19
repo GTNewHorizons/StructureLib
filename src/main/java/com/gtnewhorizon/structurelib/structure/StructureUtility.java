@@ -787,6 +787,28 @@ public class StructureUtility {
 
 	//region defer
 
+	/**
+	 * Similar to defer, but caches the first returned element returned and won't call it again.
+	 * Initialization is not thread safe.
+	 */
+	public static <T> IStructureElementDeferred<T> lazy(Supplier<IStructureElement<T>> to) {
+		if (to == null) {
+			throw new IllegalArgumentException();
+		}
+		return new LazyStructureElement<>(t -> to.get());
+	}
+
+	/**
+	 * Similar to defer, but caches the first returned element returned and won't call it again.
+	 * Initialization is not thread safe.
+	 */
+	public static <T> IStructureElementDeferred<T> lazy(Function<T, IStructureElement<T>> to) {
+		if (to == null) {
+			throw new IllegalArgumentException();
+		}
+		return new LazyStructureElement<>(to);
+	}
+
 	public static <T> IStructureElementDeferred<T> defer(Supplier<IStructureElement<T>> to) {
 		if (to == null) {
 			throw new IllegalArgumentException();
@@ -1414,4 +1436,5 @@ public class StructureUtility {
 		}
 		return shape;
 	}
+
 }
