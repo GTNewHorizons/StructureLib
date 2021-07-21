@@ -51,10 +51,17 @@ task deobfJar(type: Jar) {
     classifier = 'deobf'
 }
 
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
 artifacts {
     archives deobfJar
-    archives jar
+    archives sourceJar
 }
+
+install.dependsOn reobf
 
 idea {
     module {
