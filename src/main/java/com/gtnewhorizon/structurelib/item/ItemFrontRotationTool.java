@@ -12,7 +12,7 @@ import net.minecraft.world.World;
 
 import java.util.List;
 
-import static com.gtnewhorizon.structurelib.StructureLib.MOD_ID;
+import static com.gtnewhorizon.structurelib.StructureLibAPI.MOD_ID;
 import static net.minecraft.util.StatCollector.translateToLocal;
 
 public class ItemFrontRotationTool extends Item {

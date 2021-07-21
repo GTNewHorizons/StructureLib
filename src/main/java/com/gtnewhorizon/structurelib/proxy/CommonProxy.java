@@ -1,5 +1,6 @@
 package com.gtnewhorizon.structurelib.proxy;
 
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.IIcon;
@@ -18,4 +19,8 @@ public class CommonProxy {
 	}
 	public void addClientSideChatMessages(String... messages){
 	}
+	public void startHinting(World w) {}
+	public void endHinting(World w) {}
+
+	public void preInit(FMLPreInitializationEvent e) {}
 }

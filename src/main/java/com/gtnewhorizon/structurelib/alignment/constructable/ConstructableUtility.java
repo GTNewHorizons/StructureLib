@@ -1,6 +1,7 @@
 package com.gtnewhorizon.structurelib.alignment.constructable;
 
 import com.gtnewhorizon.structurelib.StructureLib;
+import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import net.minecraft.entity.player.EntityPlayer;
@@ -17,6 +18,13 @@ public class ConstructableUtility {
     }
 
     public static boolean handle(ItemStack aStack, EntityPlayer aPlayer, World aWorld, int aX, int aY, int aZ, int aSide) {
+        StructureLibAPI.startHinting(aWorld);
+        boolean ret = handle0(aStack, aPlayer, aWorld, aX, aY, aZ, aSide);
+        StructureLibAPI.endHinting(aWorld);
+        return ret;
+    }
+
+    private static boolean handle0(ItemStack aStack, EntityPlayer aPlayer, World aWorld, int aX, int aY, int aZ, int aSide) {
         TileEntity tTileEntity = aWorld.getTileEntity(aX, aY, aZ);
         if (tTileEntity == null || aPlayer instanceof FakePlayer) {
             return aPlayer instanceof EntityPlayerMP;

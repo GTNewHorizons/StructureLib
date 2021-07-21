@@ -1,6 +1,7 @@
 package com.gtnewhorizon.structurelib.entity.fx;
 
 import com.gtnewhorizon.structurelib.StructureLib;
+import com.gtnewhorizon.structurelib.proxy.ClientProxy;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
@@ -12,11 +13,11 @@ import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
 
 @SideOnly(Side.CLIENT)
-public class BlockHint extends EntityFX {
+public class EntityFXBlockHint extends EntityFX {
     private IIcon[] icons;
     private short[] mRGBa = {255,255,255,0};
 
-    public BlockHint(World world){
+    public EntityFXBlockHint(World world){
         this(world,0,0,0, Blocks.stone,0);
     }
 
@@ -28,7 +29,7 @@ public class BlockHint extends EntityFX {
      * @param z
      * @param icons DOWN, UP, NORTH, SOUTH, WEST, EAST
      */
-    public BlockHint(World world, int x, int y, int z, IIcon[] icons) {
+    public EntityFXBlockHint(World world, int x, int y, int z, IIcon[] icons) {
         super(world, x + .25, y + .5, z + .25);
         particleGravity = 0;
         prevPosX = posX;
@@ -39,7 +40,7 @@ public class BlockHint extends EntityFX {
         this.icons=icons;
     }
 
-    public BlockHint(World world, int x, int y, int z, Block block, int meta) {
+    public EntityFXBlockHint(World world, int x, int y, int z, Block block, int meta) {
         super(world, x+.25, y+.5, z+.25);
         particleGravity = 0;
         prevPosX = posX;
@@ -53,7 +54,7 @@ public class BlockHint extends EntityFX {
         }
     }
 
-    public BlockHint withColorTint(short[] coloure){
+    public EntityFXBlockHint withColorTint(short[] coloure){
         this.mRGBa =coloure;
         return this;
     }
@@ -129,5 +130,11 @@ public class BlockHint extends EntityFX {
     @Override
     public boolean shouldRenderInPass(int pass) {
         return pass==2;
+    }
+
+    @Override
+    public void setDead() {
+        super.setDead();
+        ClientProxy.onHintDead(this);
     }
 }

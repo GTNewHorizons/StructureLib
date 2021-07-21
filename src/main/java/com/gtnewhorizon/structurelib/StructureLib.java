@@ -1,6 +1,6 @@
 package com.gtnewhorizon.structurelib;
 
-import com.gtnewhorizon.structurelib.alignment.AlignmentMessage;
+import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import com.gtnewhorizon.structurelib.block.BlockHint;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
@@ -26,15 +26,14 @@ import org.apache.logging.log4j.Logger;
 /**
  * This class does not contain a stable API. Refrain from using this class.
  */
-@Mod(modid = StructureLib.MOD_ID, name = "StructureLib", version = "${version}", acceptableRemoteVersions = "*")
+@Mod(modid = StructureLibAPI.MOD_ID, name = "StructureLib", version = "${version}", acceptableRemoteVersions = "*", guiFactory = "com.gtnewhorizon.structurelib.GuiFactory")
 public class StructureLib {
-	public static boolean DEBUG_MODE = true;
+	public static boolean DEBUG_MODE = Boolean.getBoolean("structurelib.debug");
 	public static Logger LOGGER = LogManager.getLogger("StructureLib");
-	public static final String MOD_ID = "structurelib";
 
 	@SidedProxy(serverSide = "com.gtnewhorizon.structurelib.proxy.CommonProxy", clientSide = "com.gtnewhorizon.structurelib.proxy.ClientProxy")
 	static CommonProxy proxy;
-	static SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel(MOD_ID);
+	static SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel(StructureLibAPI.MOD_ID);
 
 	static {
 		net.registerMessage(AlignmentMessage.ServerHandler.class, AlignmentMessage.AlignmentQuery.class, 0, Side.SERVER);
@@ -57,10 +56,12 @@ public class StructureLib {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
+		ConfigurationHandler.INSTANCE.init(e.getSuggestedConfigurationFile());
 		GameRegistry.registerBlock(blockHint = new BlockHint(), ItemBlockHint.class, "blockhint");
 		itemBlockHint = ItemBlock.getItemFromBlock(StructureLibAPI.getBlockHint());
 		GameRegistry.registerItem(itemFrontRotationTool = new ItemFrontRotationTool(), itemFrontRotationTool.getUnlocalizedName());
 		GameRegistry.registerItem(itemConstructableTrigger = new ItemConstructableTrigger(), itemConstructableTrigger.getUnlocalizedName());
+		proxy.preInit(e);
 	}
 
 	public static void addClientSideChatMessages(String... messages) {

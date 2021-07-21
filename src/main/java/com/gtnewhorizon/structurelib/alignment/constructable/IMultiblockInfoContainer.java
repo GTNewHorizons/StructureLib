@@ -14,6 +14,10 @@ import java.util.HashMap;
 public interface IMultiblockInfoContainer<T> {
     HashMap<String, IMultiblockInfoContainer<?>> MULTIBLOCK_MAP = new HashMap<>();
 
+    /**
+     * There is no specific loading phase restriction, but you should generally not call it before the tile entity is
+     * properly registered.
+     */
     static <T extends TileEntity> void registerTileClass(Class<T> clazz, IMultiblockInfoContainer<?> info) {
         MULTIBLOCK_MAP.put(clazz.getCanonicalName(), info);
     }
