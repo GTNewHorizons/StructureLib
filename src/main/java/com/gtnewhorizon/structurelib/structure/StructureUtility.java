@@ -13,7 +13,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -21,13 +23,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntBinaryOperator;
 import java.util.function.Supplier;
 
 import static java.lang.Integer.MIN_VALUE;
@@ -186,6 +191,81 @@ public class StructureUtility {
 	//endregion
 
 	//region block
+
+	/**
+	 * A more primitive variant of {@link #ofBlocksTiered(ITierConverter, List, Object, BiConsumer, Function)}
+	 * Main difference is this one is check only.
+	 * @see #ofBlocksTiered(ITierConverter, Object, BiConsumer, Function)
+	 */
+	public static <T, TIER> IStructureElementCheckOnly<T> ofBlocksTiered(ITierConverter<TIER> tierExtractor, @Nullable TIER notSet, BiConsumer<T, TIER> setter, Function<T, TIER> getter) {
+		if (tierExtractor == null) throw new IllegalArgumentException();
+		if (setter == null) throw new IllegalArgumentException();
+		if (getter == null) throw new IllegalArgumentException();
+
+		return (t, world, x, y, z) -> {
+			Block block = world.getBlock(x, y, z);
+			int meta = world.getBlockMetadata(x, y, z);
+			TIER tier = tierExtractor.convert(block, meta);
+			TIER current = getter.apply(t);
+			if (Objects.equals(notSet, current)) {
+				setter.accept(t, tier);
+				return true;
+			}
+			return Objects.equals(current, tier);
+		};
+	}
+
+		/**
+         * Element representing a component with different tiers. Player can use more blueprint to get hints denoting more
+         * advanced components.
+         *
+         * There is yet no TileEntity counter part of this utility. Feel free to submit a PR to add it.
+         * @param allKnownTiers All known tiers as of calling. Can be empty or null. No hint will be spawned if empty or null. Cannot have null elements.
+         *                      First element denotes the most primitive tier. Last element denotes the most advanced tier.
+         *                      If not all tiers are available at definition construction time, use {@link #lazy(Supplier)} or its overloads to delay a little bit.
+         * @param notSet The value returned from {@code getter} when there were no tier info found in T yet. Can be null.
+         * @param getter a function to retrieve the current tier from T
+         * @param setter a function to set the current tier into T
+         * @param tierExtractor a function to extract tier info from a block.
+         */
+	public static <T, TIER> IStructureElement<T> ofBlocksTiered(ITierConverter<TIER> tierExtractor, @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet, BiConsumer<T, TIER> setter, Function<T, TIER> getter) {
+		List<Pair<Block, Integer>> hints = allKnownTiers == null ? Collections.emptyList() : allKnownTiers;
+		if (hints.stream().anyMatch(Objects::isNull)) throw new IllegalArgumentException();
+		IStructureElementCheckOnly<T> check = ofBlocksTiered(tierExtractor, notSet, setter, getter);
+		return new IStructureElement<T>() {
+			@Override
+			public boolean check(T t, World world, int x, int y, int z) {
+				return check.check(t, world, x, y, z);
+			}
+
+			private Pair<Block, Integer> getHint(ItemStack trigger) {
+				return hints.get(Math.min(Math.max(trigger.stackSize, 1), hints.size()));
+			}
+
+			@Override
+			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+				Pair<Block, Integer> hint = getHint(trigger);
+				if (hint == null)
+					return false;
+				StructureLibAPI.hintParticle(world, x, y, z, hint.getKey(), hint.getValue());
+				return true;
+			}
+
+			@Override
+			public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+				Pair<Block, Integer> hint = getHint(trigger);
+				if (hint == null)
+					return false;
+				if (hint.getKey() instanceof ICustomBlockSetting) {
+					ICustomBlockSetting block = (ICustomBlockSetting) hint.getKey();
+					block.setBlock(world, x, y, z, hint.getValue());
+				} else {
+					world.setBlock(x, y, z, hint.getKey(), hint.getValue(), 2);
+				}
+				return true;
+			}
+		};
+	}
 
 	/**
 	 * Denote a block using unlocalized names. This can be useful to get around mod loading order issues.
