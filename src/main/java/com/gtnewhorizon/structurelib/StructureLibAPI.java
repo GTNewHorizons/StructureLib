@@ -120,4 +120,12 @@ public class StructureLibAPI {
 	public static Item getItemBlockHint() {
 		return StructureLib.itemBlockHint;
 	}
+
+	public static boolean isDebugEnabled() {
+		return StructureLib.DEBUG_MODE;
+	}
+
+	public static void setDebugEnabled(boolean enabled) {
+		StructureLib.DEBUG_MODE = enabled;
+	}
 }

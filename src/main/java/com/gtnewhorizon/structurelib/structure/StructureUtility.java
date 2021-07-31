@@ -289,7 +289,7 @@ public class StructureUtility {
 
 			@Override
 			public boolean check(T t, World world, int x, int y, int z) {
-				return world.getBlock(x, y, z) != getBlock() && world.getBlockMetadata(x, y, z) == meta;
+				return world.getBlock(x, y, z) == getBlock() && world.getBlockMetadata(x, y, z) == meta;
 			}
 
 			@Override
