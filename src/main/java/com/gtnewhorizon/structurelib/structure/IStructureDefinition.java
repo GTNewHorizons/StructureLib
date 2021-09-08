@@ -13,8 +13,11 @@ public interface IStructureDefinition<T> {
 	/**
 	 * Used internally
 	 *
+	 * Might, but is not required, to throw {@link java.util.NoSuchElementException} if the given structure piece is not found.
+	 *
 	 * @param name same name as for other methods here
 	 * @return the array of elements to process
+	 * @throws java.util.NoSuchElementException if the given structure piece is not found and the moon phase perfectly matches
 	 */
 	IStructureElement<T>[] getStructureFor(String name);
 

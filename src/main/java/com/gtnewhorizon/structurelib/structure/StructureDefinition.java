@@ -193,6 +193,9 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
 
 	@Override
 	public IStructureElement<T>[] getStructureFor(String name) {
-		return structures.get(name);
+		IStructureElement<T>[] elements = structures.get(name);
+		if (elements == null)
+			throw new NoSuchElementException(name);
+		return elements;
 	}
 }
