@@ -1,10 +1,10 @@
 [
 {
-  "modid": "structurelib",
-  "name": "StructureLib",
+  "modid": "${modId}",
+  "name": "${modName}",
   "description": "Multiblocks with ease",
-  "version": "${version}",
-  "mcversion": "${mcversion}",
+  "version": "${modVersion}",
+  "mcversion": "${minecraftVersion}",
   "url": "",
   "updateUrl": "",
   "authorList": ["glee8e"],

@@ -26,7 +26,7 @@ import org.apache.logging.log4j.Logger;
 /**
  * This class does not contain a stable API. Refrain from using this class.
  */
-@Mod(modid = StructureLibAPI.MOD_ID, name = "StructureLib", version = "${version}", acceptableRemoteVersions = "*", guiFactory = "com.gtnewhorizon.structurelib.GuiFactory")
+@Mod(modid = StructureLibAPI.MOD_ID, name = "StructureLib", version = "GRADLETOKEN_VERSION", acceptableRemoteVersions = "*", guiFactory = "com.gtnewhorizon.structurelib.GuiFactory")
 public class StructureLib {
 	public static boolean DEBUG_MODE = Boolean.getBoolean("structurelib.debug");
 	public static Logger LOGGER = LogManager.getLogger("StructureLib");
