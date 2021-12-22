@@ -14,6 +14,10 @@ public interface IAlignment extends IAlignmentLimits,IAlignmentProvider {
 
     ExtendedFacing getExtendedFacing();
 
+    /**
+     * Set the facing without additional checks.
+     * Tools altering facing should use {@link #toolSetExtendedFacing(ExtendedFacing)} instead.
+     */
     void setExtendedFacing(ExtendedFacing alignment);
 
     IAlignmentLimits getAlignmentLimits();

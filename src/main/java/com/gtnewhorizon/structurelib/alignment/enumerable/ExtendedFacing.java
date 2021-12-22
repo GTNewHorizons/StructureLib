@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.IntegerAxisSwap;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
+import net.minecraft.util.StatCollector;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -274,6 +275,10 @@ public enum ExtendedFacing {
 
     public String getName2() {
         return this.name;
+    }
+
+    public String getLocalizedName() {
+        return StatCollector.translateToLocal("structurelib.facing." + getIndex());
     }
 
     public static ExtendedFacing byName(String name) {
