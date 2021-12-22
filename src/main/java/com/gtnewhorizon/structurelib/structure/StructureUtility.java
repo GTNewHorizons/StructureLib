@@ -27,13 +27,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.IntBinaryOperator;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 import static java.lang.Integer.MIN_VALUE;
 
@@ -815,6 +809,28 @@ public class StructureUtility {
 	}
 
 	//endregion
+
+	/**
+	 * Enable this structure element only if given predicate returns true.
+	 */
+	public static <T> IStructureElement<T> onlyIf(Predicate<? super T> predicate, IStructureElement<? super T> downstream) {
+		return new IStructureElement<T>() {
+			@Override
+			public boolean check(T t, World world, int x, int y, int z) {
+				return predicate.test(t) && downstream.check(t, world, x, y, z);
+			}
+
+			@Override
+			public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+				return predicate.test(t) && downstream.spawnHint(t, world, x, y, z, trigger);
+			}
+
+			@Override
+			public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+				return predicate.test(t) && downstream.placeBlock(t, world, x, y, z, trigger);
+			}
+		};
+	}
 
 	/**
 	 * Take care while chaining, as it will try to call every structure element until it returns true.
