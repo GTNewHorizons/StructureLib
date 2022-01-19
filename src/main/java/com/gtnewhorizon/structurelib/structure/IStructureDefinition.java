@@ -128,6 +128,9 @@ public interface IStructureDefinition<T> {
 					}
 				}
 			}
+			if (DEBUG_MODE) {
+				StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", " + basePositionZ + "] pass");
+			}
 		} else {
 			if (hintsOnly) {
 				for (IStructureElement<T> element : elements) {
