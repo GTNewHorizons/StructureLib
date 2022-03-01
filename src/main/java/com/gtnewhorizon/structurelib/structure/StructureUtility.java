@@ -233,7 +233,7 @@ public class StructureUtility {
 			}
 
 			private Pair<Block, Integer> getHint(ItemStack trigger) {
-				return hints.get(Math.min(Math.max(trigger.stackSize, 1), hints.size()));
+				return hints.get(Math.min(Math.max(trigger.stackSize, 1), hints.size()) - 1);
 			}
 
 			@Override
