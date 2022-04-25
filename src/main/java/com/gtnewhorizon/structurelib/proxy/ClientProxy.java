@@ -26,6 +26,9 @@ import java.util.List;
 import static com.gtnewhorizon.structurelib.StructureLib.RANDOM;
 
 public class ClientProxy extends CommonProxy {
+
+    private static final short[] NO_TINT = {255, 255, 255, 0};
+
     @Override
     public void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {
         EntityFXBlockHint hint = new EntityFXBlockHint(w, x, y, z, icons).withColorTint(RGBa);
@@ -46,10 +49,6 @@ public class ClientProxy extends CommonProxy {
             allHints.forcePut(hint, info);
         }
         currentHints.add(hint);
-
-        EntityFX particle = new WeightlessParticleFX(w, x + RANDOM.nextFloat() * 0.5F, y + RANDOM.nextFloat() * 0.5F, z + RANDOM.nextFloat() * 0.5F, 0, 0, 0);
-        particle.setRBGColorF(0, 0.6F * RANDOM.nextFloat(), 0.8f);
-        Minecraft.getMinecraft().effectRenderer.addEffect(particle);
     }
 
     @Override
@@ -59,12 +58,12 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void hintParticle(World w, int x, int y, int z, IIcon[] icons) {
-        hintParticleTinted(w, x, y, z, icons, new short[]{255, 255, 255, 0});
+        hintParticleTinted(w, x, y, z, icons, NO_TINT);
     }
 
     @Override
     public void hintParticle(World w, int x, int y, int z, Block block, int meta) {
-        hintParticleTinted(w, x, y, z, createIIconFromBlock(block, meta), new short[]{255, 255, 255, 0});
+        hintParticleTinted(w, x, y, z, createIIconFromBlock(block, meta), NO_TINT);
     }
 
     private static IIcon[] createIIconFromBlock(Block block, int meta) {

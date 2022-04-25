@@ -46,7 +46,7 @@ public class StructureLibAPI {
     }
 
     /**
-     * Start current batch of hinting. All hints particles generated during one batch will be considered to belong to one hologram.
+     * End current batch of hinting. All hints particles generated during one batch will be considered to belong to one hologram.
      * <p>
      * You don't need to call this unless your constructable tool didn't call {@link com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility#handle(ItemStack, EntityPlayer, World, int, int, int, int)}
      */
