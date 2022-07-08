@@ -89,7 +89,7 @@ public class StructureUtility {
             if (check(o, world, x, y, z)) return PlaceResult.ACCEPT;
             // user should place anything here.
             // maybe make this configurable, but for now we try to take some cobble from user
-            if (s.take(is -> is.getItem() == Item.getItemFromBlock(Blocks.cobblestone), false, 1) == 1) {
+            if (s.takeOne(ItemStackPredicate.from(Blocks.cobblestone), false)) {
                 world.setBlock(x, y, z, Blocks.cobblestone, 0, 2);
             }
             return PlaceResult.REJECT;
