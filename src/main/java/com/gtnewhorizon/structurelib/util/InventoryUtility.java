@@ -18,12 +18,11 @@
  */
 package com.gtnewhorizon.structurelib.util;
 
-import com.gtnewhorizon.structurelib.util.ItemStackArrayIterable;
-import com.gtnewhorizon.structurelib.util.SortedRegistry;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -51,14 +50,15 @@ public class InventoryUtility {
      * @param count     let's hope int size is enough...
      * @return amount taken. never negative nor bigger than count...
      */
-    public static int takeFromInventory(EntityPlayerMP player, Predicate<ItemStack> predicate, boolean simulate, int count) {
-        int found = 0;
+    public static Map<ItemStack, Integer> takeFromInventory(EntityPlayerMP player, Predicate<ItemStack> predicate, boolean simulate, int count) {
+        Map<ItemStack, Integer> store = new ItemStackMap<>();
+        int sum = 0;
         for (Function<EntityPlayerMP, Iterable<ItemStack>> provider : inventoryProviders) {
-            found += takeFromInventory(provider.apply(player), predicate, simulate, count - found);
-            if (found >= count)
-                return found;
+            sum += takeFromInventory(provider.apply(player), predicate, simulate, count - sum, true, store);
+            if (sum >= count)
+                return store;
         }
-        return found;
+        return store;
     }
 
     /**
@@ -71,11 +71,13 @@ public class InventoryUtility {
      * @param count     let's hope int size is enough...
      * @return amount taken. never negative nor bigger than count...
      */
-    public static int takeFromInventory(Iterable<ItemStack> inv, Predicate<ItemStack> predicate, boolean simulate, int count) {
-        return takeFromInventory(inv, predicate, simulate, count, true);
+    public static Map<ItemStack, Integer> takeFromInventory(Iterable<ItemStack> inv, Predicate<ItemStack> predicate, boolean simulate, int count) {
+        Map<ItemStack, Integer> store = new ItemStackMap<>();
+        takeFromInventory(inv, predicate, simulate, count, true, store);
+        return store;
     }
 
-    private static int takeFromInventory(Iterable<ItemStack> inv, Predicate<ItemStack> predicate, boolean simulate, int count, boolean recurse) {
+    private static int takeFromInventory(Iterable<ItemStack> inv, Predicate<ItemStack> predicate, boolean simulate, int count, boolean recurse, Map<ItemStack, Integer> store) {
         int found = 0;
         for (Iterator<ItemStack> iterator = inv.iterator(); iterator.hasNext(); ) {
             ItemStack stack = iterator.next();
@@ -87,10 +89,13 @@ public class InventoryUtility {
                 if (found > count) {
                     if (!simulate) {
                         // leave the surplus in its place
-                        stack.stackSize = found - count;
+                        int surplus = found - count;
+                        store.merge(stack, stack.stackSize - surplus, Integer::sum);
+                        stack.stackSize = surplus;
                     }
                     return count;
                 }
+                store.merge(stack, stack.stackSize, Integer::sum);
                 if (!simulate)
                     iterator.remove();
                 if (found == count)
@@ -100,7 +105,7 @@ public class InventoryUtility {
             for (Function<ItemStack, Iterable<ItemStack>> f : stackExtractors) {
                 Iterable<ItemStack> stacks = f.apply(stack);
                 if (stacks == null) continue;
-                found += takeFromInventory(inv, predicate, simulate, count - found, false);
+                found += takeFromInventory(inv, predicate, simulate, count - found, false, store);
                 if (found > count) return found;
             }
         }
