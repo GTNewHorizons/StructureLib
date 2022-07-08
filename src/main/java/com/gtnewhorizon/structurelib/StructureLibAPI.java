@@ -13,8 +13,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
-import java.util.UUID;
-
 import static com.gtnewhorizon.structurelib.StructureLib.proxy;
 
 /**
@@ -149,9 +147,9 @@ public class StructureLibAPI {
      * Determines if given block can be replaced without much effort. The exact predicate clauses is not stable and
      * will be changed, but the general idea will always stay the same.
      *
-     * Use this in your {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, UUID)}
+     * Use this in your {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP)}
      */
-    public static boolean isBlockTriviallyReplaceable(World w, int x, int y, int z, UUID actorProfile) {
+    public static boolean isBlockTriviallyReplaceable(World w, int x, int y, int z, EntityPlayerMP actor) {
         // TODO extend this function a bit
         return w.getBlock(x, y, z).isReplaceable(w, x, y, z);
     }

@@ -2,11 +2,11 @@ package com.gtnewhorizon.structurelib.structure;
 
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 import java.util.Arrays;
-import java.util.UUID;
 
 import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
 
@@ -55,7 +55,7 @@ public interface IStructureDefinition<T> {
     /**
      * @param elementBudget build up to this many elements
      * @param source        from where to drain resource
-     * @param actorProfile  source of action
+     * @param actor         source of action
      * @param check         whether {@link IStructureElement#check(Object, World, int, int, int)} should be called if anything
      *                      would be placed. use with caution.
      *                      if in doubt, call {@link #check(Object, String, World, ExtendedFacing, int, int, int, int, int, int, boolean)}
@@ -65,8 +65,8 @@ public interface IStructureDefinition<T> {
      */
     default int survivalBuild(T object, ItemStack trigger, String piece, World world, ExtendedFacing extendedFacing,
                               int basePositionX, int basePositionY, int basePositionZ,
-                              int basePositionA, int basePositionB, int basePositionC, int elementBudget, IItemSource source, UUID actorProfile, boolean check) {
-        SurvivalBuildStructureWalker<T> walker = new SurvivalBuildStructureWalker<>(object, trigger, source, actorProfile, elementBudget, check);
+                              int basePositionA, int basePositionB, int basePositionC, int elementBudget, IItemSource source, EntityPlayerMP actor, boolean check) {
+        SurvivalBuildStructureWalker<T> walker = new SurvivalBuildStructureWalker<>(object, trigger, source, actor, elementBudget, check);
         StructureUtility.iterateV2(getStructureFor(piece), world, extendedFacing, basePositionX, basePositionY, basePositionZ,
             basePositionA, basePositionB, basePositionC, walker, "iterateV2");
         return walker.getBuilt();

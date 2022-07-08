@@ -10,6 +10,7 @@ import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -55,9 +56,9 @@ public class StructureUtility {
         }
 
         @Override
-        public PlaceResult survivalPlaceBlock(Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+        public PlaceResult survivalPlaceBlock(Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
             if (check(o, world, x, y, z)) return PlaceResult.ACCEPT;
-            if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actorProfile))
+            if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor))
                 return PlaceResult.REJECT;
             world.setBlock(x, y, z, Blocks.air, 0, 2);
             return PlaceResult.ACCEPT;
@@ -84,7 +85,7 @@ public class StructureUtility {
         }
 
         @Override
-        public PlaceResult survivalPlaceBlock(Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+        public PlaceResult survivalPlaceBlock(Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
             if (check(o, world, x, y, z)) return PlaceResult.ACCEPT;
             // user should place anything here.
             // maybe make this configurable, but for now we try to take some cobble from user
@@ -114,7 +115,7 @@ public class StructureUtility {
         }
 
         @Override
-        public PlaceResult survivalPlaceBlock(Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+        public PlaceResult survivalPlaceBlock(Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
             return PlaceResult.REJECT;
         }
     };
@@ -126,10 +127,10 @@ public class StructureUtility {
     /**
      * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
      */
-    static PlaceResult survivalPlaceBlock(Block block, int meta, World world, int x, int y, int z, IItemSource s, UUID actorProfile) {
+    static PlaceResult survivalPlaceBlock(Block block, int meta, World world, int x, int y, int z, IItemSource s, EntityPlayerMP actor) {
         if (block == null)
             throw new NullPointerException();
-        if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actorProfile))
+        if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor))
             return PlaceResult.REJECT;
         Item itemBlock = Item.getItemFromBlock(block);
         int itemMeta = itemBlock instanceof ISpecialItemBlock ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta) : meta;
@@ -301,12 +302,12 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                 if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
                 Pair<Block, Integer> hint = getHint(trigger);
                 if (hint == null)
                     return PlaceResult.REJECT; // TODO or SKIP?
-                return StructureUtility.survivalPlaceBlock(hint.getKey(), hint.getValue(), world, x, z, z, s, actorProfile);
+                return StructureUtility.survivalPlaceBlock(hint.getKey(), hint.getValue(), world, x, z, z, s, actor);
             }
         };
     }
@@ -349,11 +350,11 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                 if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
                 if (getBlock() == null)
                     return PlaceResult.REJECT; // TODO or SKIP?
-                return StructureUtility.survivalPlaceBlock(getBlock(), meta, world, x, z, z, s, actorProfile);
+                return StructureUtility.survivalPlaceBlock(getBlock(), meta, world, x, z, z, s, actor);
             }
         };
     }
@@ -410,11 +411,11 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                 if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
                 if (init())
-                    return StructureUtility.survivalPlaceBlock(block, meta, world, x, z, z, s, actorProfile);
-                return fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+                    return StructureUtility.survivalPlaceBlock(block, meta, world, x, z, z, s, actor);
+                return fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -538,9 +539,9 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                     if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
                 }
             };
         } else {
@@ -564,9 +565,9 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                     if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
                 }
             };
         }
@@ -605,9 +606,9 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                     if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
                 }
             };
         } else {
@@ -631,9 +632,9 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                     if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
                 }
             };
         }
@@ -664,9 +665,9 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                     if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
                 }
             };
         } else {
@@ -690,9 +691,9 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                     if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
                 }
             };
         }
@@ -725,9 +726,9 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                     if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
                 }
             };
         } else {
@@ -750,9 +751,9 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                     if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
                 }
             };
         }
@@ -805,9 +806,9 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                     //TODO should we call block adder to check????
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
                 }
             };
         } else {
@@ -831,9 +832,9 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                     //TODO should we call block adder to check????
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
                 }
             };
         }
@@ -910,8 +911,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -938,8 +939,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -974,9 +975,9 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                 if (predicate.test(t))
-                    return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+                    return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
                 return placeResultWhenDisabled;
             }
         };
@@ -1027,8 +1028,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return elem.survivalPlaceBlock(t.getCurrentContext(), world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return elem.survivalPlaceBlock(t.getCurrentContext(), world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -1079,8 +1080,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return to.get().survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return to.get().survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -1106,8 +1107,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return to.apply(t).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return to.apply(t).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -1133,8 +1134,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return map.get(keyExtractor.apply(t)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return map.get(keyExtractor.apply(t)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -1160,8 +1161,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return map.getOrDefault(keyExtractor.apply(t), defaultElem).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return map.getOrDefault(keyExtractor.apply(t), defaultElem).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -1188,8 +1189,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return array[keyExtractor.apply(t)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return array[keyExtractor.apply(t)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -1220,8 +1221,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -1247,8 +1248,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return map.get(keyExtractor.apply(t, trigger)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return map.get(keyExtractor.apply(t, trigger)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -1274,8 +1275,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -1302,8 +1303,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -1334,8 +1335,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -1361,8 +1362,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return map.get(keyExtractor.apply(t, trigger)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return map.get(keyExtractor.apply(t, trigger)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -1388,8 +1389,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
@@ -1416,8 +1417,8 @@ public class StructureUtility {
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
-                return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
     }
