@@ -1,4 +1,5 @@
 package com.gtnewhorizon.structurelib.alignment;
+
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.alignment.enumerable.Flip;
 import com.gtnewhorizon.structurelib.alignment.enumerable.Rotation;
@@ -18,9 +19,9 @@ public interface IAlignmentLimits {
 
     default boolean isNewExtendedFacingValid(ExtendedFacing alignment) {
         return isNewExtendedFacingValid(
-                alignment.getDirection(),
-                alignment.getRotation(),
-                alignment.getFlip());
+            alignment.getDirection(),
+            alignment.getRotation(),
+            alignment.getFlip());
     }
 
     static IAlignmentLimits allowOnly(ExtendedFacing... allowedFacings) {
@@ -42,7 +43,8 @@ public interface IAlignmentLimits {
     class Builder {
         protected final boolean[] validStates = new boolean[STATES_COUNT];
 
-        private Builder() {}
+        private Builder() {
+        }
 
         public static Builder allowAll() {
             Builder b = new Builder();

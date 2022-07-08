@@ -28,51 +28,51 @@ import org.apache.logging.log4j.Logger;
  */
 @Mod(modid = StructureLibAPI.MOD_ID, name = "StructureLib", version = "GRADLETOKEN_VERSION", acceptableRemoteVersions = "*", guiFactory = "com.gtnewhorizon.structurelib.GuiFactory")
 public class StructureLib {
-	public static boolean DEBUG_MODE = Boolean.getBoolean("structurelib.debug");
-	public static Logger LOGGER = LogManager.getLogger("StructureLib");
+    public static boolean DEBUG_MODE = Boolean.getBoolean("structurelib.debug");
+    public static Logger LOGGER = LogManager.getLogger("StructureLib");
 
-	@SidedProxy(serverSide = "com.gtnewhorizon.structurelib.proxy.CommonProxy", clientSide = "com.gtnewhorizon.structurelib.proxy.ClientProxy")
-	static CommonProxy proxy;
-	static SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel(StructureLibAPI.MOD_ID);
+    @SidedProxy(serverSide = "com.gtnewhorizon.structurelib.proxy.CommonProxy", clientSide = "com.gtnewhorizon.structurelib.proxy.ClientProxy")
+    static CommonProxy proxy;
+    static SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel(StructureLibAPI.MOD_ID);
 
-	static {
-		net.registerMessage(AlignmentMessage.ServerHandler.class, AlignmentMessage.AlignmentQuery.class, 0, Side.SERVER);
-		net.registerMessage(AlignmentMessage.ClientHandler.class, AlignmentMessage.AlignmentData.class, 1, Side.CLIENT);
-	}
+    static {
+        net.registerMessage(AlignmentMessage.ServerHandler.class, AlignmentMessage.AlignmentQuery.class, 0, Side.SERVER);
+        net.registerMessage(AlignmentMessage.ClientHandler.class, AlignmentMessage.AlignmentData.class, 1, Side.CLIENT);
+    }
 
-	public static final XSTR RANDOM = new XSTR();
+    public static final XSTR RANDOM = new XSTR();
 
-	static Block blockHint;
-	static Item itemBlockHint;
-	static Item itemFrontRotationTool;
-	static Item itemConstructableTrigger;
-	public static final CreativeTabs creativeTab = new CreativeTabs("structurelib") {
-		@Override
-		@SideOnly(Side.CLIENT)
-		public Item getTabIconItem() {
-			return StructureLibAPI.getItemBlockHint();
-		}
-	};
+    static Block blockHint;
+    static Item itemBlockHint;
+    static Item itemFrontRotationTool;
+    static Item itemConstructableTrigger;
+    public static final CreativeTabs creativeTab = new CreativeTabs("structurelib") {
+        @Override
+        @SideOnly(Side.CLIENT)
+        public Item getTabIconItem() {
+            return StructureLibAPI.getItemBlockHint();
+        }
+    };
 
-	@Mod.EventHandler
-	public void preInit(FMLPreInitializationEvent e) {
-		ConfigurationHandler.INSTANCE.init(e.getSuggestedConfigurationFile());
-		GameRegistry.registerBlock(blockHint = new BlockHint(), ItemBlockHint.class, "blockhint");
-		itemBlockHint = ItemBlock.getItemFromBlock(StructureLibAPI.getBlockHint());
-		GameRegistry.registerItem(itemFrontRotationTool = new ItemFrontRotationTool(), itemFrontRotationTool.getUnlocalizedName());
-		GameRegistry.registerItem(itemConstructableTrigger = new ItemConstructableTrigger(), itemConstructableTrigger.getUnlocalizedName());
-		proxy.preInit(e);
-	}
+    @Mod.EventHandler
+    public void preInit(FMLPreInitializationEvent e) {
+        ConfigurationHandler.INSTANCE.init(e.getSuggestedConfigurationFile());
+        GameRegistry.registerBlock(blockHint = new BlockHint(), ItemBlockHint.class, "blockhint");
+        itemBlockHint = ItemBlock.getItemFromBlock(StructureLibAPI.getBlockHint());
+        GameRegistry.registerItem(itemFrontRotationTool = new ItemFrontRotationTool(), itemFrontRotationTool.getUnlocalizedName());
+        GameRegistry.registerItem(itemConstructableTrigger = new ItemConstructableTrigger(), itemConstructableTrigger.getUnlocalizedName());
+        proxy.preInit(e);
+    }
 
-	public static void addClientSideChatMessages(String... messages) {
-		proxy.addClientSideChatMessages(messages);
-	}
+    public static void addClientSideChatMessages(String... messages) {
+        proxy.addClientSideChatMessages(messages);
+    }
 
-	public static EntityPlayer getCurrentPlayer() {
-		return proxy.getCurrentPlayer();
-	}
+    public static EntityPlayer getCurrentPlayer() {
+        return proxy.getCurrentPlayer();
+    }
 
-	public static boolean isCurrentPlayer(EntityPlayer player) {
-		return proxy.isCurrentPlayer(player);
-	}
+    public static boolean isCurrentPlayer(EntityPlayer player) {
+        return proxy.isCurrentPlayer(player);
+    }
 }

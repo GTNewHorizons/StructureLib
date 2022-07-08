@@ -114,19 +114,20 @@ public enum ExtendedFacing {
     EAST_COUNTER_CLOCKWISE_VERTICAL("east counter clockwise vertical"),
     EAST_COUNTER_CLOCKWISE_BOTH("east counter clockwise both");
 
-    public static final ExtendedFacing DEFAULT=NORTH_NORMAL_NONE;
+    public static final ExtendedFacing DEFAULT = NORTH_NORMAL_NONE;
     public static final ExtendedFacing[] VALUES = values();
-    public static final Map<ForgeDirection, List<ExtendedFacing>> FOR_FACING=new HashMap<>();
+    public static final Map<ForgeDirection, List<ExtendedFacing>> FOR_FACING = new HashMap<>();
     public static final int STATES_COUNT = VALUES.length;
+
     static {
         stream(values()).forEach(extendedFacing ->
-                FOR_FACING.compute(extendedFacing.direction, ((forgeDirection, extendedFacings) -> {
-                    if (extendedFacings == null) {
-                        extendedFacings = new ArrayList<>();
-                    }
-                    extendedFacings.add(extendedFacing);
-                    return extendedFacings;
-                })));
+            FOR_FACING.compute(extendedFacing.direction, ((forgeDirection, extendedFacings) -> {
+                if (extendedFacings == null) {
+                    extendedFacings = new ArrayList<>();
+                }
+                extendedFacings.add(extendedFacing);
+                return extendedFacings;
+            })));
     }
 
     private static final Map<String, ExtendedFacing> NAME_LOOKUP = stream(VALUES).collect(toMap(ExtendedFacing::getName2, (extendedFacing) -> extendedFacing));
@@ -143,133 +144,146 @@ public enum ExtendedFacing {
 
     ExtendedFacing(String name) {
         this.name = name;
-        direction= Direction.VALUES[ordinal()/(ROTATIONS_COUNT*FLIPS_COUNT)].getForgeDirection();
-        rotation=Rotation.VALUES[ordinal()/FLIPS_COUNT-direction.ordinal()*ROTATIONS_COUNT];
-        flip=Flip.VALUES[ordinal()%FLIPS_COUNT];
-        ForgeDirection a,b,c;
-        switch (direction){
+        direction = Direction.VALUES[ordinal() / (ROTATIONS_COUNT * FLIPS_COUNT)].getForgeDirection();
+        rotation = Rotation.VALUES[ordinal() / FLIPS_COUNT - direction.ordinal() * ROTATIONS_COUNT];
+        flip = Flip.VALUES[ordinal() % FLIPS_COUNT];
+        ForgeDirection a, b, c;
+        switch (direction) {
             case DOWN:
-                a= ForgeDirection.WEST;
-                b= ForgeDirection.SOUTH;
-                c= ForgeDirection.UP;
+                a = ForgeDirection.WEST;
+                b = ForgeDirection.SOUTH;
+                c = ForgeDirection.UP;
                 break;
             case UP:
-                a= ForgeDirection.EAST;
-                b= ForgeDirection.SOUTH;
-                c= ForgeDirection.DOWN;
+                a = ForgeDirection.EAST;
+                b = ForgeDirection.SOUTH;
+                c = ForgeDirection.DOWN;
                 break;
             case NORTH:
-                a= ForgeDirection.WEST;
-                b= ForgeDirection.DOWN;
-                c= ForgeDirection.SOUTH;
+                a = ForgeDirection.WEST;
+                b = ForgeDirection.DOWN;
+                c = ForgeDirection.SOUTH;
                 break;
             case SOUTH:
-                a= ForgeDirection.EAST;
-                b= ForgeDirection.DOWN;
-                c= ForgeDirection.NORTH;
+                a = ForgeDirection.EAST;
+                b = ForgeDirection.DOWN;
+                c = ForgeDirection.NORTH;
                 break;
             case WEST:
-                a= ForgeDirection.SOUTH;
-                b= ForgeDirection.DOWN;
-                c= ForgeDirection.EAST;
+                a = ForgeDirection.SOUTH;
+                b = ForgeDirection.DOWN;
+                c = ForgeDirection.EAST;
                 break;
             case EAST:
-                a= ForgeDirection.NORTH;
-                b= ForgeDirection.DOWN;
-                c= ForgeDirection.WEST;
+                a = ForgeDirection.NORTH;
+                b = ForgeDirection.DOWN;
+                c = ForgeDirection.WEST;
                 break;
-            default:throw new RuntimeException("Is impossible...");
+            default:
+                throw new RuntimeException("Is impossible...");
         }
-        switch (flip){//This duplicates some axis swaps since flip boolean would do, but seems more convenient to use
+        switch (flip) {//This duplicates some axis swaps since flip boolean would do, but seems more convenient to use
             case HORIZONTAL:
-                a=a.getOpposite();
+                a = a.getOpposite();
                 break;
             case BOTH:
-                a=a.getOpposite();
+                a = a.getOpposite();
             case VERTICAL:
-                b=b.getOpposite();
+                b = b.getOpposite();
                 break;
-            case NONE: break;
-            default:throw new RuntimeException("Even more impossible...");
+            case NONE:
+                break;
+            default:
+                throw new RuntimeException("Even more impossible...");
         }
         switch (rotation) {
             case CLOCKWISE: {
-                ForgeDirection _a=a;
-                a =b;
-                b =_a.getOpposite();
+                ForgeDirection _a = a;
+                a = b;
+                b = _a.getOpposite();
                 break;
             }
             case UPSIDE_DOWN:
-                a=a.getOpposite();
-                b=b.getOpposite();
+                a = a.getOpposite();
+                b = b.getOpposite();
                 break;
             case COUNTER_CLOCKWISE: {
-                ForgeDirection _a=a;
-                a =b.getOpposite();
-                b =_a;
+                ForgeDirection _a = a;
+                a = b.getOpposite();
+                b = _a;
                 break;
             }
-            case NORMAL: break;
+            case NORMAL:
+                break;
             default:
                 throw new RuntimeException("More impossible...");
         }
-        this.a=a;
-        this.b=b;
-        this.c=c;
-        integerAxisSwap =new IntegerAxisSwap(a,b,c);
+        this.a = a;
+        this.b = b;
+        this.c = c;
+        integerAxisSwap = new IntegerAxisSwap(a, b, c);
     }
 
-    public static ExtendedFacing of(ForgeDirection direction, Rotation rotation, Flip flip){
-        if(direction==ForgeDirection.UNKNOWN){
+    public static ExtendedFacing of(ForgeDirection direction, Rotation rotation, Flip flip) {
+        if (direction == ForgeDirection.UNKNOWN) {
             return VALUES[IAlignment.getAlignmentIndex(ForgeDirection.NORTH, rotation, flip)];
         }
         return VALUES[IAlignment.getAlignmentIndex(direction, rotation, flip)];
     }
 
-    public static ExtendedFacing of(ForgeDirection direction){
-        if(direction==ForgeDirection.UNKNOWN){
+    public static ExtendedFacing of(ForgeDirection direction) {
+        if (direction == ForgeDirection.UNKNOWN) {
             return DEFAULT;
         }
         return VALUES[IAlignment.getAlignmentIndex(direction, Rotation.NORMAL, Flip.NONE)];
     }
 
-    public static ImmutableSet<ExtendedFacing> getAllWith(ForgeDirection direction) { return LOOKUP_BY_DIRECTION.get(direction);}
-    public static ImmutableSet<ExtendedFacing> getAllWith(Rotation rotation) { return LOOKUP_BY_ROTATION.get(rotation);}
-    public static ImmutableSet<ExtendedFacing> getAllWith(Flip flip) { return LOOKUP_BY_FLIP.get(flip);}
-
-    public ExtendedFacing with(ForgeDirection direction){
-        return of(direction,rotation,flip);
+    public static ImmutableSet<ExtendedFacing> getAllWith(ForgeDirection direction) {
+        return LOOKUP_BY_DIRECTION.get(direction);
     }
 
-    public ExtendedFacing with(Rotation rotation){
-        return of(direction,rotation,flip);
+    public static ImmutableSet<ExtendedFacing> getAllWith(Rotation rotation) {
+        return LOOKUP_BY_ROTATION.get(rotation);
     }
 
-    public ExtendedFacing with(Flip flip){
-        return of(direction,rotation,flip);
+    public static ImmutableSet<ExtendedFacing> getAllWith(Flip flip) {
+        return LOOKUP_BY_FLIP.get(flip);
+    }
+
+    public ExtendedFacing with(ForgeDirection direction) {
+        return of(direction, rotation, flip);
+    }
+
+    public ExtendedFacing with(Rotation rotation) {
+        return of(direction, rotation, flip);
+    }
+
+    public ExtendedFacing with(Flip flip) {
+        return of(direction, rotation, flip);
     }
 
     public ExtendedFacing getOppositeDirection() {
-        return of(direction.getOpposite(),rotation,flip);
+        return of(direction.getOpposite(), rotation, flip);
     }
 
     public ExtendedFacing getOppositeRotation() {
-        return of(direction,rotation.getOpposite(),flip);
+        return of(direction, rotation.getOpposite(), flip);
     }
 
     public ExtendedFacing getOppositeFlip() {
-        return of(direction,rotation,flip.getOpposite());
+        return of(direction, rotation, flip.getOpposite());
     }
 
     /**
      * Gets the same effective facing achieved by different rot/flip combo
+     *
      * @return same effective facing, but different enum value
      */
-    public ExtendedFacing getDuplicate(){
-        return of(direction,rotation.getOpposite(),flip.getOpposite());
+    public ExtendedFacing getDuplicate() {
+        return of(direction, rotation.getOpposite(), flip.getOpposite());
     }
 
-    public int getIndex(){
+    public int getIndex() {
         return ordinal();
     }
 
@@ -307,39 +321,47 @@ public enum ExtendedFacing {
 
     /**
      * Translates relative to front facing offset  to  world offset
+     *
      * @param abcOffset A,B,C offset (facing relative  L-->R,U-->D,F-->B)
-     * @return X,Y,Z offset in world
+     * @return X, Y, Z offset in world
      */
     public Vec3 getWorldOffset(Vec3 abcOffset) {
         return integerAxisSwap.inverseTranslate(abcOffset);
     }
+
     public Vec3Impl getWorldOffset(Vec3Impl abcOffset) {
         return integerAxisSwap.inverseTranslate(abcOffset);
     }
-    public void getWorldOffset(int[] point,int[] out){
-        integerAxisSwap.inverseTranslate(point,out);
+
+    public void getWorldOffset(int[] point, int[] out) {
+        integerAxisSwap.inverseTranslate(point, out);
     }
-    public void getWorldOffset(double[] point,double[] out){
-        integerAxisSwap.inverseTranslate(point,out);
+
+    public void getWorldOffset(double[] point, double[] out) {
+        integerAxisSwap.inverseTranslate(point, out);
     }
 
 
     /**
      * Translates world offset  to  relative front facing offset
+     *
      * @param xyzOffset X,Y,Z offset in world
-     * @return A,B,C offset (facing relative  L-->R,U-->D,F-->B)
+     * @return A, B, C offset (facing relative  L-->R,U-->D,F-->B)
      */
-    public Vec3 getOffsetABC(Vec3 xyzOffset){
+    public Vec3 getOffsetABC(Vec3 xyzOffset) {
         return integerAxisSwap.translate(xyzOffset);
     }
-    public Vec3Impl getOffsetABC(Vec3Impl xyzOffset){
+
+    public Vec3Impl getOffsetABC(Vec3Impl xyzOffset) {
         return integerAxisSwap.translate(xyzOffset);
     }
-    public void getOffsetABC(int[] point,int[] out){
-        integerAxisSwap.translate(point,out);
+
+    public void getOffsetABC(int[] point, int[] out) {
+        integerAxisSwap.translate(point, out);
     }
-    public void getOffsetABC(double[] point,double[] out){
-        integerAxisSwap.translate(point,out);
+
+    public void getOffsetABC(double[] point, double[] out) {
+        integerAxisSwap.translate(point, out);
     }
 
     public IntegerAxisSwap getIntegerAxisSwap() {

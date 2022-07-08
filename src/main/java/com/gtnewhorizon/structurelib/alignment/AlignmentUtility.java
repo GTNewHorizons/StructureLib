@@ -7,10 +7,10 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 
 public class AlignmentUtility {
-    private AlignmentUtility(){
+    private AlignmentUtility() {
     }
 
-    public static boolean handle(EntityPlayer aPlayer, World aWorld, int aX, int aY, int aZ){
+    public static boolean handle(EntityPlayer aPlayer, World aWorld, int aX, int aY, int aZ) {
         TileEntity tTileEntity = aWorld.getTileEntity(aX, aY, aZ);
         if (tTileEntity == null || aPlayer instanceof FakePlayer) {
             return aPlayer instanceof EntityPlayerMP;

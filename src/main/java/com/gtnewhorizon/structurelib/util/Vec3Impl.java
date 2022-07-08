@@ -23,11 +23,15 @@ public class Vec3Impl implements Comparable<Vec3Impl> {
      * Gets the coordinate.
      */
     public int get(int index) {
-        switch (index){
-            case 0: return val0;
-            case 1: return val1;
-            case 2: return val2;
-            default: return 0;
+        switch (index) {
+            case 0:
+                return val0;
+            case 1:
+                return val1;
+            case 2:
+                return val2;
+            default:
+                return 0;
         }
     }
 
@@ -64,17 +68,17 @@ public class Vec3Impl implements Comparable<Vec3Impl> {
         return new Vec3Impl(val0 - pos.val0, val1 - pos.val1, val2 - pos.val2);
     }
 
-    public Vec3Impl add(int pos0,int pos1,int pos2) {
+    public Vec3Impl add(int pos0, int pos1, int pos2) {
         return new Vec3Impl(val0 + pos0, val1 + pos1, val2 + pos2);
     }
 
-    public Vec3Impl sub(int pos0,int pos1,int pos2) {
+    public Vec3Impl sub(int pos0, int pos1, int pos2) {
         return new Vec3Impl(val0 - pos0, val1 - pos1, val2 - pos2);
     }
 
     public Vec3Impl crossProduct(Vec3Impl vec) {
         return new Vec3Impl(val1 * vec.val2 - val2 * vec.val1, val2 * vec.val0 - val0 * vec.val2,
-                val0 * vec.val1 - val1 * vec.val0);
+            val0 * vec.val1 - val1 * vec.val0);
     }
 
     public boolean withinDistance(Vec3Impl to, double distance) {
@@ -95,17 +99,17 @@ public class Vec3Impl implements Comparable<Vec3Impl> {
 
     public double distanceSq(double x, double y, double z, boolean useCenter) {
         double d0 = useCenter ? 0.5D : 0.0D;
-        double d1 = (double)val0 + d0 - x;
-        double d2 = (double)val1 + d0 - y;
-        double d3 = (double)val2 + d0 - z;
+        double d1 = (double) val0 + d0 - x;
+        double d2 = (double) val1 + d0 - y;
+        double d3 = (double) val2 + d0 - z;
         return d1 * d1 + d2 * d2 + d3 * d3;
     }
 
     public int manhattanDistance(Vec3Impl to) {
-        float f = (float)Math.abs(to.val0 - val0);
-        float f1 = (float)Math.abs(to.val1 - val1);
-        float f2 = (float)Math.abs(to.val2 - val2);
-        return (int)(f + f1 + f2);
+        float f = (float) Math.abs(to.val0 - val0);
+        float f1 = (float) Math.abs(to.val1 - val1);
+        float f2 = (float) Math.abs(to.val2 - val2);
+        return (int) (f + f1 + f2);
     }
 
     @Override
@@ -114,14 +118,14 @@ public class Vec3Impl implements Comparable<Vec3Impl> {
     }
 
     public Vec3Impl abs() {
-        return new Vec3Impl(Math.abs(val0),Math.abs(val1),Math.abs(val2));
+        return new Vec3Impl(Math.abs(val0), Math.abs(val1), Math.abs(val2));
     }
 
     public boolean equals(Object o) {
         if (this == o) {
             return true;
         } else if (o instanceof Vec3Impl) {
-            Vec3Impl vec3i = (Vec3Impl)o;
+            Vec3Impl vec3i = (Vec3Impl) o;
             return val0 == vec3i.val0 && val1 == vec3i.val1 && val2 == vec3i.val2;
         }
         return false;

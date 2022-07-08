@@ -13,11 +13,11 @@ public enum Direction {
 
     private final ForgeDirection forgeDirection;
     private final Vec3Impl axisVector;
-    public static final Direction[] VALUES=values();
+    public static final Direction[] VALUES = values();
 
     Direction(ForgeDirection forgeDirection) {
         this.forgeDirection = forgeDirection;
-        axisVector=new Vec3Impl(forgeDirection.offsetX,forgeDirection.offsetY,forgeDirection.offsetZ);
+        axisVector = new Vec3Impl(forgeDirection.offsetX, forgeDirection.offsetY, forgeDirection.offsetZ);
     }
 
     public ForgeDirection getForgeDirection() {
@@ -28,7 +28,7 @@ public enum Direction {
         return axisVector;
     }
 
-    public static Vec3Impl getAxisVector(ForgeDirection forgeDirection){
+    public static Vec3Impl getAxisVector(ForgeDirection forgeDirection) {
         return VALUES[forgeDirection.ordinal()].axisVector;
     }
 }

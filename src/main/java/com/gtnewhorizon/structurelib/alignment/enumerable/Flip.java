@@ -26,7 +26,7 @@ public enum Flip {
         this.name = nameIn;
     }
 
-    public int getIndex(){
+    public int getIndex() {
         return ordinal();
     }
 
@@ -58,19 +58,19 @@ public enum Flip {
         return this.name;
     }
 
-    public boolean isNotFlipped(){
-        return this==NONE;
+    public boolean isNotFlipped() {
+        return this == NONE;
     }
 
-    public boolean isBothFlipped(){
-        return this==BOTH;
+    public boolean isBothFlipped() {
+        return this == BOTH;
     }
 
     public boolean isHorizontallyFlipped() {
-        return this==HORIZONTAL || isBothFlipped();
+        return this == HORIZONTAL || isBothFlipped();
     }
 
     public boolean isVerticallyFliped() {
-        return this==VERTICAL || isBothFlipped();
+        return this == VERTICAL || isBothFlipped();
     }
 }

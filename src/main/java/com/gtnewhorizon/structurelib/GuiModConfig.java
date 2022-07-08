@@ -18,8 +18,8 @@ public class GuiModConfig extends GuiConfig {
     private static List<IConfigElement> getConfigElements() {
         final Configuration config = ConfigurationHandler.INSTANCE.getConfig();
         return config.getCategoryNames().stream()
-                .filter(name -> name.indexOf('.') == -1)
-                .map(name -> new ConfigElement(config.getCategory(name)))
-                .collect(Collectors.toList());
+            .filter(name -> name.indexOf('.') == -1)
+            .map(name -> new ConfigElement(config.getCategory(name)))
+            .collect(Collectors.toList());
     }
 }

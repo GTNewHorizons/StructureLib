@@ -43,10 +43,10 @@ public class ConstructableUtility {
                     IMultiblockInfoContainer<TileEntity> iMultiblockInfoContainer = IMultiblockInfoContainer.get(tTileEntity.getClass());
                     if (tTileEntity instanceof IAlignment) {
                         iMultiblockInfoContainer.construct(aStack, false, tTileEntity,
-                                ((IAlignment) tTileEntity).getExtendedFacing());
+                            ((IAlignment) tTileEntity).getExtendedFacing());
                     } else {
                         iMultiblockInfoContainer.construct(aStack, false, tTileEntity,
-                                ExtendedFacing.of(ForgeDirection.getOrientation(aSide)));
+                            ExtendedFacing.of(ForgeDirection.getOrientation(aSide)));
                     }
                 }
             }
@@ -68,10 +68,10 @@ public class ConstructableUtility {
                 IMultiblockInfoContainer<TileEntity> iMultiblockInfoContainer = IMultiblockInfoContainer.get(tTileEntity.getClass());
                 if (tTileEntity instanceof IAlignment) {
                     iMultiblockInfoContainer.construct(aStack, true, tTileEntity,
-                            ((IAlignment) tTileEntity).getExtendedFacing());
+                        ((IAlignment) tTileEntity).getExtendedFacing());
                 } else {
                     iMultiblockInfoContainer.construct(aStack, true, tTileEntity,
-                            ExtendedFacing.of(ForgeDirection.getOrientation(aSide)));
+                        ExtendedFacing.of(ForgeDirection.getOrientation(aSide)));
                 }
                 StructureLib.addClientSideChatMessages(IMultiblockInfoContainer.get(tTileEntity.getClass()).getDescription(aStack));
                 return false;

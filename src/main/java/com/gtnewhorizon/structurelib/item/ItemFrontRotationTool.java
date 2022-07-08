@@ -16,23 +16,23 @@ import static com.gtnewhorizon.structurelib.StructureLibAPI.MOD_ID;
 import static net.minecraft.util.StatCollector.translateToLocal;
 
 public class ItemFrontRotationTool extends Item {
-	public ItemFrontRotationTool() {
-		setMaxStackSize(1);
-		setUnlocalizedName("structurelib.frontRotationTool");
-		setTextureName(MOD_ID + ":itemFrontRotationTool");
-		setCreativeTab(StructureLib.creativeTab);
-	}
+    public ItemFrontRotationTool() {
+        setMaxStackSize(1);
+        setUnlocalizedName("structurelib.frontRotationTool");
+        setTextureName(MOD_ID + ":itemFrontRotationTool");
+        setCreativeTab(StructureLib.creativeTab);
+    }
 
-	@Override
-	public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ) {
-		return AlignmentUtility.handle(player, world, x, y, z);
-	}
+    @Override
+    public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ) {
+        return AlignmentUtility.handle(player, world, x, y, z);
+    }
 
-	@Override
-	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack p_77624_1_, EntityPlayer p_77624_2_, List aList, boolean p_77624_4_) {
-		aList.add(translateToLocal("item.structurelib.frontRotationTool.desc.0"));//Triggers Front Rotation Interface
-		aList.add(EnumChatFormatting.BLUE + translateToLocal("item.structurelib.frontRotationTool.desc.1"));//Rotates only the front panel,
-		aList.add(EnumChatFormatting.BLUE + translateToLocal("item.structurelib.frontRotationTool.desc.2"));//which allows structure rotation.
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack p_77624_1_, EntityPlayer p_77624_2_, List aList, boolean p_77624_4_) {
+        aList.add(translateToLocal("item.structurelib.frontRotationTool.desc.0"));//Triggers Front Rotation Interface
+        aList.add(EnumChatFormatting.BLUE + translateToLocal("item.structurelib.frontRotationTool.desc.1"));//Rotates only the front panel,
+        aList.add(EnumChatFormatting.BLUE + translateToLocal("item.structurelib.frontRotationTool.desc.2"));//which allows structure rotation.
+    }
 }

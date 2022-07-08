@@ -15,14 +15,13 @@ import org.lwjgl.opengl.GL11;
 @SideOnly(Side.CLIENT)
 public class EntityFXBlockHint extends EntityFX {
     private IIcon[] icons;
-    private short[] mRGBa = {255,255,255,0};
+    private short[] mRGBa = {255, 255, 255, 0};
 
-    public EntityFXBlockHint(World world){
-        this(world,0,0,0, Blocks.stone,0);
+    public EntityFXBlockHint(World world) {
+        this(world, 0, 0, 0, Blocks.stone, 0);
     }
 
     /**
-     *
      * @param world
      * @param x
      * @param y
@@ -37,11 +36,11 @@ public class EntityFXBlockHint extends EntityFX {
         prevPosZ = posZ;
         noClip = true;
         particleMaxAge = 2000 + StructureLib.RANDOM.nextInt(200);
-        this.icons=icons;
+        this.icons = icons;
     }
 
     public EntityFXBlockHint(World world, int x, int y, int z, Block block, int meta) {
-        super(world, x+.25, y+.5, z+.25);
+        super(world, x + .25, y + .5, z + .25);
         particleGravity = 0;
         prevPosX = posX;
         prevPosY = posY;
@@ -54,8 +53,8 @@ public class EntityFXBlockHint extends EntityFX {
         }
     }
 
-    public EntityFXBlockHint withColorTint(short[] coloure){
-        this.mRGBa =coloure;
+    public EntityFXBlockHint withColorTint(short[] coloure) {
+        this.mRGBa = coloure;
         return this;
     }
 
@@ -71,15 +70,15 @@ public class EntityFXBlockHint extends EntityFX {
 
         //var8, var9 - X U
         //var 10, var 11 - Y V
-        for(int i=0;i<6;i++){
-            if(icons[i]==null) {
+        for (int i = 0; i < 6; i++) {
+            if (icons[i] == null) {
                 continue;
             }
-            double u=icons[i].getMinU();
-            double U=icons[i].getMaxU();
-            double v=icons[i].getMinV();
-            double V=icons[i].getMaxV();
-            switch (i){//{DOWN, UP, NORTH, SOUTH, WEST, EAST}
+            double u = icons[i].getMinU();
+            double U = icons[i].getMaxU();
+            double v = icons[i].getMinV();
+            double V = icons[i].getMaxV();
+            switch (i) {//{DOWN, UP, NORTH, SOUTH, WEST, EAST}
                 case 0:
                     tes.addVertexWithUV(X, Y, Z + size, u, V);
                     tes.addVertexWithUV(X, Y, Z, u, v);
@@ -129,7 +128,7 @@ public class EntityFXBlockHint extends EntityFX {
 
     @Override
     public boolean shouldRenderInPass(int pass) {
-        return pass==2;
+        return pass == 2;
     }
 
     @Override

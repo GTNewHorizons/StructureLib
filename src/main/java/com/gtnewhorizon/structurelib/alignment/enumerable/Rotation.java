@@ -26,7 +26,7 @@ public enum Rotation {
         this.name = nameIn;
     }
 
-    public int getIndex(){
+    public int getIndex() {
         return ordinal();
     }
 
@@ -58,19 +58,19 @@ public enum Rotation {
         return this.name;
     }
 
-    public boolean isNotRotated(){
-        return this==NORMAL;
+    public boolean isNotRotated() {
+        return this == NORMAL;
     }
 
-    public boolean isClockwise(){
-        return this==CLOCKWISE;
+    public boolean isClockwise() {
+        return this == CLOCKWISE;
     }
 
-    public boolean isCounterClockwise(){
-        return this==COUNTER_CLOCKWISE;
+    public boolean isCounterClockwise() {
+        return this == COUNTER_CLOCKWISE;
     }
 
-    public boolean isUpsideDown(){
-        return this==UPSIDE_DOWN;
+    public boolean isUpsideDown() {
+        return this == UPSIDE_DOWN;
     }
 }
