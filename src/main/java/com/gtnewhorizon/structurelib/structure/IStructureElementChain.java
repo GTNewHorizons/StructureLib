@@ -43,11 +43,22 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
 
     @Override
     default PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+        boolean haveSkip = false;
         for (IStructureElement<T> fallback : fallbacks()) {
             PlaceResult result = fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            switch (result) {
+                case REJECT:
+                    break;
+                case SKIP:
+                    haveSkip = true;
+                    break;
+                default:
+                    return result;
+            }
             if (result != PlaceResult.SKIP)
                 return result;
         }
-        return PlaceResult.SKIP;
+        // TODO need reconsider to ensure this is the right course of action
+        return haveSkip ? PlaceResult.SKIP : PlaceResult.REJECT;
     }
 }
