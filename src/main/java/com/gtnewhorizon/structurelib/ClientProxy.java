@@ -1,8 +1,7 @@
-package com.gtnewhorizon.structurelib.proxy;
+package com.gtnewhorizon.structurelib;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.gtnewhorizon.structurelib.ConfigurationHandler;
 import com.gtnewhorizon.structurelib.entity.fx.EntityFXBlockHint;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -10,7 +9,6 @@ import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
@@ -64,7 +62,9 @@ public class ClientProxy extends CommonProxy {
     }
 
     @Override
-    public boolean updateHintParticleTint(World w, int x, int y, int z, short[] rgBa) {
+    public boolean updateHintParticleTint(EntityPlayer player, World w, int x, int y, int z, short[] rgBa) {
+        if (player != getCurrentPlayer())
+            return false; // how?
         HintParticleInfo info = new HintParticleInfo(x, y, z, null);
         EntityFXBlockHint existing = allHints.inverse().get(info);
         if (existing != null) {

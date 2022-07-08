@@ -73,10 +73,10 @@ public class StructureLibAPI {
 
     /**
      * Update the tint of given hint particle. Do nothing if particle not found.
-     * @return false if nothing updated. true if updated or on server side.
+     * @return false if nothing updated. true if updated.
      */
-    public static boolean updateHintParticleTint(World w, int x, int y, int z, short[] RGBa) {
-        return proxy.updateHintParticleTint(w, x, y, z, RGBa);
+    public static boolean updateHintParticleTint(EntityPlayer player, World w, int x, int y, int z, short[] RGBa) {
+        return proxy.updateHintParticleTint(player, w, x, y, z, RGBa);
     }
 
     /**

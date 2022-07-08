@@ -5,7 +5,7 @@ import com.gtnewhorizon.structurelib.block.BlockHint;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
-import com.gtnewhorizon.structurelib.proxy.CommonProxy;
+import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
 import com.gtnewhorizon.structurelib.util.XSTR;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
@@ -33,13 +33,14 @@ public class StructureLib {
     public static boolean PANIC_MODE = Boolean.getBoolean("structurelib.panic");
     public static Logger LOGGER = LogManager.getLogger("StructureLib");
 
-    @SidedProxy(serverSide = "com.gtnewhorizon.structurelib.proxy.CommonProxy", clientSide = "com.gtnewhorizon.structurelib.proxy.ClientProxy")
+    @SidedProxy(serverSide = "com.gtnewhorizon.structurelib.CommonProxy", clientSide = "com.gtnewhorizon.structurelib.ClientProxy")
     static CommonProxy proxy;
     static SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel(StructureLibAPI.MOD_ID);
 
     static {
         net.registerMessage(AlignmentMessage.ServerHandler.class, AlignmentMessage.AlignmentQuery.class, 0, Side.SERVER);
         net.registerMessage(AlignmentMessage.ClientHandler.class, AlignmentMessage.AlignmentData.class, 1, Side.CLIENT);
+        net.registerMessage(UpdateHintParticleMessage.Handler.class, UpdateHintParticleMessage.class, 2, Side.CLIENT);
     }
 
     public static final XSTR RANDOM = new XSTR();

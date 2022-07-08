@@ -15,13 +15,12 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.UUID;
-
 public class ConstructableUtility {
 
     // TODO make these configurable and expose this to external world
     private static final int COOLDOWN = 5;
     private static final int BUDGET = 25;
+    public static boolean redBrokenOne = true; // TODO this is horrible
 
     private ConstructableUtility() {
 
@@ -67,7 +66,10 @@ public class ConstructableUtility {
             if (aPlayer.capabilities.isCreativeMode) {
                 constructable.construct(aStack, false);
             } else if (constructable instanceof ISurvivalConstructable) {
-                ((ISurvivalConstructable) constructable).survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer((EntityPlayerMP) aPlayer), aPlayer.getGameProfile().getId());
+                EntityPlayerMP playerMP = (EntityPlayerMP) aPlayer;
+                if (((ISurvivalConstructable) constructable).survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer(playerMP), playerMP)> 0)
+                    // TODO somehow notify extensions that their inventory might have been modified and need to be synced to client or saved
+                    playerMP.inventory.markDirty();
                 setLastUseTickToStackTag(aStack);
             }
             return true;

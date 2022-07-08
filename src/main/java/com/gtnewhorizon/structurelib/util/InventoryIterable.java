@@ -19,7 +19,7 @@ public class InventoryIterable implements Iterable<ItemStack> {
 
             @Override
             public boolean hasNext() {
-                return ptr >= inv.getSizeInventory();
+                return ptr < inv.getSizeInventory();
             }
 
             @Override

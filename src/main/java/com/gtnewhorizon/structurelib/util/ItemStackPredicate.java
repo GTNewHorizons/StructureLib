@@ -21,21 +21,26 @@ public final class ItemStackPredicate implements Predicate<ItemStack> {
     }
 
     private final Item item;
-    private int meta;
+    private int meta = -1;
 
     private NBTTagCompound tag;
-    private NBTMode mode;
+    private NBTMode mode = NBTMode.IGNORE;
 
     private ItemStackPredicate(Item item) {
         this.item = item;
     }
 
-    public ItemStackPredicate withMeta(int meta) {
+    public ItemStackPredicate ignoreMeta() {
+        this.meta = -1;
+        return this;
+    }
+
+    public ItemStackPredicate setMeta(int meta) {
         this.meta = meta;
         return this;
     }
 
-    public ItemStackPredicate withTag(NBTMode mode, NBTTagCompound tag) {
+    public ItemStackPredicate setTag(NBTMode mode, NBTTagCompound tag) {
         this.mode = mode;
         this.tag = tag;
         return this;

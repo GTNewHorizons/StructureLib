@@ -1,8 +1,10 @@
-package com.gtnewhorizon.structurelib.proxy;
+package com.gtnewhorizon.structurelib;
 
+import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
@@ -20,8 +22,13 @@ public class CommonProxy {
     public void hintParticle(World w, int x, int y, int z, Block block, int meta) {
     }
 
-    public boolean updateHintParticleTint(World w, int x, int y, int z, short[] rgBa) {
-        return true;
+    public boolean updateHintParticleTint(EntityPlayer player, World w, int x, int y, int z, short[] rgBa) {
+        if (player instanceof EntityPlayerMP) {// just in case
+            StructureLib.net.sendTo(new UpdateHintParticleMessage(x, (short) y, z, (byte) rgBa[0], (byte) rgBa[1], (byte) rgBa[2], (byte) rgBa[3]), (EntityPlayerMP) player);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public EntityPlayer getCurrentPlayer() {

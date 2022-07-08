@@ -12,11 +12,15 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.ForgeDirection;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -127,14 +131,14 @@ public class StructureUtility {
     /**
      * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
      */
-    static PlaceResult survivalPlaceBlock(Block block, int meta, World world, int x, int y, int z, IItemSource s, EntityPlayerMP actor) {
+    public static PlaceResult survivalPlaceBlock(Block block, int meta, World world, int x, int y, int z, IItemSource s, EntityPlayerMP actor) {
         if (block == null)
             throw new NullPointerException();
         if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor))
             return PlaceResult.REJECT;
         Item itemBlock = Item.getItemFromBlock(block);
         int itemMeta = itemBlock instanceof ISpecialItemBlock ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta) : meta;
-        if (s.takeOne(ItemStackPredicate.from(itemBlock).withMeta(itemMeta), false) == null)
+        if (s.takeOne(ItemStackPredicate.from(itemBlock).setMeta(itemMeta), false) == null)
             return PlaceResult.REJECT;
         if (block instanceof ICustomBlockSetting) {
             ICustomBlockSetting block2 = (ICustomBlockSetting) block;
@@ -142,6 +146,30 @@ public class StructureUtility {
         } else {
             world.setBlock(x, y, z, block, meta, 2);
         }
+        return PlaceResult.ACCEPT;
+    }
+
+    /**
+     * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
+     * @param stack a valid stack with stack size of exactly 1. Must be of an ItemBlock!
+     */
+    public static PlaceResult survivalPlaceBlock(ItemStack stack, ItemStackPredicate.NBTMode nbtMode, NBTTagCompound tag, boolean assumeStackPresent, World world, int x, int y, int z, IItemSource s, EntityPlayerMP actor) {
+        if (stack == null)
+            throw new NullPointerException();
+        if (stack.stackSize != 1)
+            throw new IllegalArgumentException();
+        if (!(stack.getItem() instanceof ItemBlock))
+            throw new IllegalArgumentException();
+        if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor))
+            return PlaceResult.REJECT;
+        ItemStackPredicate predicate = ItemStackPredicate.from(stack.getItem()).setMeta(Items.feather.getDamage(stack)).setTag(nbtMode, tag);
+        if (!assumeStackPresent && (stack = s.takeOne(predicate, true)) == null)
+            return PlaceResult.REJECT;
+        if (!stack.tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f,0.5f,0.5f))
+            return PlaceResult.REJECT;
+        if (s.takeOne(predicate, false) == null)
+            // this is bad! probably an exploit somehow. Let's nullify the block we just placed instead
+            world.setBlockToAir(x, y, z);
         return PlaceResult.ACCEPT;
     }
 
@@ -303,11 +331,11 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 Pair<Block, Integer> hint = getHint(trigger);
                 if (hint == null)
                     return PlaceResult.REJECT; // TODO or SKIP?
-                return StructureUtility.survivalPlaceBlock(hint.getKey(), hint.getValue(), world, x, z, z, s, actor);
+                return StructureUtility.survivalPlaceBlock(hint.getKey(), hint.getValue(), world, x, y, z, s, actor);
             }
         };
     }
@@ -351,10 +379,10 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 if (getBlock() == null)
                     return PlaceResult.REJECT; // TODO or SKIP?
-                return StructureUtility.survivalPlaceBlock(getBlock(), meta, world, x, z, z, s, actor);
+                return StructureUtility.survivalPlaceBlock(getBlock(), meta, world, x, y, z, s, actor);
             }
         };
     }
@@ -412,9 +440,9 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 if (init())
-                    return StructureUtility.survivalPlaceBlock(block, meta, world, x, z, z, s, actor);
+                    return StructureUtility.survivalPlaceBlock(block, meta, world, x, y, z, s, actor);
                 return fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
             }
         };
@@ -540,8 +568,8 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
+                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
             };
         } else {
@@ -566,8 +594,8 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
+                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
             };
         }
@@ -607,8 +635,8 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
+                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
             };
         } else {
@@ -633,8 +661,8 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
+                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
             };
         }
@@ -666,8 +694,8 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
+                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
             };
         } else {
@@ -692,8 +720,8 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
+                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
             };
         }
@@ -727,8 +755,8 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
+                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
             };
         } else {
@@ -752,8 +780,8 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
+                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
             };
         }
@@ -808,7 +836,7 @@ public class StructureUtility {
                 @Override
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                     //TODO should we call block adder to check????
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
             };
         } else {
@@ -834,7 +862,7 @@ public class StructureUtility {
                 @Override
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
                     //TODO should we call block adder to check????
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actor);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
             };
         }
@@ -1694,6 +1722,8 @@ public class StructureUtility {
                 xyz[0] += basePositionX;
                 xyz[1] += basePositionY;
                 xyz[2] += basePositionZ;
+
+                StructureLib.LOGGER.info("Multi [{}, {}, {}] {} step @ {} {}", basePositionX, basePositionY, basePositionZ, iterateType, Arrays.toString(xyz), Arrays.toString(abc));
 
                 if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
                     if (!predicate.visit(element, world, xyz[0], xyz[1], xyz[2])) {

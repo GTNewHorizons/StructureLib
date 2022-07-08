@@ -56,7 +56,7 @@ public class UpdateHintParticleMessage implements IMessage {
     public static class Handler implements IMessageHandler<UpdateHintParticleMessage, IMessage> {
         @Override
         public IMessage onMessage(UpdateHintParticleMessage msg, MessageContext ctx) {
-            boolean updateResult = StructureLibAPI.updateHintParticleTint(StructureLib.getCurrentPlayer().worldObj,
+            boolean updateResult = StructureLibAPI.updateHintParticleTint(StructureLib.getCurrentPlayer(), StructureLib.getCurrentPlayer().worldObj,
                 msg.x, msg.y, msg.z, new short[]{msg.r, msg.g, msg.b, msg.a,});
             if (!updateResult)
                 LOGGER.debug("Server instructed to update hint particle at ({}, {}, {}) but there is nothing there!", msg.x, msg.y, msg.z);

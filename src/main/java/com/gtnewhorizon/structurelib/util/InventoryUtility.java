@@ -23,21 +23,29 @@ import net.minecraft.item.ItemStack;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+/**
+ * This class is part of API, but is not stable. Use at your own risk.
+ */
 public class InventoryUtility {
     private static final SortedRegistry<Function<ItemStack, Iterable<ItemStack>>> stackExtractors = new SortedRegistry<>();
     /**
      * The remove() of the Iterable returned must be implemented!
      */
     private static final SortedRegistry<Function<EntityPlayerMP, Iterable<ItemStack>>> inventoryProviders = new SortedRegistry<>();
-    private static final NavigableMap<String, Function<EntityPlayerMP, Iterable<ItemStack>>> inventoryProviderRegistry = new TreeMap<>();
 
     static {
         inventoryProviders.register("5000-main-inventory", player -> new ItemStackArrayIterable(player.inventory.mainInventory));
+    }
+
+    public static void registerStackExtractor(String key, Function<ItemStack, Iterable<ItemStack>> val) {
+        stackExtractors.register(key, val);
+    }
+
+    public static void registerInventoryProvider(String key, Function<EntityPlayerMP, Iterable<ItemStack>> val) {
+        inventoryProviders.register(key, val);
     }
 
     /**
@@ -87,10 +95,10 @@ public class InventoryUtility {
             if (predicate.test(stack)) {
                 found += stack.stackSize;
                 if (found > count) {
+                    int surplus = found - count;
+                    store.merge(stack, stack.stackSize - surplus, Integer::sum);
                     if (!simulate) {
                         // leave the surplus in its place
-                        int surplus = found - count;
-                        store.merge(stack, stack.stackSize - surplus, Integer::sum);
                         stack.stackSize = surplus;
                     }
                     return count;

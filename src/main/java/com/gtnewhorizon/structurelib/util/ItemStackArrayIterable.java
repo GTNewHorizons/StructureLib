@@ -18,7 +18,7 @@ public class ItemStackArrayIterable implements Iterable<ItemStack> {
 
             @Override
             public boolean hasNext() {
-                return ptr >= stacks.length;
+                return ptr < stacks.length;
             }
 
             @Override

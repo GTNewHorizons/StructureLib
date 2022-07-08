@@ -54,8 +54,6 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
                 default:
                     return result;
             }
-            if (result != PlaceResult.SKIP)
-                return result;
         }
         // TODO need reconsider to ensure this is the right course of action
         return haveSkip ? PlaceResult.SKIP : PlaceResult.REJECT;

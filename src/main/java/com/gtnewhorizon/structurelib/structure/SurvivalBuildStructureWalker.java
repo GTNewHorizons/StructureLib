@@ -1,11 +1,11 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
 import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-
-import java.util.UUID;
 
 class SurvivalBuildStructureWalker<T> implements IStructureWalker<T> {
     private final T object;
@@ -37,6 +37,8 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T> {
                     element.check(object, world, x, y, z);
                 return ++built < elementBudget;
             case REJECT:
+                if (ConstructableUtility.redBrokenOne)
+                    StructureLibAPI.updateHintParticleTint(actor, world, x, y, z, new short[]{255, 128, 128, 0});
                 return false;
             case ACCEPT_STOP:
                 if (check)

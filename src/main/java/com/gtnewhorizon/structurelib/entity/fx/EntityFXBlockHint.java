@@ -1,7 +1,7 @@
 package com.gtnewhorizon.structurelib.entity.fx;
 
 import com.gtnewhorizon.structurelib.StructureLib;
-import com.gtnewhorizon.structurelib.proxy.ClientProxy;
+import com.gtnewhorizon.structurelib.ClientProxy;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;

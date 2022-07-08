@@ -68,7 +68,7 @@ public interface IStructureDefinition<T> {
                               int basePositionA, int basePositionB, int basePositionC, int elementBudget, IItemSource source, EntityPlayerMP actor, boolean check) {
         SurvivalBuildStructureWalker<T> walker = new SurvivalBuildStructureWalker<>(object, trigger, source, actor, elementBudget, check);
         StructureUtility.iterateV2(getStructureFor(piece), world, extendedFacing, basePositionX, basePositionY, basePositionZ,
-            basePositionA, basePositionB, basePositionC, walker, "iterateV2");
+            basePositionA, basePositionB, basePositionC, walker, "survivalBuild");
         return walker.getBuilt();
     }
 
@@ -101,6 +101,8 @@ public interface IStructureDefinition<T> {
                         xyz[1] += basePositionY;
                         xyz[2] += basePositionZ;
 
+                        StructureLib.LOGGER.info("Multi [{}, {}, {}] step @ {} {}", basePositionX, basePositionY, basePositionZ, Arrays.toString(xyz), Arrays.toString(abc));
+
                         if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
                             if (!element.check(object, world, xyz[0], xyz[1], xyz[2])) {
                                 if (DEBUG_MODE) {
@@ -130,6 +132,8 @@ public interface IStructureDefinition<T> {
                         xyz[0] += basePositionX;
                         xyz[1] += basePositionY;
                         xyz[2] += basePositionZ;
+
+                        StructureLib.LOGGER.info("Multi [{}, {}, {}] step @ {} {}", basePositionX, basePositionY, basePositionZ, Arrays.toString(xyz), Arrays.toString(abc));
 
                         if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
                             if (!element.check(object, world, xyz[0], xyz[1], xyz[2])) {

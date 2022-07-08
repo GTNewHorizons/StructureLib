@@ -8,7 +8,7 @@ public class SortedRegistry<V> implements Iterable<V> {
     /**
      * Store stuff in an array for faster iteration access than a red black tree
      */
-    private ArrayList<V> baked;
+    private List<V> baked = Collections.emptyList();
 
     public void register(String key, V val) {
         if (key == null || val == null)

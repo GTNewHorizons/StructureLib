@@ -4,12 +4,12 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.IItemSource;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 import java.util.HashMap;
-import java.util.UUID;
 
 /**
  * To implement IConstructable on not own TileEntities
@@ -40,7 +40,7 @@ public interface IMultiblockInfoContainer<T> {
      * Construct the structure using {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, net.minecraft.entity.player.EntityPlayerMP)}
      * @return -1 if done, a helping pointer
      */
-    default int survivalConstruct(ItemStack stackSize, int elementBudge, IItemSource source, UUID actorProfile, T tileEntity, ExtendedFacing aSide) {
+    default int survivalConstruct(ItemStack stackSize, int elementBudge, IItemSource source, EntityPlayerMP actorProfile, T tileEntity, ExtendedFacing aSide) {
         return -1;
     }
 
@@ -49,7 +49,7 @@ public interface IMultiblockInfoContainer<T> {
 
     /**
      * Override this and return {@link #toConstructable(IMultiblockInfoContainer, Object, ExtendedFacing)} if
-     * {@link #survivalConstruct(ItemStack, int, IItemSource, UUID, Object, ExtendedFacing)} isn't a stub
+     * {@link #survivalConstruct(ItemStack, int, IItemSource, EntityPlayerMP, Object, ExtendedFacing)} isn't a stub
      */
     default IConstructable toConstructable(T tileEntity, ExtendedFacing aSide) {
         return new IConstructable() {
@@ -69,8 +69,8 @@ public interface IMultiblockInfoContainer<T> {
     static <T> ISurvivalConstructable toConstructable(IMultiblockInfoContainer<T> thiz, T tileEntity, ExtendedFacing aSide) {
         return new ISurvivalConstructable() {
             @Override
-            public int survivalConstruct(ItemStack stackSize, int elementBudget, IItemSource source, UUID actorProfile) {
-                return thiz.survivalConstruct(stackSize, elementBudget, source, actorProfile, tileEntity, aSide);
+            public int survivalConstruct(ItemStack stackSize, int elementBudget, IItemSource source, EntityPlayerMP actor) {
+                return thiz.survivalConstruct(stackSize, elementBudget, source, actor, tileEntity, aSide);
             }
 
             @Override
