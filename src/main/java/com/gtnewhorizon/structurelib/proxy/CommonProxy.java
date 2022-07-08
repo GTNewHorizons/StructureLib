@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib.proxy;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
@@ -17,6 +18,10 @@ public class CommonProxy {
     }
 
     public void hintParticle(World w, int x, int y, int z, Block block, int meta) {
+    }
+
+    public boolean updateHintParticleTint(World w, int x, int y, int z, short[] rgBa) {
+        return true;
     }
 
     public EntityPlayer getCurrentPlayer() {
@@ -37,5 +42,9 @@ public class CommonProxy {
     }
 
     public void preInit(FMLPreInitializationEvent e) {
+    }
+
+    public long getOverworldTime() {
+        return MinecraftServer.getServer().getEntityWorld().getTotalWorldTime();
     }
 }

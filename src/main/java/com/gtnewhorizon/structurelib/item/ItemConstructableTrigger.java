@@ -2,9 +2,11 @@ package com.gtnewhorizon.structurelib.item;
 
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 import java.util.List;
@@ -33,5 +35,15 @@ public class ItemConstructableTrigger extends Item {
         aList.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.2"));//just Use on a multiblock controller.
         aList.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.3"));//(Sneak Use in creative to build)
         aList.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.4"));//Quantity affects tier/mode/type
+    }
+
+    @Override
+    public void onUpdate(ItemStack p_77663_1_, World p_77663_2_, Entity p_77663_3_, int p_77663_4_, boolean p_77663_5_) {
+        if (p_77663_1_.hasTagCompound() && p_77663_1_.getTagCompound().getLong("LastUse") + 5 < StructureLib.getOverworldTime()) {
+            NBTTagCompound tag = p_77663_1_.getTagCompound();
+            tag.removeTag("LastUse");
+            if (tag.hasNoTags())
+                p_77663_1_.setTagCompound(null);
+        }
     }
 }

@@ -4,14 +4,13 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.gtnewhorizon.structurelib.ConfigurationHandler;
 import com.gtnewhorizon.structurelib.entity.fx.EntityFXBlockHint;
-import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
-import net.minecraft.client.particle.EntityFX;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
@@ -22,8 +21,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-
-import static com.gtnewhorizon.structurelib.StructureLib.RANDOM;
 
 public class ClientProxy extends CommonProxy {
 
@@ -64,6 +61,17 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void hintParticle(World w, int x, int y, int z, Block block, int meta) {
         hintParticleTinted(w, x, y, z, createIIconFromBlock(block, meta), NO_TINT);
+    }
+
+    @Override
+    public boolean updateHintParticleTint(World w, int x, int y, int z, short[] rgBa) {
+        HintParticleInfo info = new HintParticleInfo(x, y, z, null);
+        EntityFXBlockHint existing = allHints.inverse().get(info);
+        if (existing != null) {
+            existing.withColorTint(rgBa);
+            return true;
+        }
+        return false;
     }
 
     private static IIcon[] createIIconFromBlock(Block block, int meta) {
@@ -140,6 +148,12 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void preInit(FMLPreInitializationEvent e) {
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
+    }
+
+    @Override
+    public long getOverworldTime() {
+        // there is no overworld, better just hope current world time is ok...
+        return Minecraft.getMinecraft().theWorld.getTotalWorldTime();
     }
 
     private static class HintParticleInfo {

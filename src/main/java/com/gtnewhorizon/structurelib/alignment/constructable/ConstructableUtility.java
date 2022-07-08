@@ -4,15 +4,25 @@ import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.structure.IItemSource;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import java.util.UUID;
+
 public class ConstructableUtility {
+
+    // TODO make these configurable and expose this to external world
+    private static final int COOLDOWN = 5;
+    private static final int BUDGET = 25;
+
     private ConstructableUtility() {
 
     }
@@ -30,25 +40,35 @@ public class ConstructableUtility {
             return aPlayer instanceof EntityPlayerMP;
         }
         if (aPlayer instanceof EntityPlayerMP) {
-            //struct gen
-            if (aPlayer.isSneaking() && aPlayer.capabilities.isCreativeMode) {
-                if (tTileEntity instanceof IConstructableProvider) {
-                    IConstructable constructable = ((IConstructableProvider) tTileEntity).getConstructable();
-                    if (constructable != null) {
-                        constructable.construct(aStack, false);
-                    }
-                } else if (tTileEntity instanceof IConstructable) {
-                    ((IConstructable) tTileEntity).construct(aStack, false);
-                } else if (IMultiblockInfoContainer.contains(tTileEntity.getClass())) {
-                    IMultiblockInfoContainer<TileEntity> iMultiblockInfoContainer = IMultiblockInfoContainer.get(tTileEntity.getClass());
-                    if (tTileEntity instanceof IAlignment) {
-                        iMultiblockInfoContainer.construct(aStack, false, tTileEntity,
-                            ((IAlignment) tTileEntity).getExtendedFacing());
-                    } else {
-                        iMultiblockInfoContainer.construct(aStack, false, tTileEntity,
-                            ExtendedFacing.of(ForgeDirection.getOrientation(aSide)));
-                    }
-                }
+            // server side
+            // not sneaking - client side will generate hologram. nothing to do on server side
+            if (!aPlayer.isSneaking()) return true;
+
+            long timePast = StructureLib.getOverworldTime() - getLastUseTick(aStack);
+            if (timePast < COOLDOWN) {
+                aPlayer.addChatComponentMessage(new ChatComponentTranslation("item.structurelib.constructableTrigger.too_fast", COOLDOWN - timePast));
+                return true;
+            }
+
+            IConstructable constructable = null;
+            if (tTileEntity instanceof IConstructableProvider)
+                constructable = ((IConstructableProvider) tTileEntity).getConstructable();
+            else if (tTileEntity instanceof IConstructable) {
+                constructable = (IConstructable) tTileEntity;
+            } else if (IMultiblockInfoContainer.contains(tTileEntity.getClass())) {
+                ExtendedFacing facing = tTileEntity instanceof IAlignment ?
+                    ((IAlignment) tTileEntity).getExtendedFacing() :
+                    ExtendedFacing.of(ForgeDirection.getOrientation(aSide));
+                constructable = IMultiblockInfoContainer.<TileEntity>get(tTileEntity.getClass()).toConstructable(tTileEntity, facing);
+            }
+
+            if (constructable == null) return false;
+
+            if (aPlayer.capabilities.isCreativeMode) {
+                constructable.construct(aStack, false);
+            } else if (constructable instanceof ISurvivalConstructable) {
+                ((ISurvivalConstructable) constructable).survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer((EntityPlayerMP) aPlayer), aPlayer.getGameProfile().getId());
+                setLastUseTickToStackTag(aStack);
             }
             return true;
         } else if (StructureLib.isCurrentPlayer(aPlayer)) {//particles and text client side
@@ -78,5 +98,17 @@ public class ConstructableUtility {
             }
         }
         return false;
+    }
+
+    private static long getLastUseTick(ItemStack aStack) {
+        return aStack.hasTagCompound() ? aStack.getTagCompound().getLong("LastUse") : 0;
+    }
+
+    private static void setLastUseTickToStackTag(ItemStack aStack) {
+        NBTTagCompound tag = aStack.stackTagCompound;
+        if (tag == null)
+            tag = aStack.stackTagCompound = new NBTTagCompound();
+        // here we force use the overworld tick time, in case the current world is over
+        tag.setLong("LastUse", StructureLib.getOverworldTime());
     }
 }

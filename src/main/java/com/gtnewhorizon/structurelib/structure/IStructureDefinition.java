@@ -6,6 +6,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 import java.util.Arrays;
+import java.util.UUID;
 
 import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
 
@@ -49,6 +50,26 @@ public interface IStructureDefinition<T> {
                                  boolean hintsOnly) {
         return iterate(object, trigger, getStructureFor(piece), world, extendedFacing, basePositionX, basePositionY, basePositionZ,
             basePositionA, basePositionB, basePositionC, hintsOnly, null);
+    }
+
+    /**
+     * @param elementBudget build up to this many elements
+     * @param source        from where to drain resource
+     * @param actorProfile  source of action
+     * @param check         whether {@link IStructureElement#check(Object, World, int, int, int)} should be called if anything
+     *                      would be placed. use with caution.
+     *                      if in doubt, call {@link #check(Object, String, World, ExtendedFacing, int, int, int, int, int, int, boolean)}
+     *                      after this call and set this parameter to false
+     * @return number of elements built
+     * @see #build(Object, ItemStack, String, World, ExtendedFacing, int, int, int, int, int, int)
+     */
+    default int survivalBuild(T object, ItemStack trigger, String piece, World world, ExtendedFacing extendedFacing,
+                              int basePositionX, int basePositionY, int basePositionZ,
+                              int basePositionA, int basePositionB, int basePositionC, int elementBudget, IItemSource source, UUID actorProfile, boolean check) {
+        SurvivalBuildStructureWalker<T> walker = new SurvivalBuildStructureWalker<>(object, trigger, source, actorProfile, elementBudget, check);
+        StructureUtility.iterateV2(getStructureFor(piece), world, extendedFacing, basePositionX, basePositionY, basePositionZ,
+            basePositionA, basePositionB, basePositionC, walker, "iterateV2");
+        return walker.getBuilt();
     }
 
     static <T> boolean iterate(T object, ItemStack trigger, IStructureElement<T>[] elements, World world, ExtendedFacing extendedFacing,

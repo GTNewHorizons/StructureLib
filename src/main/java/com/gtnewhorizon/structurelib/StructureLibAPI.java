@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.structure.IItemSource;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
@@ -11,6 +12,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
+
+import java.util.UUID;
 
 import static com.gtnewhorizon.structurelib.StructureLib.proxy;
 
@@ -68,6 +71,14 @@ public class StructureLibAPI {
 
     public static void hintParticle(World w, int x, int y, int z, Block block, int meta) {
         proxy.hintParticle(w, x, y, z, block, meta);
+    }
+
+    /**
+     * Update the tint of given hint particle. Do nothing if particle not found.
+     * @return false if nothing updated. true if updated or on server side.
+     */
+    public static boolean updateHintParticleTint(World w, int x, int y, int z, short[] RGBa) {
+        return proxy.updateHintParticleTint(w, x, y, z, RGBa);
     }
 
     /**
@@ -132,5 +143,16 @@ public class StructureLibAPI {
 
     public static void setDebugEnabled(boolean enabled) {
         StructureLib.DEBUG_MODE = enabled;
+    }
+
+    /**
+     * Determines if given block can be replaced without much effort. The exact predicate clauses is not stable and
+     * will be changed, but the general idea will always stay the same.
+     *
+     * Use this in your {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, UUID)}
+     */
+    public static boolean isBlockTriviallyReplaceable(World w, int x, int y, int z, UUID actorProfile) {
+        // TODO extend this function a bit
+        return w.getBlock(x, y, z).isReplaceable(w, x, y, z);
     }
 }

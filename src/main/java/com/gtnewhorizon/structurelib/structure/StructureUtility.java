@@ -1,13 +1,17 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
 import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
 import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
@@ -16,19 +20,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.function.*;
 
+import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
 import static java.lang.Integer.MIN_VALUE;
 
 /**
@@ -58,7 +53,17 @@ public class StructureUtility {
             world.setBlock(x, y, z, Blocks.air, 0, 2);
             return false;
         }
+
+        @Override
+        public PlaceResult survivalPlaceBlock(Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+            if (check(o, world, x, y, z)) return PlaceResult.ACCEPT;
+            if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actorProfile))
+                return PlaceResult.REJECT;
+            world.setBlock(x, y, z, Blocks.air, 0, 2);
+            return PlaceResult.ACCEPT;
+        }
     };
+
     @SuppressWarnings("rawtypes")
     private static final IStructureElement NOT_AIR = new IStructureElement() {
         @Override
@@ -77,7 +82,19 @@ public class StructureUtility {
             world.setBlock(x, y, z, StructureLibAPI.getBlockHint(), 14, 2);
             return true;
         }
+
+        @Override
+        public PlaceResult survivalPlaceBlock(Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+            if (check(o, world, x, y, z)) return PlaceResult.ACCEPT;
+            // user should place anything here.
+            // maybe make this configurable, but for now we try to take some cobble from user
+            if (s.take(is -> is.getItem() == Item.getItemFromBlock(Blocks.cobblestone), false, 1) == 1) {
+                world.setBlock(x, y, z, Blocks.cobblestone, 0, 2);
+            }
+            return PlaceResult.REJECT;
+        }
     };
+
     @SuppressWarnings("rawtypes")
     private static final IStructureElement ERROR = new IStructureElement() {
         @Override
@@ -95,10 +112,36 @@ public class StructureUtility {
         public boolean placeBlock(Object o, World world, int x, int y, int z, ItemStack trigger) {
             return true;
         }
+
+        @Override
+        public PlaceResult survivalPlaceBlock(Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+            return PlaceResult.REJECT;
+        }
     };
 
     private StructureUtility() {
 
+    }
+
+    /**
+     * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
+     */
+    static PlaceResult survivalPlaceBlock(Block block, int meta, World world, int x, int y, int z, IItemSource s, UUID actorProfile) {
+        if (block == null)
+            throw new NullPointerException();
+        if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actorProfile))
+            return PlaceResult.REJECT;
+        Item itemBlock = Item.getItemFromBlock(block);
+        int itemMeta = itemBlock instanceof ISpecialItemBlock ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta) : meta;
+        if (!s.takeOne(ItemStackPredicate.from(itemBlock).withMeta(itemMeta), false))
+            return PlaceResult.REJECT;
+        if (block instanceof ICustomBlockSetting) {
+            ICustomBlockSetting block2 = (ICustomBlockSetting) block;
+            block2.setBlock(world, x, y, z, meta);
+        } else {
+            world.setBlock(x, y, z, block, meta, 2);
+        }
+        return PlaceResult.ACCEPT;
     }
 
     @SuppressWarnings("unchecked")
@@ -256,6 +299,15 @@ public class StructureUtility {
                 }
                 return true;
             }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                Pair<Block, Integer> hint = getHint(trigger);
+                if (hint == null)
+                    return PlaceResult.REJECT; // TODO or SKIP?
+                return StructureUtility.survivalPlaceBlock(hint.getKey(), hint.getValue(), world, x, z, z, s, actorProfile);
+            }
         };
     }
 
@@ -294,6 +346,14 @@ public class StructureUtility {
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                 world.setBlock(x, y, z, getBlock(), meta, 2);
                 return true;
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                if (getBlock() == null)
+                    return PlaceResult.REJECT; // TODO or SKIP?
+                return StructureUtility.survivalPlaceBlock(getBlock(), meta, world, x, z, z, s, actorProfile);
             }
         };
     }
@@ -347,6 +407,14 @@ public class StructureUtility {
                     return true;
                 } else
                     return fallback.placeBlock(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                if (init())
+                    return StructureUtility.survivalPlaceBlock(block, meta, world, x, z, z, s, actorProfile);
+                return fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
             }
         };
     }
@@ -468,6 +536,12 @@ public class StructureUtility {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
                 }
+
+                @Override
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                }
             };
         } else {
             return new IStructureElement<T>() {
@@ -487,6 +561,12 @@ public class StructureUtility {
                 public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
+                }
+
+                @Override
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
                 }
             };
         }
@@ -523,6 +603,12 @@ public class StructureUtility {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
                 }
+
+                @Override
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                }
             };
         } else {
             return new IStructureElement<T>() {
@@ -542,6 +628,12 @@ public class StructureUtility {
                 public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
+                }
+
+                @Override
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
                 }
             };
         }
@@ -570,6 +662,12 @@ public class StructureUtility {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
                 }
+
+                @Override
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                }
             };
         } else {
             return new IStructureElement<T>() {
@@ -589,6 +687,12 @@ public class StructureUtility {
                 public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
+                }
+
+                @Override
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
                 }
             };
         }
@@ -619,6 +723,12 @@ public class StructureUtility {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
                 }
+
+                @Override
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                }
             };
         } else {
             return new IStructureElement<T>() {
@@ -637,6 +747,12 @@ public class StructureUtility {
                 public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
+                }
+
+                @Override
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                    if (check(t, world, x, y, z)) return PlaceResult.ACCEPT;
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
                 }
             };
         }
@@ -687,6 +803,12 @@ public class StructureUtility {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
                 }
+
+                @Override
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                    //TODO should we call block adder to check????
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
+                }
             };
         } else {
             return new IStructureElement<T>() {
@@ -706,6 +828,12 @@ public class StructureUtility {
                 public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
+                }
+
+                @Override
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                    //TODO should we call block adder to check????
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, z, z, s, actorProfile);
                 }
             };
         }
@@ -780,6 +908,11 @@ public class StructureUtility {
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return element.spawnHint(t, world, x, y, z, trigger);
             }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            }
         };
     }
 
@@ -803,6 +936,11 @@ public class StructureUtility {
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return element.spawnHint(t, world, x, y, z, trigger);
             }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            }
         };
     }
 
@@ -812,6 +950,13 @@ public class StructureUtility {
      * Enable this structure element only if given predicate returns true.
      */
     public static <T> IStructureElement<T> onlyIf(Predicate<? super T> predicate, IStructureElement<? super T> downstream) {
+        return onlyIf(predicate, downstream, PlaceResult.SKIP);
+    }
+
+    /**
+     * Enable this structure element only if given predicate returns true.
+     */
+    public static <T> IStructureElement<T> onlyIf(Predicate<? super T> predicate, IStructureElement<? super T> downstream, PlaceResult placeResultWhenDisabled) {
         return new IStructureElement<T>() {
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -826,6 +971,13 @@ public class StructureUtility {
             @Override
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return predicate.test(t) && downstream.placeBlock(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                if (predicate.test(t))
+                    return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+                return placeResultWhenDisabled;
             }
         };
     }
@@ -872,6 +1024,11 @@ public class StructureUtility {
             @Override
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return elem.placeBlock(t.getCurrentContext(), world, x, y, z, trigger);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return elem.survivalPlaceBlock(t.getCurrentContext(), world, x, y, z, trigger, s, actorProfile);
             }
         };
     }
@@ -920,6 +1077,11 @@ public class StructureUtility {
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return to.get().spawnHint(t, world, x, y, z, trigger);
             }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return to.get().survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            }
         };
     }
 
@@ -941,6 +1103,11 @@ public class StructureUtility {
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return to.apply(t).spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return to.apply(t).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
             }
         };
     }
@@ -964,6 +1131,11 @@ public class StructureUtility {
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return map.get(keyExtractor.apply(t)).spawnHint(t, world, x, y, z, trigger);
             }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return map.get(keyExtractor.apply(t)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            }
         };
     }
 
@@ -985,6 +1157,11 @@ public class StructureUtility {
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return map.getOrDefault(keyExtractor.apply(t), defaultElem).spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return map.getOrDefault(keyExtractor.apply(t), defaultElem).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
             }
         };
     }
@@ -1008,6 +1185,11 @@ public class StructureUtility {
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return array[keyExtractor.apply(t)].spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return array[keyExtractor.apply(t)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
             }
         };
     }
@@ -1036,6 +1218,11 @@ public class StructureUtility {
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return to.apply(t, trigger).spawnHint(t, world, x, y, z, trigger);
             }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            }
         };
     }
 
@@ -1057,6 +1244,11 @@ public class StructureUtility {
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return map.get(keyExtractor.apply(t, trigger)).spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return map.get(keyExtractor.apply(t, trigger)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
             }
         };
     }
@@ -1080,6 +1272,11 @@ public class StructureUtility {
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem).spawnHint(t, world, x, y, z, trigger);
             }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            }
         };
     }
 
@@ -1102,6 +1299,11 @@ public class StructureUtility {
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return array[keyExtractor.apply(t, trigger)].spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
             }
         };
     }
@@ -1130,6 +1332,11 @@ public class StructureUtility {
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return to.apply(t, trigger).spawnHint(t, world, x, y, z, trigger);
             }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            }
         };
     }
 
@@ -1151,6 +1358,11 @@ public class StructureUtility {
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return map.get(keyExtractor.apply(t, trigger)).spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return map.get(keyExtractor.apply(t, trigger)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
             }
         };
     }
@@ -1174,6 +1386,11 @@ public class StructureUtility {
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem).spawnHint(t, world, x, y, z, trigger);
             }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem).survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
+            }
         };
     }
 
@@ -1196,6 +1413,11 @@ public class StructureUtility {
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return array[keyExtractor.apply(t, trigger)].spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, UUID actorProfile) {
+                return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actorProfile);
             }
         };
     }
@@ -1448,6 +1670,47 @@ public class StructureUtility {
             builder.append("}\n\n");
         }
         return (builder.toString().replaceAll("\"\"", "E"));
+    }
+
+    static <T> boolean iterateV2(IStructureElement<T>[] elements, World world, ExtendedFacing extendedFacing,
+                                 int basePositionX, int basePositionY, int basePositionZ,
+                                 int basePositionA, int basePositionB, int basePositionC, IStructureWalker<T> predicate, String iterateType) {
+        //change base position to base offset
+        basePositionA = -basePositionA;
+        basePositionB = -basePositionB;
+        basePositionC = -basePositionC;
+
+        int[] abc = new int[]{basePositionA, basePositionB, basePositionC};
+        int[] xyz = new int[3];
+
+        for (IStructureElement<T> element : elements) {
+            if (element.isNavigating()) {
+                abc[0] = (element.resetA() ? basePositionA : abc[0]) + element.getStepA();
+                abc[1] = (element.resetB() ? basePositionB : abc[1]) + element.getStepB();
+                abc[2] = (element.resetC() ? basePositionC : abc[2]) + element.getStepC();
+            } else {
+                extendedFacing.getWorldOffset(abc, xyz);
+                xyz[0] += basePositionX;
+                xyz[1] += basePositionY;
+                xyz[2] += basePositionZ;
+
+                if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
+                    if (!predicate.visit(element, world, xyz[0], xyz[1], xyz[2])) {
+                        if (DEBUG_MODE) {
+                            StructureLib.LOGGER.info("Multi [{}, {}, {}] {} stop @ {} {}", basePositionX, basePositionY, basePositionZ, iterateType, Arrays.toString(xyz), Arrays.toString(abc));
+                        }
+                        return false;
+                    }
+                } else {
+                    if (DEBUG_MODE) {
+                        StructureLib.LOGGER.info("Multi [{}, {}, {}] {} !blockExists @ {} {}", basePositionX, basePositionY, basePositionZ, iterateType, Arrays.toString(xyz), Arrays.toString(abc));
+                    }
+                    return false;
+                }
+                abc[0] += 1;
+            }
+        }
+        return true;
     }
 
     public static void iterate(World world, ExtendedFacing extendedFacing,
