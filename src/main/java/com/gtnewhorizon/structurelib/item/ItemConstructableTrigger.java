@@ -39,7 +39,11 @@ public class ItemConstructableTrigger extends Item {
 
     @Override
     public void onUpdate(ItemStack p_77663_1_, World p_77663_2_, Entity p_77663_3_, int p_77663_4_, boolean p_77663_5_) {
-        if (p_77663_1_.hasTagCompound() && p_77663_1_.getTagCompound().getLong("LastUse") + 5 < StructureLib.getOverworldTime()) {
+        // remove LastUse tags if it times out,
+        // so it can stack with other trigger item stacks
+        // don't remove it too soon though, to prevent chat spam
+        // this might be perceived as a hack, but ok this is simple enough to implement
+        if (p_77663_1_.hasTagCompound() && p_77663_1_.getTagCompound().getLong("LastUse") + ConstructableUtility.COOLDOWN * 2 < StructureLib.getOverworldTime()) {
             NBTTagCompound tag = p_77663_1_.getTagCompound();
             tag.removeTag("LastUse");
             if (tag.hasNoTags())

@@ -18,7 +18,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 public class ConstructableUtility {
 
     // TODO make these configurable and expose this to external world
-    private static final int COOLDOWN = 5;
+    public static final int COOLDOWN = 5;
     private static final int BUDGET = 25;
     public static boolean redBrokenOne = true; // TODO this is horrible
 
@@ -39,7 +39,6 @@ public class ConstructableUtility {
             return aPlayer instanceof EntityPlayerMP;
         }
         if (aPlayer instanceof EntityPlayerMP) {
-            // server side
             // not sneaking - client side will generate hologram. nothing to do on server side
             if (!aPlayer.isSneaking()) return true;
 
@@ -48,57 +47,43 @@ public class ConstructableUtility {
                 aPlayer.addChatComponentMessage(new ChatComponentTranslation("item.structurelib.constructableTrigger.too_fast", COOLDOWN - timePast));
                 return true;
             }
+        } else if (!StructureLib.isCurrentPlayer(aPlayer)) {
+            return false;
+        }
 
-            IConstructable constructable = null;
-            if (tTileEntity instanceof IConstructableProvider)
-                constructable = ((IConstructableProvider) tTileEntity).getConstructable();
-            else if (tTileEntity instanceof IConstructable) {
-                constructable = (IConstructable) tTileEntity;
-            } else if (IMultiblockInfoContainer.contains(tTileEntity.getClass())) {
-                ExtendedFacing facing = tTileEntity instanceof IAlignment ?
-                    ((IAlignment) tTileEntity).getExtendedFacing() :
-                    ExtendedFacing.of(ForgeDirection.getOrientation(aSide));
-                constructable = IMultiblockInfoContainer.<TileEntity>get(tTileEntity.getClass()).toConstructable(tTileEntity, facing);
-            }
+        IConstructable constructable = null;
+        if (tTileEntity instanceof IConstructableProvider)
+            constructable = ((IConstructableProvider) tTileEntity).getConstructable();
+        else if (tTileEntity instanceof IConstructable) {
+            constructable = (IConstructable) tTileEntity;
+        } else if (IMultiblockInfoContainer.contains(tTileEntity.getClass())) {
+            ExtendedFacing facing = tTileEntity instanceof IAlignment ?
+                ((IAlignment) tTileEntity).getExtendedFacing() :
+                ExtendedFacing.of(ForgeDirection.getOrientation(aSide));
+            constructable = IMultiblockInfoContainer.<TileEntity>get(tTileEntity.getClass()).toConstructable(tTileEntity, facing);
+        }
 
-            if (constructable == null) return false;
+        if (constructable == null) return false;
 
+        if (aPlayer instanceof EntityPlayerMP) {
+            // server side and sneaking (already checked above)
+            // do construct
             if (aPlayer.capabilities.isCreativeMode) {
                 constructable.construct(aStack, false);
             } else if (constructable instanceof ISurvivalConstructable) {
                 EntityPlayerMP playerMP = (EntityPlayerMP) aPlayer;
-                if (((ISurvivalConstructable) constructable).survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer(playerMP), playerMP)> 0)
+                if (((ISurvivalConstructable) constructable).survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer(playerMP), playerMP) > 0)
                     // TODO somehow notify extensions that their inventory might have been modified and need to be synced to client or saved
                     playerMP.inventory.markDirty();
                 setLastUseTickToStackTag(aStack);
             }
             return true;
-        } else if (StructureLib.isCurrentPlayer(aPlayer)) {//particles and text client side
-            //if ((!aPlayer.isSneaking() || !aPlayer.capabilities.isCreativeMode)) {
-            if (tTileEntity instanceof IConstructableProvider) {
-                IConstructable constructable = ((IConstructableProvider) tTileEntity).getConstructable();
-                if (constructable != null) {
-                    constructable.construct(aStack, true);
-                    StructureLib.addClientSideChatMessages(constructable.getStructureDescription(aStack));
-                }
-            } else if (tTileEntity instanceof IConstructable) {
-                IConstructable constructable = (IConstructable) tTileEntity;
-                constructable.construct(aStack, true);
-                StructureLib.addClientSideChatMessages(constructable.getStructureDescription(aStack));
-                return false;
-            } else if (IMultiblockInfoContainer.contains(tTileEntity.getClass())) {
-                IMultiblockInfoContainer<TileEntity> iMultiblockInfoContainer = IMultiblockInfoContainer.get(tTileEntity.getClass());
-                if (tTileEntity instanceof IAlignment) {
-                    iMultiblockInfoContainer.construct(aStack, true, tTileEntity,
-                        ((IAlignment) tTileEntity).getExtendedFacing());
-                } else {
-                    iMultiblockInfoContainer.construct(aStack, true, tTileEntity,
-                        ExtendedFacing.of(ForgeDirection.getOrientation(aSide)));
-                }
-                StructureLib.addClientSideChatMessages(IMultiblockInfoContainer.get(tTileEntity.getClass()).getDescription(aStack));
-                return false;
-            }
         }
+        // client side
+        // particles and text
+        constructable.construct(aStack, true);
+        if (getLastUseTick(aStack) == 0)
+            StructureLib.addClientSideChatMessages(constructable.getStructureDescription(aStack));
         return false;
     }
 
