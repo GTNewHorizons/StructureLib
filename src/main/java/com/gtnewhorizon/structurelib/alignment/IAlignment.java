@@ -57,7 +57,9 @@ public interface IAlignment extends IAlignmentLimits, IAlignmentProvider {
 
     default boolean toolSetDirection(ForgeDirection direction) {
         if (direction == null || direction == ForgeDirection.UNKNOWN) {
-            for (int i = 0, j = getDirection().ordinal() + 1, valuesLength = Direction.VALUES.length; i < valuesLength; i++) {
+            for (int i = 0, j = getDirection().ordinal() + 1, valuesLength = Direction.VALUES.length;
+                    i < valuesLength;
+                    i++) {
                 if (toolSetDirection(Direction.VALUES[(j + i) % valuesLength].getForgeDirection())) {
                     return true;
                 }
@@ -95,7 +97,8 @@ public interface IAlignment extends IAlignmentLimits, IAlignmentProvider {
             int rotations = Rotation.VALUES.length;
             for (int ii = 0, jj = getFlip().ordinal(); ii < flips; ii++) {
                 for (int i = 1, j = getRotation().ordinal(); i < rotations; i++) {
-                    if (checkedSetExtendedFacing(ExtendedFacing.of(getDirection(), Rotation.VALUES[(j + i) % rotations], Flip.VALUES[(jj + ii) % flips]))) {
+                    if (checkedSetExtendedFacing(ExtendedFacing.of(
+                            getDirection(), Rotation.VALUES[(j + i) % rotations], Flip.VALUES[(jj + ii) % flips]))) {
                         return true;
                     }
                 }
@@ -137,7 +140,9 @@ public interface IAlignment extends IAlignmentLimits, IAlignmentProvider {
 
     default boolean toolSetExtendedFacing(ExtendedFacing extendedFacing) {
         if (extendedFacing == null) {
-            for (int i = 0, j = getExtendedFacing().ordinal() + 1, valuesLength = ExtendedFacing.VALUES.length; i < valuesLength; i++) {
+            for (int i = 0, j = getExtendedFacing().ordinal() + 1, valuesLength = ExtendedFacing.VALUES.length;
+                    i < valuesLength;
+                    i++) {
                 if (checkedSetExtendedFacing(ExtendedFacing.VALUES[(j + i) % valuesLength])) {
                     return true;
                 }
@@ -179,9 +184,7 @@ public interface IAlignment extends IAlignmentLimits, IAlignmentProvider {
 
     @Override
     default boolean isNewExtendedFacingValid(ExtendedFacing alignment) {
-        return getAlignmentLimits().isNewExtendedFacingValid(
-            alignment.getDirection(),
-            alignment.getRotation(),
-            alignment.getFlip());
+        return getAlignmentLimits()
+                .isNewExtendedFacingValid(alignment.getDirection(), alignment.getRotation(), alignment.getFlip());
     }
 }

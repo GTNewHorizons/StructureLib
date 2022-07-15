@@ -3,12 +3,11 @@ package com.gtnewhorizon.structurelib;
 import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import java.io.File;
+import java.util.Map;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
-
-import java.io.File;
-import java.util.Map;
 
 public enum ConfigurationHandler {
     INSTANCE;
@@ -39,8 +38,18 @@ public enum ConfigurationHandler {
     }
 
     private void loadConfig() {
-        maxCoexistingHologram = config.getInt("maxCoexisting", "client.hologram", 1, 1, 100, "An attempt will be made to prune old holograms when a new hologram is about to be projected");
-        removeCollidingHologram = config.getBoolean("removeColliding", "client.hologram", true, "An attempt will be made to remove an existing hologram if it collides with a new hologram.");
+        maxCoexistingHologram = config.getInt(
+                "maxCoexisting",
+                "client.hologram",
+                1,
+                1,
+                100,
+                "An attempt will be made to prune old holograms when a new hologram is about to be projected");
+        removeCollidingHologram = config.getBoolean(
+                "removeColliding",
+                "client.hologram",
+                true,
+                "An attempt will be made to remove an existing hologram if it collides with a new hologram.");
 
         if (config.hasChanged()) {
             config.save();
