@@ -1,13 +1,13 @@
 package com.gtnewhorizon.structurelib.alignment.enumerable;
 
-import javax.annotation.Nonnull;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Random;
-
 import static java.lang.Math.abs;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toMap;
+
+import java.util.Locale;
+import java.util.Map;
+import java.util.Random;
+import javax.annotation.Nonnull;
 
 public enum Flip {
     NONE(3, "none"),

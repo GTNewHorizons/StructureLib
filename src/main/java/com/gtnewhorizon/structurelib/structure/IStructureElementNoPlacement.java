@@ -11,7 +11,8 @@ public interface IStructureElementNoPlacement<T> extends IStructureElement<T> {
     }
 
     @Override
-    default PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+    default PlaceResult survivalPlaceBlock(
+            T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
         return PlaceResult.SKIP;
     }
 }

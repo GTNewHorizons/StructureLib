@@ -1,15 +1,14 @@
 package com.gtnewhorizon.structurelib.util;
 
+import java.util.Objects;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import net.minecraft.block.Block;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
-
-import java.util.Objects;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 public final class ItemStackPredicate implements Predicate<ItemStack> {
     public static ItemStackPredicate from(Item item) {
@@ -66,15 +65,12 @@ public final class ItemStackPredicate implements Predicate<ItemStack> {
                 if (lhs == null || lhs.hasNoTags()) return true;
                 if (rhs == null || rhs.hasNoTags()) return false;
                 for (String key : MiscUtils.getTagKeys(lhs)) {
-                    if (!rhs.hasKey(key, lhs.func_150299_b(key)))
-                        return false;
+                    if (!rhs.hasKey(key, lhs.func_150299_b(key))) return false;
                     NBTBase tag = lhs.getTag(key);
                     if (tag instanceof NBTTagCompound) {
-                        if (!test((NBTTagCompound) tag, rhs.getCompoundTag(key)))
-                            return false;
+                        if (!test((NBTTagCompound) tag, rhs.getCompoundTag(key))) return false;
                     } else {
-                        if (!tag.equals(rhs.getTag(key)))
-                            return false;
+                        if (!tag.equals(rhs.getTag(key))) return false;
                     }
                 }
                 return true;

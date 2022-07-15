@@ -11,8 +11,7 @@ public class SortedRegistry<V> implements Iterable<V> {
     private List<V> baked = Collections.emptyList();
 
     public void register(String key, V val) {
-        if (key == null || val == null)
-            throw new NullPointerException();
+        if (key == null || val == null) throw new NullPointerException();
         V old = store.putIfAbsent(key, val);
         if (old != null) {
             throw new IllegalArgumentException("Duplicate key: " + key);

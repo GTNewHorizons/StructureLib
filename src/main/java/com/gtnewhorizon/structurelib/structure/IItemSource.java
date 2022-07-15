@@ -2,13 +2,12 @@ package com.gtnewhorizon.structurelib.structure;
 
 import com.gtnewhorizon.structurelib.util.InventoryIterable;
 import com.gtnewhorizon.structurelib.util.InventoryUtility;
+import java.util.Map;
+import java.util.function.Predicate;
+import javax.annotation.Nonnull;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-
-import javax.annotation.Nonnull;
-import java.util.Map;
-import java.util.function.Predicate;
 
 public interface IItemSource {
     /**

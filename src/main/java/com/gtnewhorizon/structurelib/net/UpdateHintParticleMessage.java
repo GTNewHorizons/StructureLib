@@ -1,13 +1,13 @@
 package com.gtnewhorizon.structurelib.net;
 
+import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
+
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
-
-import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
 
 public class UpdateHintParticleMessage implements IMessage {
     private int x;
@@ -18,8 +18,7 @@ public class UpdateHintParticleMessage implements IMessage {
     private byte b;
     private byte a;
 
-    public UpdateHintParticleMessage() {
-    }
+    public UpdateHintParticleMessage() {}
 
     public UpdateHintParticleMessage(int x, short y, int z, byte r, byte g, byte b, byte a) {
         this.x = x;
@@ -56,10 +55,21 @@ public class UpdateHintParticleMessage implements IMessage {
     public static class Handler implements IMessageHandler<UpdateHintParticleMessage, IMessage> {
         @Override
         public IMessage onMessage(UpdateHintParticleMessage msg, MessageContext ctx) {
-            boolean updateResult = StructureLibAPI.updateHintParticleTint(StructureLib.getCurrentPlayer(), StructureLib.getCurrentPlayer().worldObj,
-                msg.x, msg.y, msg.z, new short[]{msg.r, msg.g, msg.b, msg.a,});
+            boolean updateResult = StructureLibAPI.updateHintParticleTint(
+                    StructureLib.getCurrentPlayer(),
+                    StructureLib.getCurrentPlayer().worldObj,
+                    msg.x,
+                    msg.y,
+                    msg.z,
+                    new short[] {
+                        msg.r, msg.g, msg.b, msg.a,
+                    });
             if (!updateResult)
-                LOGGER.debug("Server instructed to update hint particle at ({}, {}, {}) but there is nothing there!", msg.x, msg.y, msg.z);
+                LOGGER.debug(
+                        "Server instructed to update hint particle at ({}, {}, {}) but there is nothing there!",
+                        msg.x,
+                        msg.y,
+                        msg.z);
             return null;
         }
     }

@@ -5,6 +5,10 @@ import com.google.common.collect.HashBiMap;
 import com.gtnewhorizon.structurelib.entity.fx.EntityFXBlockHint;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
@@ -14,11 +18,6 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 public class ClientProxy extends CommonProxy {
 
@@ -63,8 +62,7 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public boolean updateHintParticleTint(EntityPlayer player, World w, int x, int y, int z, short[] rgBa) {
-        if (player != getCurrentPlayer())
-            return false; // how?
+        if (player != getCurrentPlayer()) return false; // how?
         HintParticleInfo info = new HintParticleInfo(x, y, z, null);
         EntityFXBlockHint existing = allHints.inverse().get(info);
         if (existing != null) {
@@ -105,13 +103,11 @@ public class ClientProxy extends CommonProxy {
     private static List<EntityFXBlockHint> currentHints;
 
     public static void onHintDead(EntityFXBlockHint fx) {
-        if (ConfigurationHandler.INSTANCE.isRemoveCollidingHologram())
-            allHints.remove(fx);
+        if (ConfigurationHandler.INSTANCE.isRemoveCollidingHologram()) allHints.remove(fx);
         for (Iterator<List<EntityFXBlockHint>> iterator = hintOwners.iterator(); iterator.hasNext(); ) {
             List<EntityFXBlockHint> list = iterator.next();
             if (list.remove(fx)) {
-                if (list.isEmpty())
-                    iterator.remove();
+                if (list.isEmpty()) iterator.remove();
                 break;
             }
         }
@@ -119,29 +115,24 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void startHinting(World w) {
-        if (!w.isRemote)
-            return;
-        if (currentHints != null)
-            hintOwners.add(currentHints);
+        if (!w.isRemote) return;
+        if (currentHints != null) hintOwners.add(currentHints);
         currentHints = new LinkedList<>();
     }
 
     private void ensureHinting() {
-        if (currentHints == null)
-            currentHints = new LinkedList<>();
+        if (currentHints == null) currentHints = new LinkedList<>();
     }
 
     @Override
     public void endHinting(World w) {
-        if (!w.isRemote)
-            return;
+        if (!w.isRemote) return;
         while (!hintOwners.isEmpty() && hintOwners.size() >= ConfigurationHandler.INSTANCE.getMaxCoexistingHologram()) {
             List<EntityFXBlockHint> list = hintOwners.remove(0);
             list.forEach(EntityFXBlockHint::setDead);
             list.clear();
         }
-        if (!currentHints.isEmpty())
-            hintOwners.add(currentHints);
+        if (!currentHints.isEmpty()) hintOwners.add(currentHints);
         currentHints = null;
     }
 

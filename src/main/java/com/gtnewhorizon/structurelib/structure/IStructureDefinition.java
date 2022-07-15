@@ -1,14 +1,13 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
+
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import java.util.Arrays;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-
-import java.util.Arrays;
-
-import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
 
 public interface IStructureDefinition<T> {
     /**
@@ -22,34 +21,117 @@ public interface IStructureDefinition<T> {
      */
     IStructureElement<T>[] getStructureFor(String name);
 
-    default boolean check(T object, String piece, World world, ExtendedFacing extendedFacing,
-                          int basePositionX, int basePositionY, int basePositionZ,
-                          int basePositionA, int basePositionB, int basePositionC,
-                          boolean forceCheckAllBlocks) {
-        return iterate(object, null, getStructureFor(piece), world, extendedFacing, basePositionX, basePositionY, basePositionZ,
-            basePositionA, basePositionB, basePositionC, false, forceCheckAllBlocks);
+    default boolean check(
+            T object,
+            String piece,
+            World world,
+            ExtendedFacing extendedFacing,
+            int basePositionX,
+            int basePositionY,
+            int basePositionZ,
+            int basePositionA,
+            int basePositionB,
+            int basePositionC,
+            boolean forceCheckAllBlocks) {
+        return iterate(
+                object,
+                null,
+                getStructureFor(piece),
+                world,
+                extendedFacing,
+                basePositionX,
+                basePositionY,
+                basePositionZ,
+                basePositionA,
+                basePositionB,
+                basePositionC,
+                false,
+                forceCheckAllBlocks);
     }
 
-    default boolean hints(T object, ItemStack trigger, String piece, World world, ExtendedFacing extendedFacing,
-                          int basePositionX, int basePositionY, int basePositionZ,
-                          int basePositionA, int basePositionB, int basePositionC) {
-        return iterate(object, trigger, getStructureFor(piece), world, extendedFacing, basePositionX, basePositionY, basePositionZ,
-            basePositionA, basePositionB, basePositionC, true, null);
+    default boolean hints(
+            T object,
+            ItemStack trigger,
+            String piece,
+            World world,
+            ExtendedFacing extendedFacing,
+            int basePositionX,
+            int basePositionY,
+            int basePositionZ,
+            int basePositionA,
+            int basePositionB,
+            int basePositionC) {
+        return iterate(
+                object,
+                trigger,
+                getStructureFor(piece),
+                world,
+                extendedFacing,
+                basePositionX,
+                basePositionY,
+                basePositionZ,
+                basePositionA,
+                basePositionB,
+                basePositionC,
+                true,
+                null);
     }
 
-    default boolean build(T object, ItemStack trigger, String piece, World world, ExtendedFacing extendedFacing,
-                          int basePositionX, int basePositionY, int basePositionZ,
-                          int basePositionA, int basePositionB, int basePositionC) {
-        return iterate(object, trigger, getStructureFor(piece), world, extendedFacing, basePositionX, basePositionY, basePositionZ,
-            basePositionA, basePositionB, basePositionC, false, null);
+    default boolean build(
+            T object,
+            ItemStack trigger,
+            String piece,
+            World world,
+            ExtendedFacing extendedFacing,
+            int basePositionX,
+            int basePositionY,
+            int basePositionZ,
+            int basePositionA,
+            int basePositionB,
+            int basePositionC) {
+        return iterate(
+                object,
+                trigger,
+                getStructureFor(piece),
+                world,
+                extendedFacing,
+                basePositionX,
+                basePositionY,
+                basePositionZ,
+                basePositionA,
+                basePositionB,
+                basePositionC,
+                false,
+                null);
     }
 
-    default boolean buildOrHints(T object, ItemStack trigger, String piece, World world, ExtendedFacing extendedFacing,
-                                 int basePositionX, int basePositionY, int basePositionZ,
-                                 int basePositionA, int basePositionB, int basePositionC,
-                                 boolean hintsOnly) {
-        return iterate(object, trigger, getStructureFor(piece), world, extendedFacing, basePositionX, basePositionY, basePositionZ,
-            basePositionA, basePositionB, basePositionC, hintsOnly, null);
+    default boolean buildOrHints(
+            T object,
+            ItemStack trigger,
+            String piece,
+            World world,
+            ExtendedFacing extendedFacing,
+            int basePositionX,
+            int basePositionY,
+            int basePositionZ,
+            int basePositionA,
+            int basePositionB,
+            int basePositionC,
+            boolean hintsOnly) {
+        return iterate(
+                object,
+                trigger,
+                getStructureFor(piece),
+                world,
+                extendedFacing,
+                basePositionX,
+                basePositionY,
+                basePositionZ,
+                basePositionA,
+                basePositionB,
+                basePositionC,
+                hintsOnly,
+                null);
     }
 
     /**
@@ -60,32 +142,66 @@ public interface IStructureDefinition<T> {
      *                      would be placed. use with caution.
      *                      if in doubt, call {@link #check(Object, String, World, ExtendedFacing, int, int, int, int, int, int, boolean)}
      *                      after this call and set this parameter to false
-     * @return number of elements built
+     * @return number of elements built, or -1 if structure done
      * @see #build(Object, ItemStack, String, World, ExtendedFacing, int, int, int, int, int, int)
      */
-    default int survivalBuild(T object, ItemStack trigger, String piece, World world, ExtendedFacing extendedFacing,
-                              int basePositionX, int basePositionY, int basePositionZ,
-                              int basePositionA, int basePositionB, int basePositionC, int elementBudget, IItemSource source, EntityPlayerMP actor, boolean check) {
-        SurvivalBuildStructureWalker<T> walker = new SurvivalBuildStructureWalker<>(object, trigger, source, actor, elementBudget, check);
-        StructureUtility.iterateV2(getStructureFor(piece), world, extendedFacing, basePositionX, basePositionY, basePositionZ,
-            basePositionA, basePositionB, basePositionC, walker, "survivalBuild");
+    default int survivalBuild(
+            T object,
+            ItemStack trigger,
+            String piece,
+            World world,
+            ExtendedFacing extendedFacing,
+            int basePositionX,
+            int basePositionY,
+            int basePositionZ,
+            int basePositionA,
+            int basePositionB,
+            int basePositionC,
+            int elementBudget,
+            IItemSource source,
+            EntityPlayerMP actor,
+            boolean check) {
+        SurvivalBuildStructureWalker<T> walker =
+                new SurvivalBuildStructureWalker<>(object, trigger, source, actor, elementBudget, check);
+        StructureUtility.iterateV2(
+                getStructureFor(piece),
+                world,
+                extendedFacing,
+                basePositionX,
+                basePositionY,
+                basePositionZ,
+                basePositionA,
+                basePositionB,
+                basePositionC,
+                walker,
+                "survivalBuild");
         return walker.getBuilt();
     }
 
-    static <T> boolean iterate(T object, ItemStack trigger, IStructureElement<T>[] elements, World world, ExtendedFacing extendedFacing,
-                               int basePositionX, int basePositionY, int basePositionZ,
-                               int basePositionA, int basePositionB, int basePositionC,
-                               boolean hintsOnly, Boolean checkBlocksIfNotNullForceCheckAllIfTrue) {
+    static <T> boolean iterate(
+            T object,
+            ItemStack trigger,
+            IStructureElement<T>[] elements,
+            World world,
+            ExtendedFacing extendedFacing,
+            int basePositionX,
+            int basePositionY,
+            int basePositionZ,
+            int basePositionA,
+            int basePositionB,
+            int basePositionC,
+            boolean hintsOnly,
+            Boolean checkBlocksIfNotNullForceCheckAllIfTrue) {
         if (world.isRemote ^ hintsOnly) {
             return false;
         }
 
-        //change base position to base offset
+        // change base position to base offset
         basePositionA = -basePositionA;
         basePositionB = -basePositionB;
         basePositionC = -basePositionC;
 
-        int[] abc = new int[]{basePositionA, basePositionB, basePositionC};
+        int[] abc = new int[] {basePositionA, basePositionB, basePositionC};
         int[] xyz = new int[3];
 
         if (checkBlocksIfNotNullForceCheckAllIfTrue != null) {
@@ -101,20 +217,28 @@ public interface IStructureDefinition<T> {
                         xyz[1] += basePositionY;
                         xyz[2] += basePositionZ;
 
-                        StructureLib.LOGGER.info("Multi [{}, {}, {}] step @ {} {}", basePositionX, basePositionY, basePositionZ, Arrays.toString(xyz), Arrays.toString(abc));
+                        StructureLib.LOGGER.info(
+                                "Multi [{}, {}, {}] step @ {} {}",
+                                basePositionX,
+                                basePositionY,
+                                basePositionZ,
+                                Arrays.toString(xyz),
+                                Arrays.toString(abc));
 
                         if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
                             if (!element.check(object, world, xyz[0], xyz[1], xyz[2])) {
                                 if (DEBUG_MODE) {
-                                    StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", " + basePositionZ + "] failed @ " +
-                                        Arrays.toString(xyz) + " " + Arrays.toString(abc));
+                                    StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", "
+                                            + basePositionZ + "] failed @ " + Arrays.toString(xyz) + " "
+                                            + Arrays.toString(abc));
                                 }
                                 return false;
                             }
                         } else {
                             if (DEBUG_MODE) {
-                                StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", " + basePositionZ + "] !blockExists @ " +
-                                    Arrays.toString(xyz) + " " + Arrays.toString(abc));
+                                StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", "
+                                        + basePositionZ + "] !blockExists @ " + Arrays.toString(xyz) + " "
+                                        + Arrays.toString(abc));
                             }
                             return false;
                         }
@@ -133,20 +257,28 @@ public interface IStructureDefinition<T> {
                         xyz[1] += basePositionY;
                         xyz[2] += basePositionZ;
 
-                        StructureLib.LOGGER.info("Multi [{}, {}, {}] step @ {} {}", basePositionX, basePositionY, basePositionZ, Arrays.toString(xyz), Arrays.toString(abc));
+                        StructureLib.LOGGER.info(
+                                "Multi [{}, {}, {}] step @ {} {}",
+                                basePositionX,
+                                basePositionY,
+                                basePositionZ,
+                                Arrays.toString(xyz),
+                                Arrays.toString(abc));
 
                         if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
                             if (!element.check(object, world, xyz[0], xyz[1], xyz[2])) {
                                 if (DEBUG_MODE) {
-                                    StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", " + basePositionZ + "] failed @ " +
-                                        Arrays.toString(xyz) + " " + Arrays.toString(abc));
+                                    StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", "
+                                            + basePositionZ + "] failed @ " + Arrays.toString(xyz) + " "
+                                            + Arrays.toString(abc));
                                 }
                                 return false;
                             }
                         } else {
                             if (DEBUG_MODE) {
-                                StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", " + basePositionZ + "] !blockExists @ " +
-                                    Arrays.toString(xyz) + " " + Arrays.toString(abc));
+                                StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", "
+                                        + basePositionZ + "] !blockExists @ " + Arrays.toString(xyz) + " "
+                                        + Arrays.toString(abc));
                             }
                         }
                         abc[0] += 1;
@@ -154,7 +286,8 @@ public interface IStructureDefinition<T> {
                 }
             }
             if (DEBUG_MODE) {
-                StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", " + basePositionZ + "] pass");
+                StructureLib.LOGGER.info(
+                        "Multi [" + basePositionX + ", " + basePositionY + ", " + basePositionZ + "] pass");
             }
         } else {
             if (hintsOnly) {

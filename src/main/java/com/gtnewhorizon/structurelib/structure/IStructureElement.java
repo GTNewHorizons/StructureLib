@@ -1,13 +1,13 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
+import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
+import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
+
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-
-import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
-import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
-import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 
 /**
  * Use StructureUtility to instantiate
@@ -25,13 +25,14 @@ public interface IStructureElement<T> {
      * @param s     drain resources from this place
      * @param actor source of action.
      */
-    default PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-        if (PANIC_MODE)
-            throw new RuntimeException("Panic Tripwire hit");
+    default PlaceResult survivalPlaceBlock(
+            T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+        if (PANIC_MODE) throw new RuntimeException("Panic Tripwire hit");
         if (DEBUG_MODE)
-            LOGGER.error("Default implementation of survivalPlaceBlock hit! Things aren't going to work well! IStructureElement class: {}", getClass().getName());
-        if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor))
-            return PlaceResult.REJECT;
+            LOGGER.error(
+                    "Default implementation of survivalPlaceBlock hit! Things aren't going to work well! IStructureElement class: {}",
+                    getClass().getName());
+        if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
         return PlaceResult.SKIP;
     }
 

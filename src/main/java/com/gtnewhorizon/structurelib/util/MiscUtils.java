@@ -1,8 +1,7 @@
 package com.gtnewhorizon.structurelib.util;
 
-import net.minecraft.nbt.NBTTagCompound;
-
 import java.util.Set;
+import net.minecraft.nbt.NBTTagCompound;
 
 /**
  * not related to a certain mod!

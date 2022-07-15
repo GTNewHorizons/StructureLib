@@ -18,26 +18,28 @@
  */
 package com.gtnewhorizon.structurelib.util;
 
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
-
 import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 
 /**
  * This class is part of API, but is not stable. Use at your own risk.
  */
 public class InventoryUtility {
-    private static final SortedRegistry<Function<ItemStack, Iterable<ItemStack>>> stackExtractors = new SortedRegistry<>();
+    private static final SortedRegistry<Function<ItemStack, Iterable<ItemStack>>> stackExtractors =
+            new SortedRegistry<>();
     /**
      * The remove() of the Iterable returned must be implemented!
      */
-    private static final SortedRegistry<Function<EntityPlayerMP, Iterable<ItemStack>>> inventoryProviders = new SortedRegistry<>();
+    private static final SortedRegistry<Function<EntityPlayerMP, Iterable<ItemStack>>> inventoryProviders =
+            new SortedRegistry<>();
 
     static {
-        inventoryProviders.register("5000-main-inventory", player -> new ItemStackArrayIterable(player.inventory.mainInventory));
+        inventoryProviders.register(
+                "5000-main-inventory", player -> new ItemStackArrayIterable(player.inventory.mainInventory));
     }
 
     public static void registerStackExtractor(String key, Function<ItemStack, Iterable<ItemStack>> val) {
@@ -58,13 +60,13 @@ public class InventoryUtility {
      * @param count     let's hope int size is enough...
      * @return amount taken. never negative nor bigger than count...
      */
-    public static Map<ItemStack, Integer> takeFromInventory(EntityPlayerMP player, Predicate<ItemStack> predicate, boolean simulate, int count) {
+    public static Map<ItemStack, Integer> takeFromInventory(
+            EntityPlayerMP player, Predicate<ItemStack> predicate, boolean simulate, int count) {
         Map<ItemStack, Integer> store = new ItemStackMap<>();
         int sum = 0;
         for (Function<EntityPlayerMP, Iterable<ItemStack>> provider : inventoryProviders) {
             sum += takeFromInventory(provider.apply(player), predicate, simulate, count - sum, true, store);
-            if (sum >= count)
-                return store;
+            if (sum >= count) return store;
         }
         return store;
     }
@@ -79,13 +81,20 @@ public class InventoryUtility {
      * @param count     let's hope int size is enough...
      * @return amount taken. never negative nor bigger than count...
      */
-    public static Map<ItemStack, Integer> takeFromInventory(Iterable<ItemStack> inv, Predicate<ItemStack> predicate, boolean simulate, int count) {
+    public static Map<ItemStack, Integer> takeFromInventory(
+            Iterable<ItemStack> inv, Predicate<ItemStack> predicate, boolean simulate, int count) {
         Map<ItemStack, Integer> store = new ItemStackMap<>();
         takeFromInventory(inv, predicate, simulate, count, true, store);
         return store;
     }
 
-    private static int takeFromInventory(Iterable<ItemStack> inv, Predicate<ItemStack> predicate, boolean simulate, int count, boolean recurse, Map<ItemStack, Integer> store) {
+    private static int takeFromInventory(
+            Iterable<ItemStack> inv,
+            Predicate<ItemStack> predicate,
+            boolean simulate,
+            int count,
+            boolean recurse,
+            Map<ItemStack, Integer> store) {
         int found = 0;
         for (Iterator<ItemStack> iterator = inv.iterator(); iterator.hasNext(); ) {
             ItemStack stack = iterator.next();
@@ -104,10 +113,8 @@ public class InventoryUtility {
                     return count;
                 }
                 store.merge(stack, stack.stackSize, Integer::sum);
-                if (!simulate)
-                    iterator.remove();
-                if (found == count)
-                    return count;
+                if (!simulate) iterator.remove();
+                if (found == count) return count;
             }
             if (!recurse) continue;
             for (Function<ItemStack, Iterable<ItemStack>> f : stackExtractors) {

@@ -1,9 +1,8 @@
 package com.gtnewhorizon.structurelib.util;
 
+import java.util.Iterator;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-
-import java.util.Iterator;
 
 public class InventoryIterable implements Iterable<ItemStack> {
     private final IInventory inv;

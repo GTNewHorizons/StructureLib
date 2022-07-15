@@ -22,18 +22,18 @@ public class ConstructableUtility {
     private static final int BUDGET = 25;
     public static boolean redBrokenOne = true; // TODO this is horrible
 
-    private ConstructableUtility() {
+    private ConstructableUtility() {}
 
-    }
-
-    public static boolean handle(ItemStack aStack, EntityPlayer aPlayer, World aWorld, int aX, int aY, int aZ, int aSide) {
+    public static boolean handle(
+            ItemStack aStack, EntityPlayer aPlayer, World aWorld, int aX, int aY, int aZ, int aSide) {
         StructureLibAPI.startHinting(aWorld);
         boolean ret = handle0(aStack, aPlayer, aWorld, aX, aY, aZ, aSide);
         StructureLibAPI.endHinting(aWorld);
         return ret;
     }
 
-    private static boolean handle0(ItemStack aStack, EntityPlayer aPlayer, World aWorld, int aX, int aY, int aZ, int aSide) {
+    private static boolean handle0(
+            ItemStack aStack, EntityPlayer aPlayer, World aWorld, int aX, int aY, int aZ, int aSide) {
         TileEntity tTileEntity = aWorld.getTileEntity(aX, aY, aZ);
         if (tTileEntity == null || aPlayer instanceof FakePlayer) {
             return aPlayer instanceof EntityPlayerMP;
@@ -44,7 +44,8 @@ public class ConstructableUtility {
 
             long timePast = StructureLib.getOverworldTime() - getLastUseTick(aStack);
             if (timePast < COOLDOWN) {
-                aPlayer.addChatComponentMessage(new ChatComponentTranslation("item.structurelib.constructableTrigger.too_fast", COOLDOWN - timePast));
+                aPlayer.addChatComponentMessage(new ChatComponentTranslation(
+                        "item.structurelib.constructableTrigger.too_fast", COOLDOWN - timePast));
                 return true;
             }
         } else if (!StructureLib.isCurrentPlayer(aPlayer)) {
@@ -57,10 +58,11 @@ public class ConstructableUtility {
         else if (tTileEntity instanceof IConstructable) {
             constructable = (IConstructable) tTileEntity;
         } else if (IMultiblockInfoContainer.contains(tTileEntity.getClass())) {
-            ExtendedFacing facing = tTileEntity instanceof IAlignment ?
-                ((IAlignment) tTileEntity).getExtendedFacing() :
-                ExtendedFacing.of(ForgeDirection.getOrientation(aSide));
-            constructable = IMultiblockInfoContainer.<TileEntity>get(tTileEntity.getClass()).toConstructable(tTileEntity, facing);
+            ExtendedFacing facing = tTileEntity instanceof IAlignment
+                    ? ((IAlignment) tTileEntity).getExtendedFacing()
+                    : ExtendedFacing.of(ForgeDirection.getOrientation(aSide));
+            constructable = IMultiblockInfoContainer.<TileEntity>get(tTileEntity.getClass())
+                    .toConstructable(tTileEntity, facing);
         }
 
         if (constructable == null) return false;
@@ -72,8 +74,11 @@ public class ConstructableUtility {
                 constructable.construct(aStack, false);
             } else if (constructable instanceof ISurvivalConstructable) {
                 EntityPlayerMP playerMP = (EntityPlayerMP) aPlayer;
-                if (((ISurvivalConstructable) constructable).survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer(playerMP), playerMP) > 0)
-                    // TODO somehow notify extensions that their inventory might have been modified and need to be synced to client or saved
+                if (((ISurvivalConstructable) constructable)
+                                .survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer(playerMP), playerMP)
+                        > 0)
+                    // TODO somehow notify extensions that their inventory might have been modified and need to be
+                    // synced to client or saved
                     playerMP.inventory.markDirty();
                 setLastUseTickToStackTag(aStack);
             }
@@ -93,8 +98,7 @@ public class ConstructableUtility {
 
     private static void setLastUseTickToStackTag(ItemStack aStack) {
         NBTTagCompound tag = aStack.stackTagCompound;
-        if (tag == null)
-            tag = aStack.stackTagCompound = new NBTTagCompound();
+        if (tag == null) tag = aStack.stackTagCompound = new NBTTagCompound();
         // here we force use the overworld tick time, in case the current world is over
         tag.setLong("LastUse", StructureLib.getOverworldTime());
     }
