@@ -1,16 +1,14 @@
 package com.gtnewhorizon.structurelib;
 
-import net.minecraftforge.common.config.Configuration;
-
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Objects;
+import javax.annotation.Nullable;
+import net.minecraftforge.common.config.Configuration;
 
 enum ConfigurationVersion {
     V1 {
         @Override
-        protected void step(Configuration c) {
-        }
+        protected void step(Configuration c) {}
     };
 
     private static final ConfigurationVersion[] VALUES = values();
@@ -32,7 +30,10 @@ enum ConfigurationVersion {
     }
 
     public static ConfigurationVersion identify(Configuration c) {
-        return Arrays.stream(VALUES).filter(v -> Objects.equals(c.getLoadedConfigVersion(), v.getVersionMarker())).findFirst().orElse(V1);
+        return Arrays.stream(VALUES)
+                .filter(v -> Objects.equals(c.getLoadedConfigVersion(), v.getVersionMarker()))
+                .findFirst()
+                .orElse(V1);
     }
 
     @Nullable

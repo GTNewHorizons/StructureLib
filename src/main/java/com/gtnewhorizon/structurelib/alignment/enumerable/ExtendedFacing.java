@@ -1,20 +1,19 @@
 package com.gtnewhorizon.structurelib.alignment.enumerable;
 
-import com.google.common.collect.ImmutableSet;
-import com.gtnewhorizon.structurelib.alignment.IAlignment;
-import com.gtnewhorizon.structurelib.alignment.IntegerAxisSwap;
-import com.gtnewhorizon.structurelib.util.Vec3Impl;
-import net.minecraft.util.StatCollector;
-import net.minecraft.util.Vec3;
-import net.minecraftforge.common.util.ForgeDirection;
-
-import java.util.*;
-
 import static com.gtnewhorizon.structurelib.alignment.IAlignment.FLIPS_COUNT;
 import static com.gtnewhorizon.structurelib.alignment.IAlignment.ROTATIONS_COUNT;
 import static java.lang.Math.abs;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.*;
+
+import com.google.common.collect.ImmutableSet;
+import com.gtnewhorizon.structurelib.alignment.IAlignment;
+import com.gtnewhorizon.structurelib.alignment.IntegerAxisSwap;
+import com.gtnewhorizon.structurelib.util.Vec3Impl;
+import java.util.*;
+import net.minecraft.util.StatCollector;
+import net.minecraft.util.Vec3;
+import net.minecraftforge.common.util.ForgeDirection;
 
 public enum ExtendedFacing {
     DOWN_NORMAL_NONE("down normal none"),
@@ -120,20 +119,34 @@ public enum ExtendedFacing {
     public static final int STATES_COUNT = VALUES.length;
 
     static {
-        stream(values()).forEach(extendedFacing ->
-            FOR_FACING.compute(extendedFacing.direction, ((forgeDirection, extendedFacings) -> {
-                if (extendedFacings == null) {
-                    extendedFacings = new ArrayList<>();
-                }
-                extendedFacings.add(extendedFacing);
-                return extendedFacings;
-            })));
+        stream(values())
+                .forEach(extendedFacing ->
+                        FOR_FACING.compute(extendedFacing.direction, ((forgeDirection, extendedFacings) -> {
+                            if (extendedFacings == null) {
+                                extendedFacings = new ArrayList<>();
+                            }
+                            extendedFacings.add(extendedFacing);
+                            return extendedFacings;
+                        })));
     }
 
-    private static final Map<String, ExtendedFacing> NAME_LOOKUP = stream(VALUES).collect(toMap(ExtendedFacing::getName2, (extendedFacing) -> extendedFacing));
-    private static final EnumMap<ForgeDirection, ImmutableSet<ExtendedFacing>> LOOKUP_BY_DIRECTION = stream(VALUES).collect(groupingBy(ExtendedFacing::getDirection, () -> new EnumMap<>(ForgeDirection.class), collectingAndThen(toSet(), ImmutableSet::copyOf)));
-    private static final EnumMap<Rotation, ImmutableSet<ExtendedFacing>> LOOKUP_BY_ROTATION = stream(VALUES).collect(groupingBy(ExtendedFacing::getRotation, () -> new EnumMap<>(Rotation.class), collectingAndThen(toSet(), ImmutableSet::copyOf)));
-    private static final EnumMap<Flip, ImmutableSet<ExtendedFacing>> LOOKUP_BY_FLIP = stream(VALUES).collect(groupingBy(ExtendedFacing::getFlip, () -> new EnumMap<>(Flip.class), collectingAndThen(toSet(), ImmutableSet::copyOf)));
+    private static final Map<String, ExtendedFacing> NAME_LOOKUP =
+            stream(VALUES).collect(toMap(ExtendedFacing::getName2, (extendedFacing) -> extendedFacing));
+    private static final EnumMap<ForgeDirection, ImmutableSet<ExtendedFacing>> LOOKUP_BY_DIRECTION = stream(VALUES)
+            .collect(groupingBy(
+                    ExtendedFacing::getDirection,
+                    () -> new EnumMap<>(ForgeDirection.class),
+                    collectingAndThen(toSet(), ImmutableSet::copyOf)));
+    private static final EnumMap<Rotation, ImmutableSet<ExtendedFacing>> LOOKUP_BY_ROTATION = stream(VALUES)
+            .collect(groupingBy(
+                    ExtendedFacing::getRotation,
+                    () -> new EnumMap<>(Rotation.class),
+                    collectingAndThen(toSet(), ImmutableSet::copyOf)));
+    private static final EnumMap<Flip, ImmutableSet<ExtendedFacing>> LOOKUP_BY_FLIP = stream(VALUES)
+            .collect(groupingBy(
+                    ExtendedFacing::getFlip,
+                    () -> new EnumMap<>(Flip.class),
+                    collectingAndThen(toSet(), ImmutableSet::copyOf)));
     private final ForgeDirection direction;
     private final ForgeDirection a, b, c;
     private final Rotation rotation;
@@ -182,7 +195,7 @@ public enum ExtendedFacing {
             default:
                 throw new RuntimeException("Is impossible...");
         }
-        switch (flip) {//This duplicates some axis swaps since flip boolean would do, but seems more convenient to use
+        switch (flip) { // This duplicates some axis swaps since flip boolean would do, but seems more convenient to use
             case HORIZONTAL:
                 a = a.getOpposite();
                 break;
@@ -340,7 +353,6 @@ public enum ExtendedFacing {
     public void getWorldOffset(double[] point, double[] out) {
         integerAxisSwap.inverseTranslate(point, out);
     }
-
 
     /**
      * Translates world offset  to  relative front facing offset

@@ -1,12 +1,11 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import com.gtnewhorizon.structurelib.util.Vec3Impl;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
 import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.*;
+
+import com.gtnewhorizon.structurelib.util.Vec3Impl;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class StructureDefinition<T> implements IStructureDefinition<T> {
     private final Map<Character, IStructureElement<T>> elements;
@@ -18,9 +17,9 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
     }
 
     private StructureDefinition(
-        Map<Character, IStructureElement<T>> elements,
-        Map<String, String> shapes,
-        Map<String, IStructureElement<T>[]> structures) {
+            Map<Character, IStructureElement<T>> elements,
+            Map<String, String> shapes,
+            Map<String, IStructureElement<T>[]> structures) {
         this.elements = elements;
         this.shapes = shapes;
         this.structures = structures;
@@ -142,17 +141,15 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         private Map<String, IStructureElement<T>[]> compileElementSetMap() {
             Set<Integer> missing = findMissing();
             if (missing.isEmpty()) {
-                return shapes.entrySet().stream()
-                    .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> e.getValue().chars()
-                            .mapToObj(c -> (char) c)
-                            .distinct()
-                            .map(elements::get)
-                            .toArray(IStructureElement[]::new)
-                    ));
+                return shapes.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()
+                        .chars()
+                        .mapToObj(c -> (char) c)
+                        .distinct()
+                        .map(elements::get)
+                        .toArray(IStructureElement[]::new)));
             } else {
-                throw new RuntimeException("Missing Structure Element bindings for (chars as integers): " +
-                    Arrays.toString(missing.toArray()));
+                throw new RuntimeException("Missing Structure Element bindings for (chars as integers): "
+                        + Arrays.toString(missing.toArray()));
             }
         }
 
@@ -160,22 +157,22 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         private Map<String, IStructureElement<T>[]> compileStructureMap() {
             Set<Integer> missing = findMissing();
             if (missing.isEmpty()) {
-                return shapes.entrySet().stream()
-                    .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> e.getValue().chars().mapToObj(c -> elements.get((char) c)).toArray(IStructureElement[]::new)
-                    ));
+                return shapes.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()
+                        .chars()
+                        .mapToObj(c -> elements.get((char) c))
+                        .toArray(IStructureElement[]::new)));
             } else {
-                throw new RuntimeException("Missing Structure Element bindings for (chars as integers): " +
-                    Arrays.toString(missing.toArray()));
+                throw new RuntimeException("Missing Structure Element bindings for (chars as integers): "
+                        + Arrays.toString(missing.toArray()));
             }
         }
 
         private Set<Integer> findMissing() {
             return shapes.values().stream()
-                .flatMapToInt(CharSequence::chars)
-                .filter(i -> !elements.containsKey((char) i))
-                .boxed()
-                .collect(Collectors.toSet());
+                    .flatMapToInt(CharSequence::chars)
+                    .filter(i -> !elements.containsKey((char) i))
+                    .boxed()
+                    .collect(Collectors.toSet());
         }
     }
 
@@ -194,8 +191,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
     @Override
     public IStructureElement<T>[] getStructureFor(String name) {
         IStructureElement<T>[] elements = structures.get(name);
-        if (elements == null)
-            throw new NoSuchElementException(name);
+        if (elements == null) throw new NoSuchElementException(name);
         return elements;
     }
 }

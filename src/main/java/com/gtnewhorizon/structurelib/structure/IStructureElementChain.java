@@ -1,5 +1,6 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
@@ -37,5 +38,25 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
             }
         }
         return false;
+    }
+
+    @Override
+    default PlaceResult survivalPlaceBlock(
+            T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+        boolean haveSkip = false;
+        for (IStructureElement<T> fallback : fallbacks()) {
+            PlaceResult result = fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+            switch (result) {
+                case REJECT:
+                    break;
+                case SKIP:
+                    haveSkip = true;
+                    break;
+                default:
+                    return result;
+            }
+        }
+        // TODO need reconsider to ensure this is the right course of action
+        return haveSkip ? PlaceResult.SKIP : PlaceResult.REJECT;
     }
 }

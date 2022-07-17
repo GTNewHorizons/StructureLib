@@ -21,9 +21,13 @@ Originally created by TecTech authors, taken with permission. It's under MIT lic
     }
     ```
    Replace `master-SNAPSHOT` with a commit hash or a tag name (if any) of your choice to prevent unexpected upstream changes.
-2. Add `required-after:structurelib;` to your `@Mod(dependencies = "..")` tring. 
+2. Add `required-after:structurelib;` to your `@Mod(dependencies = "..")` tring.
 3. Add `structurelib` to your `mcmod.info`.
 
 ## Contribution
 
 The project is developed using IDEA. Please manually configure the build to not delegate to gradle for textures to show up in dev.
+
+## Current license
+Due to me adding in ItemStackMap, which was derived from code from CodeChicken's LGPL mod NEI. This mod is effectively considered
+licensed under LGPL in its entirety since commit ebef584b8c518f8202cfe0984fb28a6d23e52b3d.

@@ -1,14 +1,15 @@
 package com.gtnewhorizon.structurelib;
 
-import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import com.gtnewhorizon.structurelib.block.BlockHint;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
-import com.gtnewhorizon.structurelib.proxy.CommonProxy;
+import com.gtnewhorizon.structurelib.net.AlignmentMessage;
+import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
 import com.gtnewhorizon.structurelib.util.XSTR;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
@@ -26,18 +27,29 @@ import org.apache.logging.log4j.Logger;
 /**
  * This class does not contain a stable API. Refrain from using this class.
  */
-@Mod(modid = StructureLibAPI.MOD_ID, name = "StructureLib", version = "GRADLETOKEN_VERSION", acceptableRemoteVersions = "*", guiFactory = "com.gtnewhorizon.structurelib.GuiFactory")
+@Mod(
+        modid = StructureLibAPI.MOD_ID,
+        name = "StructureLib",
+        version = "GRADLETOKEN_VERSION",
+        acceptableRemoteVersions = "*",
+        guiFactory = "com.gtnewhorizon.structurelib.GuiFactory")
 public class StructureLib {
     public static boolean DEBUG_MODE = Boolean.getBoolean("structurelib.debug");
+    public static boolean PANIC_MODE = Boolean.getBoolean("structurelib.panic");
     public static Logger LOGGER = LogManager.getLogger("StructureLib");
 
-    @SidedProxy(serverSide = "com.gtnewhorizon.structurelib.proxy.CommonProxy", clientSide = "com.gtnewhorizon.structurelib.proxy.ClientProxy")
+    @SidedProxy(
+            serverSide = "com.gtnewhorizon.structurelib.CommonProxy",
+            clientSide = "com.gtnewhorizon.structurelib.ClientProxy")
     static CommonProxy proxy;
+
     static SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel(StructureLibAPI.MOD_ID);
 
     static {
-        net.registerMessage(AlignmentMessage.ServerHandler.class, AlignmentMessage.AlignmentQuery.class, 0, Side.SERVER);
+        net.registerMessage(
+                AlignmentMessage.ServerHandler.class, AlignmentMessage.AlignmentQuery.class, 0, Side.SERVER);
         net.registerMessage(AlignmentMessage.ClientHandler.class, AlignmentMessage.AlignmentData.class, 1, Side.CLIENT);
+        net.registerMessage(UpdateHintParticleMessage.Handler.class, UpdateHintParticleMessage.class, 2, Side.CLIENT);
     }
 
     public static final XSTR RANDOM = new XSTR();
@@ -59,9 +71,17 @@ public class StructureLib {
         ConfigurationHandler.INSTANCE.init(e.getSuggestedConfigurationFile());
         GameRegistry.registerBlock(blockHint = new BlockHint(), ItemBlockHint.class, "blockhint");
         itemBlockHint = ItemBlock.getItemFromBlock(StructureLibAPI.getBlockHint());
-        GameRegistry.registerItem(itemFrontRotationTool = new ItemFrontRotationTool(), itemFrontRotationTool.getUnlocalizedName());
-        GameRegistry.registerItem(itemConstructableTrigger = new ItemConstructableTrigger(), itemConstructableTrigger.getUnlocalizedName());
+        GameRegistry.registerItem(
+                itemFrontRotationTool = new ItemFrontRotationTool(), itemFrontRotationTool.getUnlocalizedName());
+        GameRegistry.registerItem(
+                itemConstructableTrigger = new ItemConstructableTrigger(),
+                itemConstructableTrigger.getUnlocalizedName());
         proxy.preInit(e);
+    }
+
+    @Mod.EventHandler
+    public void init(FMLInitializationEvent e) {
+        // TODO register stackExtractors and inventoryExtractors for other mods
     }
 
     public static void addClientSideChatMessages(String... messages) {
@@ -74,5 +94,9 @@ public class StructureLib {
 
     public static boolean isCurrentPlayer(EntityPlayer player) {
         return proxy.isCurrentPlayer(player);
+    }
+
+    public static long getOverworldTime() {
+        return proxy.getOverworldTime();
     }
 }

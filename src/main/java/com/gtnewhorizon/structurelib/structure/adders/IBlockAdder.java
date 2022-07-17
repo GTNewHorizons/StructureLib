@@ -1,6 +1,5 @@
 package com.gtnewhorizon.structurelib.structure.adders;
 
-
 import net.minecraft.block.Block;
 
 public interface IBlockAdder<T> {
