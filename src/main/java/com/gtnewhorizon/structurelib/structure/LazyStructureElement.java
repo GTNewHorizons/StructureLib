@@ -1,9 +1,8 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import java.util.function.Function;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-
-import java.util.function.Function;
 
 class LazyStructureElement<T> implements IStructureElementDeferred<T> {
     private Function<T, IStructureElement<T>> to;

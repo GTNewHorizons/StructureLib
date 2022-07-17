@@ -57,7 +57,9 @@ public class Vec3Impl implements Comparable<Vec3Impl> {
     }
 
     public Vec3Impl offset(ForgeDirection facing, int n) {
-        return n == 0 ? this : new Vec3Impl(val0 + facing.offsetX * n, val1 + facing.offsetY * n, val2 + facing.offsetZ * n);
+        return n == 0
+                ? this
+                : new Vec3Impl(val0 + facing.offsetX * n, val1 + facing.offsetY * n, val2 + facing.offsetZ * n);
     }
 
     public Vec3Impl add(Vec3Impl pos) {
@@ -77,8 +79,10 @@ public class Vec3Impl implements Comparable<Vec3Impl> {
     }
 
     public Vec3Impl crossProduct(Vec3Impl vec) {
-        return new Vec3Impl(val1 * vec.val2 - val2 * vec.val1, val2 * vec.val0 - val0 * vec.val2,
-            val0 * vec.val1 - val1 * vec.val0);
+        return new Vec3Impl(
+                val1 * vec.val2 - val2 * vec.val1,
+                val2 * vec.val0 - val0 * vec.val2,
+                val0 * vec.val1 - val1 * vec.val0);
     }
 
     public boolean withinDistance(Vec3Impl to, double distance) {

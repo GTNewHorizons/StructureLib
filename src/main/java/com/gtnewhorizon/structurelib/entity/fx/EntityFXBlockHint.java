@@ -59,7 +59,14 @@ public class EntityFXBlockHint extends EntityFX {
     }
 
     @Override
-    public void renderParticle(Tessellator tes, float subTickTime, float p_70539_3_, float p_70539_4_, float p_70539_5_, float p_70539_6_, float p_70539_7_) {
+    public void renderParticle(
+            Tessellator tes,
+            float subTickTime,
+            float p_70539_3_,
+            float p_70539_4_,
+            float p_70539_5_,
+            float p_70539_6_,
+            float p_70539_7_) {
         float size = .5f;
         float X = (float) (prevPosX + (posX - prevPosX) * (double) subTickTime - EntityFX.interpPosX);
         float Y = (float) (prevPosY + (posY - prevPosY) * (double) subTickTime - EntityFX.interpPosY) - size / 2;
@@ -68,8 +75,8 @@ public class EntityFXBlockHint extends EntityFX {
         GL11.glDepthMask(false);
         tes.setColorRGBA((int) (mRGBa[0] * .9F), (int) (mRGBa[1] * .95F), (int) (mRGBa[2] * 1F), 192);
 
-        //var8, var9 - X U
-        //var 10, var 11 - Y V
+        // var8, var9 - X U
+        // var 10, var 11 - Y V
         for (int i = 0; i < 6; i++) {
             if (icons[i] == null) {
                 continue;
@@ -78,7 +85,7 @@ public class EntityFXBlockHint extends EntityFX {
             double U = icons[i].getMaxU();
             double v = icons[i].getMinV();
             double V = icons[i].getMaxV();
-            switch (i) {//{DOWN, UP, NORTH, SOUTH, WEST, EAST}
+            switch (i) { // {DOWN, UP, NORTH, SOUTH, WEST, EAST}
                 case 0:
                     tes.addVertexWithUV(X, Y, Z + size, u, V);
                     tes.addVertexWithUV(X, Y, Z, u, v);

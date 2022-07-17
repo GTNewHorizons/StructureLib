@@ -3,10 +3,9 @@ package com.gtnewhorizon.structurelib.alignment.constructable;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.HashMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-
-import java.util.HashMap;
 
 /**
  * To implement IConstructable on not own TileEntities

@@ -4,6 +4,7 @@ import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -12,8 +13,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
-
-import java.util.List;
 
 public class BlockHint extends Block {
     private static final IIcon[] hint = new IIcon[16];
@@ -26,7 +25,7 @@ public class BlockHint extends Block {
 
     @Override
     public void registerBlockIcons(IIconRegister aIconRegister) {
-        //super.registerBlockIcons(aIconRegister);
+        // super.registerBlockIcons(aIconRegister);
         hint[0] = aIconRegister.registerIcon(StructureLibAPI.MOD_ID + ":iconsets/HINT_0");
         hint[1] = aIconRegister.registerIcon(StructureLibAPI.MOD_ID + ":iconsets/HINT_1");
         hint[2] = aIconRegister.registerIcon(StructureLibAPI.MOD_ID + ":iconsets/HINT_2");

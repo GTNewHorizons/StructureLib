@@ -1,8 +1,10 @@
 package com.gtnewhorizon.structurelib;
 
-import com.gtnewhorizon.structurelib.net.AlignmentMessage;
+import static com.gtnewhorizon.structurelib.StructureLib.proxy;
+
 import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
@@ -11,8 +13,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
-
-import static com.gtnewhorizon.structurelib.StructureLib.proxy;
 
 /**
  * A stable interface into the structure lib's internals. Backwards compatibility is maintained to the maximum extend possible.
@@ -107,7 +107,6 @@ public class StructureLibAPI {
     public static void sendAlignment(IAlignmentProvider provider, NetworkRegistry.TargetPoint targetPoint) {
         StructureLib.net.sendToAllAround(new AlignmentMessage.AlignmentData(provider), targetPoint);
     }
-
 
     /**
      * Send the ExtendedFacing of this Tile Entity to all players in that dimension. Can be called on server side only.
