@@ -24,6 +24,7 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -63,8 +64,8 @@ public class StructureUtility {
 
         @Override
         public PlaceResult survivalPlaceBlock(
-                Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-            if (check(o, world, x, y, z)) return PlaceResult.ACCEPT;
+            Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer chatter) {
+            if (check(o, world, x, y, z)) return PlaceResult.SKIP;
             if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
             world.setBlock(x, y, z, Blocks.air, 0, 2);
             return PlaceResult.ACCEPT;
@@ -92,8 +93,8 @@ public class StructureUtility {
 
         @Override
         public PlaceResult survivalPlaceBlock(
-                Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-            if (check(o, world, x, y, z)) return PlaceResult.ACCEPT;
+            Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer chatter) {
+            if (check(o, world, x, y, z)) return PlaceResult.SKIP;
             // user should place anything here.
             // maybe make this configurable, but for now we try to take some cobble from user
             if (s.takeOne(ItemStackPredicate.from(Blocks.cobblestone), false) != null) {
@@ -123,7 +124,7 @@ public class StructureUtility {
 
         @Override
         public PlaceResult survivalPlaceBlock(
-                Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+            Object o, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer chatter) {
             return PlaceResult.REJECT;
         }
     };
@@ -347,7 +348,7 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                 if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 Pair<Block, Integer> hint = getHint(trigger);
                 if (hint == null) return PlaceResult.REJECT; // TODO or SKIP?
@@ -363,6 +364,18 @@ public class StructureUtility {
      * said mod is present, otherwise bad things will happen later!
      */
     public static <T> IStructureElement<T> ofBlockUnlocalizedName(String modid, String unlocalizedName, int meta) {
+        return ofBlockUnlocalizedName(modid, unlocalizedName, meta, false);
+    }
+
+    /**
+     * Denote a block using unlocalized names. This can be useful to get around mod loading order issues.
+     * <p>
+     * While no immediate error will be thrown, client code should ensure said mod is loaded and
+     * said mod is present, otherwise bad things will happen later!
+     * <p>
+     * Will place block or hint using the given meta if wildcard is true.
+     */
+    public static <T> IStructureElement<T> ofBlockUnlocalizedName(String modid, String unlocalizedName, int meta, boolean wildcard) {
         if (StringUtils.isBlank(unlocalizedName)) throw new IllegalArgumentException();
         if (meta < 0) throw new IllegalArgumentException();
         if (meta > 15) throw new IllegalArgumentException();
@@ -377,7 +390,7 @@ public class StructureUtility {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
-                return world.getBlock(x, y, z) == getBlock() && world.getBlockMetadata(x, y, z) == meta;
+                return world.getBlock(x, y, z) == getBlock() && (wildcard || world.getBlockMetadata(x, y, z) == meta);
             }
 
             @Override
@@ -394,7 +407,7 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                 if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 if (getBlock() == null) return PlaceResult.REJECT; // TODO or SKIP?
                 return StructureUtility.survivalPlaceBlock(getBlock(), meta, world, x, y, z, s, actor);
@@ -452,10 +465,10 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                 if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 if (init()) return StructureUtility.survivalPlaceBlock(block, meta, world, x, y, z, s, actor);
-                return fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                return fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -586,7 +599,7 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
@@ -613,7 +626,7 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
@@ -657,7 +670,7 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
@@ -685,7 +698,7 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
@@ -719,7 +732,7 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
@@ -746,7 +759,7 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
@@ -782,7 +795,7 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
@@ -808,7 +821,7 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
@@ -865,7 +878,7 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                     // TODO should we call block adder to check????
                     return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
@@ -892,7 +905,7 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                     // TODO should we call block adder to check????
                     return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
                 }
@@ -976,8 +989,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1006,8 +1019,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1047,8 +1060,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                if (predicate.test(t)) return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                if (predicate.test(t)) return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
                 return placeResultWhenDisabled;
             }
         };
@@ -1101,8 +1114,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                return elem.survivalPlaceBlock(t.getCurrentContext(), world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return elem.survivalPlaceBlock(t.getCurrentContext(), world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1154,8 +1167,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                return to.get().survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return to.get().survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1182,8 +1195,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                return to.apply(t).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return to.apply(t).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1211,8 +1224,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                return map.get(keyExtractor.apply(t)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return map.get(keyExtractor.apply(t)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1240,9 +1253,9 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                 return map.getOrDefault(keyExtractor.apply(t), defaultElem)
-                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1271,8 +1284,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                return array[keyExtractor.apply(t)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return array[keyExtractor.apply(t)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1305,8 +1318,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1334,8 +1347,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                return map.get(keyExtractor.apply(t, trigger)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return map.get(keyExtractor.apply(t, trigger)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1368,9 +1381,9 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                 return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1399,8 +1412,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1434,8 +1447,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1465,8 +1478,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                return map.get(keyExtractor.apply(t, trigger)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return map.get(keyExtractor.apply(t, trigger)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1499,9 +1512,9 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                 return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1532,8 +1545,8 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
-                return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actor);
+                T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }

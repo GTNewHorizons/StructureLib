@@ -13,14 +13,14 @@ public class UpdateHintParticleMessage implements IMessage {
     private int x;
     private short y;
     private int z;
-    private byte r;
-    private byte g;
-    private byte b;
-    private byte a;
+    private short r;
+    private short g;
+    private short b;
+    private short a;
 
     public UpdateHintParticleMessage() {}
 
-    public UpdateHintParticleMessage(int x, short y, int z, byte r, byte g, byte b, byte a) {
+    public UpdateHintParticleMessage(int x, short y, int z, short r, short g, short b, short a) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -35,10 +35,10 @@ public class UpdateHintParticleMessage implements IMessage {
         x = buf.readInt();
         y = buf.readShort();
         z = buf.readInt();
-        r = buf.readByte();
-        g = buf.readByte();
-        b = buf.readByte();
-        a = buf.readByte();
+        r = buf.readUnsignedByte();
+        g = buf.readUnsignedByte();
+        b = buf.readUnsignedByte();
+        a = buf.readUnsignedByte();
     }
 
     @Override
@@ -64,12 +64,13 @@ public class UpdateHintParticleMessage implements IMessage {
                     new short[] {
                         msg.r, msg.g, msg.b, msg.a,
                     });
-            if (!updateResult)
+            if (StructureLib.DEBUG_MODE)
                 LOGGER.debug(
-                        "Server instructed to update hint particle at ({}, {}, {}) but there is nothing there!",
+                        "Server instructed to update hint particle at ({}, {}, {}), result {}!",
                         msg.x,
                         msg.y,
-                        msg.z);
+                        msg.z,
+                        updateResult);
             return null;
         }
     }

@@ -21,8 +21,7 @@ public class CommonProxy {
     public boolean updateHintParticleTint(EntityPlayer player, World w, int x, int y, int z, short[] rgBa) {
         if (player instanceof EntityPlayerMP) { // just in case
             StructureLib.net.sendTo(
-                    new UpdateHintParticleMessage(
-                            x, (short) y, z, (byte) rgBa[0], (byte) rgBa[1], (byte) rgBa[2], (byte) rgBa[3]),
+                    new UpdateHintParticleMessage(x, (short) y, z, rgBa[0], rgBa[1], rgBa[2], rgBa[3]),
                     (EntityPlayerMP) player);
             return true;
         } else {

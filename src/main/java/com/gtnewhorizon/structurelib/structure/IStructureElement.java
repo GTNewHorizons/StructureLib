@@ -7,7 +7,10 @@ import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
+
+import java.util.function.Consumer;
 
 /**
  * Use StructureUtility to instantiate
@@ -22,11 +25,12 @@ public interface IStructureElement<T> {
     /**
      * Try place the block by taking resource from given IItemSource.
      *
-     * @param s     drain resources from this place
-     * @param actor source of action.
+     * @param s       drain resources from this place
+     * @param actor   source of action.
+     * @param chatter
      */
     default PlaceResult survivalPlaceBlock(
-            T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor) {
+        T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
         if (PANIC_MODE) throw new RuntimeException("Panic Tripwire hit");
         if (DEBUG_MODE)
             LOGGER.error(
@@ -34,6 +38,24 @@ public interface IStructureElement<T> {
                     getClass().getName());
         if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
         return PlaceResult.SKIP;
+    }
+
+    /**
+     * Forget the messed up class dependency graph for now. this is just so convenient.
+     */
+    default IStructureElementNoPlacement<T> noPlacement() {
+        return new IStructureElementNoPlacement<T>() {
+
+            @Override
+            public boolean check(T t, World world, int x, int y, int z) {
+                return IStructureElement.this.check(t, world, x, y, z);
+            }
+
+            @Override
+            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return IStructureElement.this.spawnHint(t, world, x, y, z, trigger);
+            }
+        };
     }
 
     default int getStepA() {

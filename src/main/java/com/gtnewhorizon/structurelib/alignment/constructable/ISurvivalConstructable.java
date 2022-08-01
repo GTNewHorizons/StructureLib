@@ -7,7 +7,7 @@ import net.minecraft.world.World;
 
 public interface ISurvivalConstructable extends IConstructable {
     /**
-     * Construct the structure using {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, net.minecraft.entity.player.EntityPlayerMP)}
+     * Construct the structure using {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, java.util.function.Consumer)}
      *
      * @return -1 if done, otherwise number of elements placed this round
      */

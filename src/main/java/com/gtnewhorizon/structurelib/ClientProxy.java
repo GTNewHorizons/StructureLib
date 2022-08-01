@@ -13,6 +13,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
@@ -62,6 +63,7 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public boolean updateHintParticleTint(EntityPlayer player, World w, int x, int y, int z, short[] rgBa) {
+        if (player instanceof EntityPlayerMP) return super.updateHintParticleTint(player, w, x, y, z, rgBa);
         if (player != getCurrentPlayer()) return false; // how?
         HintParticleInfo info = new HintParticleInfo(x, y, z, null);
         EntityFXBlockHint existing = allHints.inverse().get(info);

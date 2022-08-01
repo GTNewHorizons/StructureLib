@@ -36,7 +36,7 @@ public interface IMultiblockInfoContainer<T> {
     void construct(ItemStack stackSize, boolean hintsOnly, T tileEntity, ExtendedFacing aSide);
 
     /**
-     * Construct the structure using {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, net.minecraft.entity.player.EntityPlayerMP)}
+     * Construct the structure using {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, java.util.function.Consumer)}
      * @return -1 if done, a helping pointer
      */
     default int survivalConstruct(
