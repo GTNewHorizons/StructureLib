@@ -5,11 +5,7 @@ import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtilit
 import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
-
-import java.util.ArrayList;
-import java.util.List;
 
 class SurvivalBuildStructureWalker<T> implements IStructureWalker<T> {
     private final T object;
@@ -32,9 +28,9 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T> {
 
     @Override
     public boolean visit(IStructureElement<T> element, World world, int x, int y, int z) {
-        PlaceResult placeResult = element.survivalPlaceBlock(object, world, x, y, z, trigger, source, actor, actor::addChatComponentMessage);
-        if (placeResult != PlaceResult.SKIP && built == -1)
-            built = 0;
+        PlaceResult placeResult = element.survivalPlaceBlock(
+                object, world, x, y, z, trigger, source, actor, actor::addChatComponentMessage);
+        if (placeResult != PlaceResult.SKIP && built == -1) built = 0;
         switch (placeResult) {
             case SKIP:
                 return true;

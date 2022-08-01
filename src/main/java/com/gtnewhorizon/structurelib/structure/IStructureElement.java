@@ -5,12 +5,11 @@ import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
 import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 
 import com.gtnewhorizon.structurelib.StructureLibAPI;
+import java.util.function.Consumer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
-
-import java.util.function.Consumer;
 
 /**
  * Use StructureUtility to instantiate
@@ -30,7 +29,15 @@ public interface IStructureElement<T> {
      * @param chatter
      */
     default PlaceResult survivalPlaceBlock(
-        T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+            T t,
+            World world,
+            int x,
+            int y,
+            int z,
+            ItemStack trigger,
+            IItemSource s,
+            EntityPlayerMP actor,
+            Consumer<IChatComponent> chatter) {
         if (PANIC_MODE) throw new RuntimeException("Panic Tripwire hit");
         if (DEBUG_MODE)
             LOGGER.error(
