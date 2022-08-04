@@ -2,6 +2,8 @@ package com.gtnewhorizon.structurelib.structure;
 
 import com.gtnewhorizon.structurelib.util.InventoryIterable;
 import com.gtnewhorizon.structurelib.util.InventoryUtility;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 import java.util.Map;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
@@ -31,12 +33,40 @@ public interface IItemSource {
         return true;
     }
 
-    static IItemSource fromPlayer(EntityPlayerMP player) {
-        return (p, s, c) -> InventoryUtility.takeFromInventory(player, p, s, c);
+    default boolean takeOne(ItemStack stack, boolean simulate) {
+        ItemStack took = takeOne(ItemStackPredicate.from(stack, NBTMode.EXACT), simulate);
+        return took == null || took.stackSize <= 0;
     }
 
-    static IItemSource fromPlayer(EntityPlayerMP player, int except) {
-        return (p, s, c) -> InventoryUtility.takeFromInventory(player, p, s, c);
+    default boolean takeAll(ItemStack stack, boolean simulate) {
+        // fast path for 1 item take requests
+        if (stack.stackSize == 1) return takeOne(stack, simulate);
+        ItemStackPredicate predicate = ItemStackPredicate.from(stack, NBTMode.EXACT);
+        Map<ItemStack, Integer> have = take(predicate, true, stack.stackSize);
+        if (have.values().stream().mapToInt(Integer::intValue).sum() < stack.stackSize) return false;
+        take(predicate, simulate, stack.stackSize);
+        return true;
+    }
+
+    static IItemSource fromPlayer(EntityPlayerMP player) {
+        return new IItemSource() {
+            @Nonnull
+            @Override
+            public Map<ItemStack, Integer> take(Predicate<ItemStack> p, boolean s, int c) {
+                return InventoryUtility.takeFromInventory(player, p, s, c);
+            }
+
+            @Override
+            public boolean takeOne(ItemStack stack, boolean simulate) {
+                assert stack.stackSize == 1;
+                return InventoryUtility.takeFromInventory(player, stack, simulate) == 1;
+            }
+
+            @Override
+            public boolean takeAll(ItemStack stack, boolean simulate) {
+                return InventoryUtility.takeFromInventory(player, stack, simulate) == stack.stackSize;
+            }
+        };
     }
 
     static IItemSource fromInventory(IInventory inv) {

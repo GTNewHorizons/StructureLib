@@ -74,7 +74,8 @@ public class ConstructableUtility {
             if (aPlayer.capabilities.isCreativeMode) {
                 constructable.construct(aStack, false);
             } else if (constructable instanceof ISurvivalConstructable) {
-                int built = ((ISurvivalConstructable) constructable).survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer(playerMP), playerMP);
+                int built = ((ISurvivalConstructable) constructable)
+                        .survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer(playerMP), playerMP);
                 if (built > 0)
                     // TODO somehow notify extensions that their inventory might have been modified and need to be
                     // synced to client or saved

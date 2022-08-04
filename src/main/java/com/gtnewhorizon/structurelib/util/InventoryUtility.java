@@ -18,19 +18,24 @@
  */
 package com.gtnewhorizon.structurelib.util;
 
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 
 /**
  * This class is part of API, but is not stable. Use at your own risk.
  */
 public class InventoryUtility {
-    private static final SortedRegistry<Function<ItemStack, Iterable<ItemStack>>> stackExtractors =
-            new SortedRegistry<>();
+    private static final SortedRegistry<ItemStackExtractor> stackExtractors = new SortedRegistry<>();
     /**
      * The remove() of the Iterable returned must be implemented!
      */
@@ -42,7 +47,7 @@ public class InventoryUtility {
                 "5000-main-inventory", player -> new ItemStackArrayIterable(player.inventory.mainInventory));
     }
 
-    public static void registerStackExtractor(String key, Function<ItemStack, Iterable<ItemStack>> val) {
+    public static void registerStackExtractor(String key, ItemStackExtractor val) {
         stackExtractors.register(key, val);
     }
 
@@ -65,10 +70,31 @@ public class InventoryUtility {
         Map<ItemStack, Integer> store = new ItemStackMap<>();
         int sum = 0;
         for (Function<EntityPlayerMP, Iterable<ItemStack>> provider : inventoryProviders) {
-            sum += takeFromInventory(provider.apply(player), predicate, simulate, count - sum, true, store);
+            sum += takeFromInventory(provider.apply(player), predicate, simulate, count - sum, true, store, null);
             if (sum >= count) return store;
         }
         return store;
+    }
+
+    /**
+     * take count amount of stacks that matches given filter. might take partial amount of stuff, so simulation is suggested
+     * if you ever need to take more than one.
+     *
+     * @param player    source of stacks
+     * @param filter    the precise type of item to extract. stackSize matters
+     * @param simulate  whether to do removal
+     * @return amount taken. never negative nor bigger than count...
+     */
+    public static int takeFromInventory(EntityPlayerMP player, ItemStack filter, boolean simulate) {
+        int sum = 0;
+        int count = filter.stackSize;
+        ItemStackPredicate predicate = ItemStackPredicate.from(filter, NBTMode.EXACT);
+        HashMap<ItemStack, Integer> store = new HashMap<>();
+        for (Function<EntityPlayerMP, Iterable<ItemStack>> provider : inventoryProviders) {
+            sum += takeFromInventory(provider.apply(player), predicate, simulate, count - sum, true, store, filter);
+            if (sum >= count) return sum;
+        }
+        return sum;
     }
 
     /**
@@ -84,18 +110,24 @@ public class InventoryUtility {
     public static Map<ItemStack, Integer> takeFromInventory(
             Iterable<ItemStack> inv, Predicate<ItemStack> predicate, boolean simulate, int count) {
         Map<ItemStack, Integer> store = new ItemStackMap<>();
-        takeFromInventory(inv, predicate, simulate, count, true, store);
+        takeFromInventory(inv, predicate, simulate, count, true, store, null);
         return store;
     }
 
     private static int takeFromInventory(
-            Iterable<ItemStack> inv,
-            Predicate<ItemStack> predicate,
+            @Nonnull Iterable<ItemStack> inv,
+            @Nonnull Predicate<ItemStack> predicate,
             boolean simulate,
             int count,
             boolean recurse,
-            Map<ItemStack, Integer> store) {
+            @Nonnull Map<ItemStack, Integer> store,
+            @Nullable ItemStack filter) {
         int found = 0;
+        ItemStack copiedFilter = null;
+        if (filter != null) {
+            copiedFilter = new ItemStack(filter.getItem(), filter.stackSize, Items.feather.getDamage(filter));
+            copiedFilter.setTagCompound(filter.stackTagCompound);
+        }
         for (Iterator<ItemStack> iterator = inv.iterator(); iterator.hasNext(); ) {
             ItemStack stack = iterator.next();
             // invalid stack
@@ -117,13 +149,75 @@ public class InventoryUtility {
                 if (found == count) return count;
             }
             if (!recurse) continue;
-            for (Function<ItemStack, Iterable<ItemStack>> f : stackExtractors) {
-                Iterable<ItemStack> stacks = f.apply(stack);
-                if (stacks == null) continue;
-                found += takeFromInventory(inv, predicate, simulate, count - found, false, store);
+            for (ItemStackExtractor f : stackExtractors) {
+                if (f.getOptimizedExtractor() != null && filter != null) {
+                    copiedFilter.stackSize = count - found;
+                    found += f.getOptimizedExtractor().extract(stack, copiedFilter, simulate);
+                } else {
+                    Iterable<ItemStack> stacks = f.getPrimaryExtractor().apply(stack);
+                    if (stacks == null) continue;
+                    found += takeFromInventory(inv, predicate, simulate, count - found, false, store, null);
+                }
                 if (found > count) return found;
             }
         }
         return found;
+    }
+
+    public interface OptimizedExtractor {
+        /**
+         * Extract a particular type of item. The extractor can choose to not return all items contained within this item
+         * as long as it makes sense, but the author should inform the player of this.
+         *
+         * Whether optimized extractor do recursive extraction is at the discretion of implementor.
+         * @param source from where an extraction should be attempted
+         * @param toExtract stack to extract. should not be mutated! match the NBT tag using EXACT mode.
+         * @param simulate true if only query but does not actually remove
+         * @return amount extracted
+         */
+        int extract(ItemStack source, ItemStack toExtract, boolean simulate);
+    }
+
+    public static final class ItemStackExtractor {
+        private final Function<ItemStack, Iterable<ItemStack>> primaryExtractor;
+        private final OptimizedExtractor optimizedExtractor;
+
+        public static ItemStackExtractor createOnlyOptimized(@Nonnull OptimizedExtractor optimizedExtractor) {
+            return new ItemStackExtractor(s -> Collections.emptyList(), optimizedExtractor);
+        }
+
+        public static ItemStackExtractor create(@Nonnull Function<ItemStack, Iterable<ItemStack>> primaryExtractor) {
+            return new ItemStackExtractor(primaryExtractor, null);
+        }
+
+        public static ItemStackExtractor create(
+                @Nonnull Function<ItemStack, Iterable<ItemStack>> primaryExtractor,
+                @Nullable OptimizedExtractor optimizedExtractor) {
+            return new ItemStackExtractor(primaryExtractor, optimizedExtractor);
+        }
+
+        private ItemStackExtractor(
+                @Nonnull Function<ItemStack, Iterable<ItemStack>> primaryExtractor,
+                @Nullable OptimizedExtractor optimizedExtractor) {
+            this.primaryExtractor = primaryExtractor;
+            this.optimizedExtractor = optimizedExtractor;
+        }
+
+        /**
+         * Get the primary extractor. The primary extractor simply list all available ItemStacks.
+         */
+        @Nonnull
+        public Function<ItemStack, Iterable<ItemStack>> getPrimaryExtractor() {
+            return primaryExtractor;
+        }
+
+        /**
+         * Get the optimized extractor. The optimized extractor extract stacks by a given item stack instead of a generic
+         * predicate.
+         */
+        @Nullable
+        public OptimizedExtractor getOptimizedExtractor() {
+            return optimizedExtractor;
+        }
     }
 }

@@ -15,6 +15,16 @@ public final class ItemStackPredicate implements Predicate<ItemStack> {
         return new ItemStackPredicate(item);
     }
 
+    public static ItemStackPredicate from(ItemStack itemStack) {
+        return new ItemStackPredicate(itemStack.getItem()).setMeta(Items.feather.getDamage(itemStack));
+    }
+
+    public static ItemStackPredicate from(ItemStack itemStack, NBTMode mode) {
+        return new ItemStackPredicate(itemStack.getItem())
+                .setMeta(Items.feather.getDamage(itemStack))
+                .setTag(mode, itemStack.stackTagCompound);
+    }
+
     public static ItemStackPredicate from(Block block) {
         return new ItemStackPredicate(Item.getItemFromBlock(block));
     }
