@@ -74,12 +74,14 @@ public class ConstructableUtility {
             if (aPlayer.capabilities.isCreativeMode) {
                 constructable.construct(aStack, false);
             } else if (constructable instanceof ISurvivalConstructable) {
-                if (((ISurvivalConstructable) constructable)
-                                .survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer(playerMP), playerMP)
-                        > 0)
+                int built = ((ISurvivalConstructable) constructable).survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer(playerMP), playerMP);
+                if (built > 0)
                     // TODO somehow notify extensions that their inventory might have been modified and need to be
                     // synced to client or saved
                     playerMP.inventory.markDirty();
+                else if (built == -1) {
+                    playerMP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.complete"));
+                }
                 setLastUseTickToStackTag(aStack);
             } else {
                 playerMP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.error.not_enabled"));
