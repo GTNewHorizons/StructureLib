@@ -10,6 +10,7 @@ import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
 import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
 import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import cpw.mods.fml.common.registry.GameRegistry;
 import java.util.*;
@@ -24,6 +25,7 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
@@ -159,14 +161,25 @@ public class StructureUtility {
      * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
      */
     public static PlaceResult survivalPlaceBlock(
-            Block block, int meta, World world, int x, int y, int z, IItemSource s, EntityPlayerMP actor) {
+        Block block, int meta, World world, int x, int y, int z, IItemSource s, EntityPlayerMP actor) {
+        return survivalPlaceBlock(block, meta, world, x, y, z, s, actor, null);
+    }
+
+    /**
+     * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
+     */
+    public static PlaceResult survivalPlaceBlock(
+        Block block, int meta, World world, int x, int y, int z, IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
         if (block == null) throw new NullPointerException();
         if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
         Item itemBlock = Item.getItemFromBlock(block);
         int itemMeta = itemBlock instanceof ISpecialItemBlock
                 ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta)
                 : meta;
-        if (s.takeOne(ItemStackPredicate.from(itemBlock).setMeta(itemMeta), false) == null) return PlaceResult.REJECT;
+        if (s.takeOne(ItemStackPredicate.from(itemBlock).setMeta(itemMeta), false) == null) {
+            if (chatter != null) chatter.accept(new ChatComponentTranslation("structurelib.autoplace.error.no_simple_block", new ItemStack(itemBlock, itemMeta).func_151000_E())); // todo use translation instead
+            return PlaceResult.REJECT;
+        }
         if (block instanceof ICustomBlockSetting) {
             ICustomBlockSetting block2 = (ICustomBlockSetting) block;
             block2.setBlock(world, x, y, z, meta);
@@ -178,19 +191,41 @@ public class StructureUtility {
 
     /**
      * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
-     * @param stack a valid stack with stack size of exactly 1. Must be of an ItemBlock!
+     *
+     * @param stack   a valid stack with stack size of exactly 1. Must be of an ItemBlock!
      */
     public static PlaceResult survivalPlaceBlock(
-            ItemStack stack,
-            ItemStackPredicate.NBTMode nbtMode,
-            NBTTagCompound tag,
-            boolean assumeStackPresent,
-            World world,
-            int x,
-            int y,
-            int z,
-            IItemSource s,
-            EntityPlayerMP actor) {
+        ItemStack stack,
+        NBTMode nbtMode,
+        NBTTagCompound tag,
+        boolean assumeStackPresent,
+        World world,
+        int x,
+        int y,
+        int z,
+        IItemSource s,
+        EntityPlayerMP actor) {
+        return survivalPlaceBlock(stack, nbtMode, tag, assumeStackPresent, world, x, y, z, s, actor, null);
+    }
+
+    /**
+     * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
+     *
+     * @param stack   a valid stack with stack size of exactly 1. Must be of an ItemBlock!
+     * @param chatter pass in null to suppress error output, or just use the other overload
+     */
+    public static PlaceResult survivalPlaceBlock(
+        ItemStack stack,
+        NBTMode nbtMode,
+        NBTTagCompound tag,
+        boolean assumeStackPresent,
+        World world,
+        int x,
+        int y,
+        int z,
+        IItemSource s,
+        EntityPlayerMP actor,
+        @Nullable Consumer<IChatComponent> chatter) {
         if (stack == null) throw new NullPointerException();
         if (stack.stackSize != 1) throw new IllegalArgumentException();
         if (!(stack.getItem() instanceof ItemBlock)) throw new IllegalArgumentException();
@@ -198,8 +233,17 @@ public class StructureUtility {
         ItemStackPredicate predicate = ItemStackPredicate.from(stack.getItem())
                 .setMeta(Items.feather.getDamage(stack))
                 .setTag(nbtMode, tag);
-        if (!assumeStackPresent && (stack = s.takeOne(predicate, true)) == null) return PlaceResult.REJECT;
-        if (!stack.tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f))
+        ItemStack realStack;
+        if (assumeStackPresent) {
+            realStack = stack;
+        } else {
+            realStack = s.takeOne(predicate, true);
+            if (realStack == null) {
+                chatter.accept(new ChatComponentTranslation("structurelib.autoplace.error.no_item_stack", stack.func_151000_E()));
+                return PlaceResult.REJECT;
+            }
+        }
+        if (!realStack.tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f))
             return PlaceResult.REJECT;
         if (s.takeOne(predicate, false) == null)
             // this is bad! probably an exploit somehow. Let's nullify the block we just placed instead
@@ -384,7 +428,7 @@ public class StructureUtility {
                 if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 Pair<Block, Integer> hint = getHint(trigger);
                 if (hint == null) return PlaceResult.REJECT; // TODO or SKIP?
-                return StructureUtility.survivalPlaceBlock(hint.getKey(), hint.getValue(), world, x, y, z, s, actor);
+                return StructureUtility.survivalPlaceBlock(hint.getKey(), hint.getValue(), world, x, y, z, s, actor, chatter);
             }
         };
     }
@@ -451,7 +495,7 @@ public class StructureUtility {
                     Consumer<IChatComponent> chatter) {
                 if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 if (getBlock() == null) return PlaceResult.REJECT; // TODO or SKIP?
-                return StructureUtility.survivalPlaceBlock(getBlock(), meta, world, x, y, z, s, actor);
+                return StructureUtility.survivalPlaceBlock(getBlock(), meta, world, x, y, z, s, actor, chatter);
             }
         };
     }
@@ -516,7 +560,7 @@ public class StructureUtility {
                     EntityPlayerMP actor,
                     Consumer<IChatComponent> chatter) {
                 if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                if (init()) return StructureUtility.survivalPlaceBlock(block, meta, world, x, y, z, s, actor);
+                if (init()) return StructureUtility.survivalPlaceBlock(block, meta, world, x, y, z, s, actor, chatter);
                 return fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
@@ -658,7 +702,7 @@ public class StructureUtility {
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         } else {
@@ -693,7 +737,7 @@ public class StructureUtility {
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         }
@@ -745,7 +789,7 @@ public class StructureUtility {
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         } else {
@@ -781,7 +825,7 @@ public class StructureUtility {
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         }
@@ -823,7 +867,7 @@ public class StructureUtility {
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         } else {
@@ -858,7 +902,7 @@ public class StructureUtility {
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         }
@@ -902,7 +946,7 @@ public class StructureUtility {
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         } else {
@@ -936,7 +980,7 @@ public class StructureUtility {
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         }
@@ -1001,7 +1045,7 @@ public class StructureUtility {
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
                     // TODO should we call block adder to check????
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         } else {
@@ -1036,7 +1080,7 @@ public class StructureUtility {
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
                     // TODO should we call block adder to check????
-                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor);
+                    return StructureUtility.survivalPlaceBlock(defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         }
