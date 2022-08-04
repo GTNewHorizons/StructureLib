@@ -177,7 +177,7 @@ public class StructureUtility {
                 ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta)
                 : meta;
         if (s.takeOne(ItemStackPredicate.from(itemBlock).setMeta(itemMeta), false) == null) {
-            if (chatter != null) chatter.accept(new ChatComponentTranslation("structurelib.autoplace.error.no_simple_block", new ItemStack(itemBlock, itemMeta).func_151000_E())); // todo use translation instead
+            if (chatter != null) chatter.accept(new ChatComponentTranslation("structurelib.autoplace.error.no_simple_block", new ItemStack(itemBlock, 1, itemMeta).func_151000_E())); // todo use translation instead
             return PlaceResult.REJECT;
         }
         if (block instanceof ICustomBlockSetting) {
@@ -239,7 +239,8 @@ public class StructureUtility {
         } else {
             realStack = s.takeOne(predicate, true);
             if (realStack == null) {
-                chatter.accept(new ChatComponentTranslation("structurelib.autoplace.error.no_item_stack", stack.func_151000_E()));
+                if (chatter != null)
+                    chatter.accept(new ChatComponentTranslation("structurelib.autoplace.error.no_item_stack", stack.func_151000_E()));
                 return PlaceResult.REJECT;
             }
         }

@@ -68,12 +68,12 @@ public class ConstructableUtility {
         if (constructable == null) return false;
 
         if (aPlayer instanceof EntityPlayerMP) {
+            EntityPlayerMP playerMP = (EntityPlayerMP) aPlayer;
             // server side and sneaking (already checked above)
             // do construct
             if (aPlayer.capabilities.isCreativeMode) {
                 constructable.construct(aStack, false);
             } else if (constructable instanceof ISurvivalConstructable) {
-                EntityPlayerMP playerMP = (EntityPlayerMP) aPlayer;
                 if (((ISurvivalConstructable) constructable)
                                 .survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer(playerMP), playerMP)
                         > 0)
@@ -81,6 +81,8 @@ public class ConstructableUtility {
                     // synced to client or saved
                     playerMP.inventory.markDirty();
                 setLastUseTickToStackTag(aStack);
+            } else {
+                playerMP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.error.not_enabled"));
             }
             return true;
         }
