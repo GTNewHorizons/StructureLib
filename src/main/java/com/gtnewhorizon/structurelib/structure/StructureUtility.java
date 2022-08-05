@@ -477,12 +477,14 @@ public class StructureUtility {
 
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                if (getBlock() == null) return error().spawnHint(t, world, x, y, z, trigger);
                 StructureLibAPI.hintParticle(world, x, y, z, getBlock(), meta);
                 return true;
             }
 
             @Override
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                if (getBlock() == null) return error().placeBlock(t, world, x, y, z, trigger);
                 world.setBlock(x, y, z, getBlock(), meta, 2);
                 return true;
             }
@@ -499,7 +501,7 @@ public class StructureUtility {
                     EntityPlayerMP actor,
                     Consumer<IChatComponent> chatter) {
                 if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                if (getBlock() == null) return PlaceResult.REJECT; // TODO or SKIP?
+                if (getBlock() == null) return PlaceResult.REJECT;
                 return StructureUtility.survivalPlaceBlock(getBlock(), meta, world, x, y, z, s, actor, chatter);
             }
         };
@@ -1057,7 +1059,6 @@ public class StructureUtility {
                         IItemSource s,
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
-                    // TODO should we call block adder to check????
                     return StructureUtility.survivalPlaceBlock(
                             defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
@@ -1093,7 +1094,6 @@ public class StructureUtility {
                         IItemSource s,
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
-                    // TODO should we call block adder to check????
                     return StructureUtility.survivalPlaceBlock(
                             defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }

@@ -79,11 +79,6 @@ public class StructureLib {
         proxy.preInit(e);
     }
 
-    @Mod.EventHandler
-    public void init(FMLInitializationEvent e) {
-        // TODO register stackExtractors and inventoryExtractors for other mods
-    }
-
     public static void addClientSideChatMessages(String... messages) {
         proxy.addClientSideChatMessages(messages);
     }
