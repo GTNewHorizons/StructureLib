@@ -10,6 +10,10 @@ public class ItemStackArrayIterable implements Iterable<ItemStack> {
         this.stacks = stacks;
     }
 
+    public ItemStack[] getStacks() {
+        return stacks;
+    }
+
     @Override
     public Iterator<ItemStack> iterator() {
         return new Iterator<ItemStack>() {

@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
@@ -39,19 +40,19 @@ public class InventoryUtility {
     /**
      * The remove() of the Iterable returned must be implemented!
      */
-    private static final SortedRegistry<Function<EntityPlayerMP, Iterable<ItemStack>>> inventoryProviders =
-            new SortedRegistry<>();
+    private static final SortedRegistry<InventoryProvider<?>> inventoryProviders = new SortedRegistry<>();
 
     static {
         inventoryProviders.register(
-                "5000-main-inventory", player -> new ItemStackArrayIterable(player.inventory.mainInventory));
+                "5000-main-inventory",
+                new InventoryProvider<>(player -> new ItemStackArrayIterable(player.inventory.mainInventory), null));
     }
 
     public static void registerStackExtractor(String key, ItemStackExtractor val) {
         stackExtractors.register(key, val);
     }
 
-    public static void registerInventoryProvider(String key, Function<EntityPlayerMP, Iterable<ItemStack>> val) {
+    public static void registerInventoryProvider(String key, InventoryProvider<?> val) {
         inventoryProviders.register(key, val);
     }
 
@@ -69,8 +70,8 @@ public class InventoryUtility {
             EntityPlayerMP player, Predicate<ItemStack> predicate, boolean simulate, int count) {
         Map<ItemStack, Integer> store = new ItemStackMap<>();
         int sum = 0;
-        for (Function<EntityPlayerMP, Iterable<ItemStack>> provider : inventoryProviders) {
-            sum += takeFromInventory(provider.apply(player), predicate, simulate, count - sum, true, store, null);
+        for (InventoryProvider<?> provider : inventoryProviders) {
+            sum += takeFromInventory(player, predicate, simulate, count - sum, store, provider, null);
             if (sum >= count) return store;
         }
         return store;
@@ -90,11 +91,27 @@ public class InventoryUtility {
         int count = filter.stackSize;
         ItemStackPredicate predicate = ItemStackPredicate.from(filter, NBTMode.EXACT);
         HashMap<ItemStack, Integer> store = new HashMap<>();
-        for (Function<EntityPlayerMP, Iterable<ItemStack>> provider : inventoryProviders) {
-            sum += takeFromInventory(provider.apply(player), predicate, simulate, count - sum, true, store, filter);
+        for (InventoryProvider<?> provider : inventoryProviders) {
+            sum += takeFromInventory(player, predicate, simulate, count - sum, store, provider, filter);
             if (sum >= count) return sum;
         }
         return sum;
+    }
+
+    // workaround java generics issue
+    private static <R extends Iterable<ItemStack>> int takeFromInventory(
+            EntityPlayerMP player,
+            Predicate<ItemStack> predicate,
+            boolean simulate,
+            int count,
+            Map<ItemStack, Integer> store,
+            InventoryProvider<R> provider,
+            ItemStack filter) {
+        R inv = provider.getInventoryProvider().apply(player);
+        int taken = takeFromInventory(inv, predicate, simulate, count, true, store, filter);
+        if (taken > 0 && provider.getDirtyListener() != null)
+            provider.getDirtyListener().accept(inv);
+        return taken;
     }
 
     /**
@@ -176,6 +193,27 @@ public class InventoryUtility {
          * @return amount extracted
          */
         int extract(ItemStack source, ItemStack toExtract, boolean simulate);
+    }
+
+    public static final class InventoryProvider<R extends Iterable<ItemStack>> {
+        private final Function<EntityPlayerMP, R> inventoryProvider;
+        private final Consumer<R> dirtyListener;
+
+        public InventoryProvider(
+                @Nonnull Function<EntityPlayerMP, R> inventoryProvider, @Nullable Consumer<R> dirtyListener) {
+            this.inventoryProvider = inventoryProvider;
+            this.dirtyListener = dirtyListener;
+        }
+
+        @Nonnull
+        public Function<EntityPlayerMP, R> getInventoryProvider() {
+            return inventoryProvider;
+        }
+
+        @Nullable
+        public Consumer<R> getDirtyListener() {
+            return dirtyListener;
+        }
     }
 
     public static final class ItemStackExtractor {

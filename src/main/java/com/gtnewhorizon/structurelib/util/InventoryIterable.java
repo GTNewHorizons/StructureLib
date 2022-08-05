@@ -11,6 +11,10 @@ public class InventoryIterable implements Iterable<ItemStack> {
         this.inv = inv;
     }
 
+    public IInventory getInventory() {
+        return inv;
+    }
+
     @Override
     public Iterator<ItemStack> iterator() {
         return new Iterator<ItemStack>() {
