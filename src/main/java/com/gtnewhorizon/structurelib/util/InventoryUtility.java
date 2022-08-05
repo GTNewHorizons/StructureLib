@@ -34,7 +34,7 @@ import net.minecraft.item.ItemStack;
  * This class is part of API, but is not stable. Use at your own risk.
  */
 public class InventoryUtility {
-    private static final SortedRegistry<ItemStackExtractor> stackExtractors = new SortedRegistry<>();
+    private static final SortedRegistry<ItemStackExtractor<?>> stackExtractors = new SortedRegistry<>();
     /**
      * The remove() of the Iterable returned must be implemented!
      */
@@ -45,7 +45,7 @@ public class InventoryUtility {
                 "5000-main-inventory", player -> new ItemStackArrayIterable(player.inventory.mainInventory));
     }
 
-    public static void registerStackExtractor(String key, ItemStackExtractor val) {
+    public static void registerStackExtractor(String key, ItemStackExtractor<?> val) {
         stackExtractors.register(key, val);
     }
 
