@@ -4,14 +4,14 @@ import java.util.Iterator;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
-public class InventoryIterable implements Iterable<ItemStack> {
-    private final IInventory inv;
+public class InventoryIterable<Inv extends IInventory> implements Iterable<ItemStack> {
+    private final Inv inv;
 
-    public InventoryIterable(IInventory inv) {
+    public InventoryIterable(Inv inv) {
         this.inv = inv;
     }
 
-    public IInventory getInventory() {
+    public Inv getInventory() {
         return inv;
     }
 
