@@ -34,6 +34,7 @@ public interface IItemSource {
     }
 
     default boolean takeOne(ItemStack stack, boolean simulate) {
+        if (stack == null || stack.getItem() == null || stack.stackSize != 1) throw new IllegalArgumentException();
         ItemStack took = takeOne(ItemStackPredicate.from(stack, NBTMode.EXACT), simulate);
         return took == null || took.stackSize <= 0;
     }
@@ -58,7 +59,7 @@ public interface IItemSource {
 
             @Override
             public boolean takeOne(ItemStack stack, boolean simulate) {
-                assert stack.stackSize == 1;
+                if (stack == null || stack.getItem() == null || stack.stackSize != 1) throw new IllegalArgumentException();
                 return InventoryUtility.takeFromInventory(player, stack, simulate) == 1;
             }
 

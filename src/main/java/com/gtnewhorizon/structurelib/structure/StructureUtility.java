@@ -182,7 +182,7 @@ public class StructureUtility {
         int itemMeta = itemBlock instanceof ISpecialItemBlock
                 ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta)
                 : meta;
-        if (s.takeOne(new ItemStack(itemBlock, 1, itemMeta), false)) {
+        if (!s.takeOne(new ItemStack(itemBlock, 1, itemMeta), false)) {
             if (chatter != null)
                 chatter.accept(new ChatComponentTranslation(
                         "structurelib.autoplace.error.no_simple_block",
@@ -239,15 +239,13 @@ public class StructureUtility {
         if (stack.stackSize != 1) throw new IllegalArgumentException();
         if (!(stack.getItem() instanceof ItemBlock)) throw new IllegalArgumentException();
         if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
-        if (!assumeStackPresent) {
-            if (!s.takeOne(stack, true)) {
-                if (chatter != null)
-                    chatter.accept(new ChatComponentTranslation(
-                            "structurelib.autoplace.error.no_item_stack", stack.func_151000_E()));
-                return PlaceResult.REJECT;
-            }
+        if (!assumeStackPresent && !s.takeOne(stack, true)) {
+            if (chatter != null)
+                chatter.accept(new ChatComponentTranslation(
+                        "structurelib.autoplace.error.no_item_stack", stack.func_151000_E()));
+            return PlaceResult.REJECT;
         }
-        if (!stack.tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f))
+        if (!stack.copy().tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f))
             return PlaceResult.REJECT;
         if (!s.takeOne(stack, false))
             // this is bad! probably an exploit somehow. Let's nullify the block we just placed instead

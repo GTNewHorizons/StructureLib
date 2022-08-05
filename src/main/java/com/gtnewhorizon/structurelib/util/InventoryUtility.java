@@ -23,11 +23,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 /**
@@ -41,16 +44,67 @@ public class InventoryUtility {
     private static final SortedRegistry<InventoryProvider<?>> inventoryProviders = new SortedRegistry<>();
 
     static {
-        inventoryProviders.register(
-                "5000-main-inventory", player -> new ItemStackArrayIterable(player.inventory.mainInventory));
+        inventoryProviders.register("5000-main-inventory", new InventoryProvider<InventoryIterable<InventoryPlayer>>() {
+            @Override
+            public InventoryIterable<InventoryPlayer> getInventory(EntityPlayerMP player) {
+                return new InventoryIterable<>(player.inventory, player.inventory.mainInventory.length);
+            }
+
+            @Override
+            public void markDirty(InventoryIterable<InventoryPlayer> inv) {
+                inv.getInventory().markDirty();
+            }
+        });
     }
 
     public static void registerStackExtractor(String key, ItemStackExtractor<?> val) {
         stackExtractors.register(key, val);
     }
 
+    public static <Inv extends IInventory> void registerStackExtractor(
+            String key, Function<ItemStack, ? extends Inv> extractor) {
+        registerStackExtractor(key, newItemStackProvider(extractor));
+    }
+
     public static void registerInventoryProvider(String key, InventoryProvider<?> val) {
         inventoryProviders.register(key, val);
+    }
+
+    public static <Inv extends IInventory> void registerInventoryProvider(
+            String key, Function<EntityPlayerMP, ? extends Inv> extractor) {
+        registerInventoryProvider(key, newInventoryProvider(extractor));
+    }
+
+    public static <Inv extends IInventory> InventoryProvider<InventoryIterable<Inv>> newInventoryProvider(
+        Function<EntityPlayerMP, ? extends Inv> extractor) {
+        return new InventoryProvider<InventoryIterable<Inv>>() {
+            @Override
+            public InventoryIterable<Inv> getInventory(EntityPlayerMP player) {
+                Inv inv = extractor.apply(player);
+                return inv != null ? new InventoryIterable<>(inv) : null;
+            }
+
+            @Override
+            public void markDirty(InventoryIterable<Inv> inv) {
+                inv.getInventory().markDirty();
+            }
+        };
+    }
+
+    public static <Inv extends IInventory> ItemStackExtractor<InventoryIterable<Inv>> newItemStackProvider(
+        Function<ItemStack, ? extends Inv> extractor) {
+        return new ItemStackExtractor<InventoryIterable<Inv>>() {
+            @Override
+            public InventoryIterable<Inv> getInventory(ItemStack source) {
+                Inv inv = extractor.apply(source);
+                return inv != null ? new InventoryIterable<>(inv) : null;
+            }
+
+            @Override
+            public void markDirty(InventoryIterable<Inv> inv) {
+                inv.getInventory().markDirty();
+            }
+        };
     }
 
     /**
@@ -105,6 +159,7 @@ public class InventoryUtility {
             InventoryProvider<R> provider,
             ItemStack filter) {
         R inv = provider.getInventory(player);
+        if (inv == null) return 0;
         int taken = takeFromInventory(inv, predicate, simulate, count, true, store, filter);
         if (taken > 0) provider.markDirty(inv);
         return taken;
@@ -172,7 +227,7 @@ public class InventoryUtility {
                     taken = takeFromStack(predicate, simulate, count - found, store, stack, f, filter);
                     found += taken;
                 }
-                if (found > count) return found;
+                if (found >= count) return found;
             }
         }
         return found;
@@ -211,7 +266,7 @@ public class InventoryUtility {
     public interface InventoryProvider<R extends Iterable<ItemStack>> {
         R getInventory(EntityPlayerMP player);
 
-        default void markDirty(R inv) {}
+        void markDirty(R inv);
     }
 
     public interface ItemStackExtractor<R extends Iterable<ItemStack>> {
@@ -223,7 +278,7 @@ public class InventoryUtility {
         /**
          * Callback for the inventory is modified.
          */
-        default void markDirty(R inv) {}
+        void markDirty(R inv);
 
         /**
          * Extract a particular type of item. The extractor can choose to not return all items contained within this item
@@ -248,6 +303,10 @@ public class InventoryUtility {
                 @Override
                 public Iterable<ItemStack> getInventory(ItemStack source) {
                     return Collections.emptyList();
+                }
+
+                @Override
+                public void markDirty(Iterable<ItemStack> inv) {
                 }
 
                 @Override
