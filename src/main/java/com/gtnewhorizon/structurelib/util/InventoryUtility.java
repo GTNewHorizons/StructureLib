@@ -19,10 +19,9 @@
 package com.gtnewhorizon.structurelib.util;
 
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
@@ -31,6 +30,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryEnderChest;
 import net.minecraft.item.ItemStack;
 
 /**
@@ -38,6 +38,7 @@ import net.minecraft.item.ItemStack;
  */
 public class InventoryUtility {
     private static final SortedRegistry<ItemStackExtractor<?>> stackExtractors = new SortedRegistry<>();
+    private static final List<Predicate<? super EntityPlayerMP>> enableEnder = new CopyOnWriteArrayList<>();
     /**
      * The remove() of the Iterable returned must be implemented!
      */
@@ -51,10 +52,30 @@ public class InventoryUtility {
             }
 
             @Override
-            public void markDirty(InventoryIterable<InventoryPlayer> inv) {
-                inv.getInventory().markDirty();
+            public void markDirty(InventoryIterable<InventoryPlayer> inv, int slotIndex) {
+                // player save its content using means other than inv.markDirty()
+                // here we only need to sync it to client
+                inv.getInventory().player.inventoryContainer.detectAndSendChanges();
             }
         });
+        inventoryProviders.register("7000-ender-inventory", new InventoryProvider<InventoryIterable<InventoryEnderChest>>() {
+            @Override
+            public InventoryIterable<InventoryEnderChest> getInventory(EntityPlayerMP player) {
+                if (enableEnder.stream().anyMatch(p -> p.test(player)))
+                    return new InventoryIterable<>(player.getInventoryEnderChest());
+                return null;
+            }
+
+            @Override
+            public void markDirty(InventoryIterable<InventoryEnderChest> inv, int slotIndex) {
+                // inv.getInventory().markDirty();
+                // TODO this seems to be a noop
+            }
+        });
+    }
+
+    public static void registerEnableEnderCondition(Predicate<? super EntityPlayerMP> predicate) {
+        enableEnder.add(predicate);
     }
 
     public static void registerStackExtractor(String key, ItemStackExtractor<?> val) {
@@ -85,7 +106,7 @@ public class InventoryUtility {
             }
 
             @Override
-            public void markDirty(InventoryIterable<Inv> inv) {
+            public void markDirty(InventoryIterable<Inv> inv, int slotIndex) {
                 inv.getInventory().markDirty();
             }
         };
@@ -161,7 +182,7 @@ public class InventoryUtility {
         R inv = provider.getInventory(player);
         if (inv == null) return 0;
         int taken = takeFromInventory(inv, predicate, simulate, count, true, store, filter);
-        if (taken > 0) provider.markDirty(inv);
+        if (taken > 0) provider.markDirty(inv, -1);
         return taken;
     }
 
@@ -266,7 +287,7 @@ public class InventoryUtility {
     public interface InventoryProvider<R extends Iterable<ItemStack>> {
         R getInventory(EntityPlayerMP player);
 
-        void markDirty(R inv);
+        void markDirty(R inv, int slotIndex);
     }
 
     public interface ItemStackExtractor<R extends Iterable<ItemStack>> {
