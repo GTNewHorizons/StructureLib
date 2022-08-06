@@ -19,7 +19,6 @@
 package com.gtnewhorizon.structurelib.util;
 
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
-
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -58,20 +57,21 @@ public class InventoryUtility {
                 inv.getInventory().player.inventoryContainer.detectAndSendChanges();
             }
         });
-        inventoryProviders.register("7000-ender-inventory", new InventoryProvider<InventoryIterable<InventoryEnderChest>>() {
-            @Override
-            public InventoryIterable<InventoryEnderChest> getInventory(EntityPlayerMP player) {
-                if (enableEnder.stream().anyMatch(p -> p.test(player)))
-                    return new InventoryIterable<>(player.getInventoryEnderChest());
-                return null;
-            }
+        inventoryProviders.register(
+                "7000-ender-inventory", new InventoryProvider<InventoryIterable<InventoryEnderChest>>() {
+                    @Override
+                    public InventoryIterable<InventoryEnderChest> getInventory(EntityPlayerMP player) {
+                        if (enableEnder.stream().anyMatch(p -> p.test(player)))
+                            return new InventoryIterable<>(player.getInventoryEnderChest());
+                        return null;
+                    }
 
-            @Override
-            public void markDirty(InventoryIterable<InventoryEnderChest> inv, int slotIndex) {
-                // inv.getInventory().markDirty();
-                // TODO this seems to be a noop
-            }
-        });
+                    @Override
+                    public void markDirty(InventoryIterable<InventoryEnderChest> inv, int slotIndex) {
+                        // inv.getInventory().markDirty();
+                        // TODO this seems to be a noop
+                    }
+                });
     }
 
     public static void registerEnableEnderCondition(Predicate<? super EntityPlayerMP> predicate) {
@@ -97,7 +97,7 @@ public class InventoryUtility {
     }
 
     public static <Inv extends IInventory> InventoryProvider<InventoryIterable<Inv>> newInventoryProvider(
-        Function<EntityPlayerMP, ? extends Inv> extractor) {
+            Function<EntityPlayerMP, ? extends Inv> extractor) {
         return new InventoryProvider<InventoryIterable<Inv>>() {
             @Override
             public InventoryIterable<Inv> getInventory(EntityPlayerMP player) {
@@ -113,7 +113,7 @@ public class InventoryUtility {
     }
 
     public static <Inv extends IInventory> ItemStackExtractor<InventoryIterable<Inv>> newItemStackProvider(
-        Function<ItemStack, ? extends Inv> extractor) {
+            Function<ItemStack, ? extends Inv> extractor) {
         return new ItemStackExtractor<InventoryIterable<Inv>>() {
             @Override
             public InventoryIterable<Inv> getInventory(ItemStack source) {
@@ -327,8 +327,7 @@ public class InventoryUtility {
                 }
 
                 @Override
-                public void markDirty(Iterable<ItemStack> inv) {
-                }
+                public void markDirty(Iterable<ItemStack> inv) {}
 
                 @Override
                 public int getItem(ItemStack source, ItemStack toExtract, boolean simulate) {

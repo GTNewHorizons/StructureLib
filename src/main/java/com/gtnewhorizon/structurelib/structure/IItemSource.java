@@ -59,7 +59,8 @@ public interface IItemSource {
 
             @Override
             public boolean takeOne(ItemStack stack, boolean simulate) {
-                if (stack == null || stack.getItem() == null || stack.stackSize != 1) throw new IllegalArgumentException();
+                if (stack == null || stack.getItem() == null || stack.stackSize != 1)
+                    throw new IllegalArgumentException();
                 return InventoryUtility.takeFromInventory(player, stack, simulate) == 1;
             }
 
