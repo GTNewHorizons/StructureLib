@@ -13,4 +13,3 @@ public interface IConstructable {
     @SideOnly(Side.CLIENT)
     String[] getStructureDescription(ItemStack stackSize);
 }
-

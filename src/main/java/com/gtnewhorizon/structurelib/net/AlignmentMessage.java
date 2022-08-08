@@ -21,8 +21,7 @@ public abstract class AlignmentMessage implements IMessage {
     int mPosD;
     int mAlign;
 
-    public AlignmentMessage() {
-    }
+    public AlignmentMessage() {}
 
     @Override
     public void fromBytes(ByteBuf pBuffer) {
@@ -47,11 +46,9 @@ public abstract class AlignmentMessage implements IMessage {
     }
 
     private AlignmentMessage(IAlignmentProvider provider) {
-        if (!(provider instanceof TileEntity))
-            throw new IllegalArgumentException("Provider must be a TileEntity");
+        if (!(provider instanceof TileEntity)) throw new IllegalArgumentException("Provider must be a TileEntity");
         IAlignment alignment = provider.getAlignment();
-        if (alignment == null)
-            throw new IllegalArgumentException("Passed in provider does not provide an alignment!");
+        if (alignment == null) throw new IllegalArgumentException("Passed in provider does not provide an alignment!");
         TileEntity base = (TileEntity) provider;
         mPosX = base.xCoord;
         mPosY = base.yCoord;
@@ -69,8 +66,7 @@ public abstract class AlignmentMessage implements IMessage {
     }
 
     public static class AlignmentQuery extends AlignmentMessage {
-        public AlignmentQuery() {
-        }
+        public AlignmentQuery() {}
 
         public AlignmentQuery(IAlignmentProvider provider) {
             super(provider);
@@ -82,8 +78,7 @@ public abstract class AlignmentMessage implements IMessage {
     }
 
     public static class AlignmentData extends AlignmentMessage {
-        public AlignmentData() {
-        }
+        public AlignmentData() {}
 
         private AlignmentData(AlignmentQuery query) {
             mPosX = query.mPosX;
@@ -106,7 +101,9 @@ public abstract class AlignmentMessage implements IMessage {
         @Override
         public IMessage onMessage(AlignmentData pMessage, MessageContext pCtx) {
             if (StructureLib.getCurrentPlayer().worldObj.provider.dimensionId == pMessage.mPosD) {
-                TileEntity te = StructureLib.getCurrentPlayer().worldObj.getTileEntity(pMessage.mPosX, pMessage.mPosY, pMessage.mPosZ);
+                TileEntity te = StructureLib.getCurrentPlayer()
+                        .worldObj
+                        .getTileEntity(pMessage.mPosX, pMessage.mPosY, pMessage.mPosZ);
                 if (te instanceof IAlignmentProvider) {
                     IAlignment alignment = ((IAlignmentProvider) te).getAlignment();
                     if (alignment != null) {
@@ -126,8 +123,7 @@ public abstract class AlignmentMessage implements IMessage {
                 TileEntity te = world.getTileEntity(pMessage.mPosX, pMessage.mPosY, pMessage.mPosZ);
                 if (te instanceof IAlignmentProvider) {
                     IAlignment alignment = ((IAlignmentProvider) te).getAlignment();
-                    if (alignment == null)
-                        return null;
+                    if (alignment == null) return null;
                     pMessage.mAlign = alignment.getExtendedFacing().getIndex();
                     return new AlignmentData(pMessage);
                 }

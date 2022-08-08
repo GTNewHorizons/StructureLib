@@ -1,9 +1,11 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
-
+import java.util.function.Consumer;
 import java.util.function.Function;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.world.World;
 
 class LazyStructureElement<T> implements IStructureElementDeferred<T> {
     private Function<T, IStructureElement<T>> to;
@@ -34,5 +36,19 @@ class LazyStructureElement<T> implements IStructureElementDeferred<T> {
     @Override
     public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
         return get(t).spawnHint(t, world, x, y, z, trigger);
+    }
+
+    @Override
+    public PlaceResult survivalPlaceBlock(
+            T t,
+            World world,
+            int x,
+            int y,
+            int z,
+            ItemStack trigger,
+            IItemSource s,
+            EntityPlayerMP actor,
+            Consumer<IChatComponent> chatter) {
+        return get(t).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
     }
 }

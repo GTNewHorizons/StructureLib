@@ -1,31 +1,29 @@
-package com.gtnewhorizon.structurelib.proxy;
+package com.gtnewhorizon.structurelib;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.gtnewhorizon.structurelib.ConfigurationHandler;
 import com.gtnewhorizon.structurelib.entity.fx.EntityFXBlockHint;
-import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
-import net.minecraft.client.particle.EntityFX;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
-import static com.gtnewhorizon.structurelib.StructureLib.RANDOM;
-
 public class ClientProxy extends CommonProxy {
+
+    private static final short[] NO_TINT = {255, 255, 255, 0};
+
     @Override
     public void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {
         EntityFXBlockHint hint = new EntityFXBlockHint(w, x, y, z, icons).withColorTint(RGBa);
@@ -46,10 +44,6 @@ public class ClientProxy extends CommonProxy {
             allHints.forcePut(hint, info);
         }
         currentHints.add(hint);
-
-        EntityFX particle = new WeightlessParticleFX(w, x + RANDOM.nextFloat() * 0.5F, y + RANDOM.nextFloat() * 0.5F, z + RANDOM.nextFloat() * 0.5F, 0, 0, 0);
-        particle.setRBGColorF(0, 0.6F * RANDOM.nextFloat(), 0.8f);
-        Minecraft.getMinecraft().effectRenderer.addEffect(particle);
     }
 
     @Override
@@ -59,12 +53,25 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void hintParticle(World w, int x, int y, int z, IIcon[] icons) {
-        hintParticleTinted(w, x, y, z, icons, new short[]{255, 255, 255, 0});
+        hintParticleTinted(w, x, y, z, icons, NO_TINT);
     }
 
     @Override
     public void hintParticle(World w, int x, int y, int z, Block block, int meta) {
-        hintParticleTinted(w, x, y, z, createIIconFromBlock(block, meta), new short[]{255, 255, 255, 0});
+        hintParticleTinted(w, x, y, z, createIIconFromBlock(block, meta), NO_TINT);
+    }
+
+    @Override
+    public boolean updateHintParticleTint(EntityPlayer player, World w, int x, int y, int z, short[] rgBa) {
+        if (player instanceof EntityPlayerMP) return super.updateHintParticleTint(player, w, x, y, z, rgBa);
+        if (player != getCurrentPlayer()) return false; // how?
+        HintParticleInfo info = new HintParticleInfo(x, y, z, null);
+        EntityFXBlockHint existing = allHints.inverse().get(info);
+        if (existing != null) {
+            existing.withColorTint(rgBa);
+            return true;
+        }
+        return false;
     }
 
     private static IIcon[] createIIconFromBlock(Block block, int meta) {
@@ -98,13 +105,11 @@ public class ClientProxy extends CommonProxy {
     private static List<EntityFXBlockHint> currentHints;
 
     public static void onHintDead(EntityFXBlockHint fx) {
-        if (ConfigurationHandler.INSTANCE.isRemoveCollidingHologram())
-            allHints.remove(fx);
+        if (ConfigurationHandler.INSTANCE.isRemoveCollidingHologram()) allHints.remove(fx);
         for (Iterator<List<EntityFXBlockHint>> iterator = hintOwners.iterator(); iterator.hasNext(); ) {
             List<EntityFXBlockHint> list = iterator.next();
             if (list.remove(fx)) {
-                if (list.isEmpty())
-                    iterator.remove();
+                if (list.isEmpty()) iterator.remove();
                 break;
             }
         }
@@ -112,35 +117,36 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void startHinting(World w) {
-        if (!w.isRemote)
-            return;
-        if (currentHints != null)
-            hintOwners.add(currentHints);
+        if (!w.isRemote) return;
+        if (currentHints != null) hintOwners.add(currentHints);
         currentHints = new LinkedList<>();
     }
 
     private void ensureHinting() {
-        if (currentHints == null)
-            currentHints = new LinkedList<>();
+        if (currentHints == null) currentHints = new LinkedList<>();
     }
 
     @Override
     public void endHinting(World w) {
-        if (!w.isRemote)
-            return;
+        if (!w.isRemote) return;
         while (!hintOwners.isEmpty() && hintOwners.size() >= ConfigurationHandler.INSTANCE.getMaxCoexistingHologram()) {
             List<EntityFXBlockHint> list = hintOwners.remove(0);
             list.forEach(EntityFXBlockHint::setDead);
             list.clear();
         }
-        if (!currentHints.isEmpty())
-            hintOwners.add(currentHints);
+        if (!currentHints.isEmpty()) hintOwners.add(currentHints);
         currentHints = null;
     }
 
     @Override
     public void preInit(FMLPreInitializationEvent e) {
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
+    }
+
+    @Override
+    public long getOverworldTime() {
+        // there is no overworld, better just hope current world time is ok...
+        return Minecraft.getMinecraft().theWorld.getTotalWorldTime();
     }
 
     private static class HintParticleInfo {

@@ -24,8 +24,14 @@ item.structurelib.constructableTrigger.name=Multiblock Structure Hologram Projec
 item.structurelib.constructableTrigger.desc.0=Triggers Constructable Interface
 item.structurelib.constructableTrigger.desc.1=Shows multiblock construction schematic,
 item.structurelib.constructableTrigger.desc.2=use on the multiblock controller.
-item.structurelib.constructableTrigger.desc.3=(Sneak use on controller in creative to build)
+item.structurelib.constructableTrigger.desc.3=(Sneak use on controller to build)
 item.structurelib.constructableTrigger.desc.4=Quantity of schematics in item stack affects tier/mode/type
+item.structurelib.constructableTrigger.too_fast=Please wait %d ticks before another autoplace...
+
+structurelib.autoplace.complete=§aThis multiblock has completed!
+structurelib.autoplace.error.not_enabled=§cThis multiblock does not support autoplace in survival!
+structurelib.autoplace.error.no_simple_block=§cSuggested to place §r%s§c but none was found
+structurelib.autoplace.error.no_item_stack=§cSuggested to place block by using §r%s§c but none was found
 
 structurelib.blockhint.desc.0=Helps while building
 structurelib.blockhint.0.name=Hint 1 dot

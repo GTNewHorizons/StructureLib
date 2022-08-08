@@ -1,6 +1,14 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
+import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
+import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
+
+import com.gtnewhorizon.structurelib.StructureLibAPI;
+import java.util.function.Consumer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
 /**
@@ -12,6 +20,50 @@ public interface IStructureElement<T> {
     boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger);
 
     boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger);
+
+    /**
+     * Try place the block by taking resource from given IItemSource.
+     *
+     * @param s       drain resources from this place
+     * @param actor   source of action.
+     * @param chatter
+     */
+    default PlaceResult survivalPlaceBlock(
+            T t,
+            World world,
+            int x,
+            int y,
+            int z,
+            ItemStack trigger,
+            IItemSource s,
+            EntityPlayerMP actor,
+            Consumer<IChatComponent> chatter) {
+        if (PANIC_MODE) throw new RuntimeException("Panic Tripwire hit");
+        if (DEBUG_MODE)
+            LOGGER.error(
+                    "Default implementation of survivalPlaceBlock hit! Things aren't going to work well! IStructureElement class: {}",
+                    getClass().getName());
+        if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
+        return PlaceResult.SKIP;
+    }
+
+    /**
+     * Forget the messed up class dependency graph for now. this is just so convenient.
+     */
+    default IStructureElementNoPlacement<T> noPlacement() {
+        return new IStructureElementNoPlacement<T>() {
+
+            @Override
+            public boolean check(T t, World world, int x, int y, int z) {
+                return IStructureElement.this.check(t, world, x, y, z);
+            }
+
+            @Override
+            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return IStructureElement.this.spawnHint(t, world, x, y, z, trigger);
+            }
+        };
+    }
 
     default int getStepA() {
         return 1;
@@ -39,5 +91,32 @@ public interface IStructureElement<T> {
 
     default boolean isNavigating() {
         return false;
+    }
+
+    enum PlaceResult {
+        /**
+         * This element either exists already, or does not yet have an implementation for survivalPlaceBlock, or
+         * some other unforeseen situations.
+         */
+        SKIP,
+        /**
+         * This element's space is occupied by other stuff and require player attention, or player missing required resource,
+         * or the block cannot be placed due to obscure mechanisms, or some other unforeseen situations.
+         */
+        REJECT,
+        /**
+         * Autoplace cannot proceed within this tick. To proceed further would require stopping the placement and wait for next round.
+         */
+        STOP,
+        /**
+         * Element placed successfully.
+         */
+        ACCEPT,
+        /**
+         * Combination of ACCEPT and STOP.
+         *
+         * Element placed successfully. To proceed further would require stopping the placement and wait for next round.
+         */
+        ACCEPT_STOP;
     }
 }

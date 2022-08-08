@@ -1,8 +1,11 @@
 package com.gtnewhorizon.structurelib;
 
-import com.gtnewhorizon.structurelib.net.AlignmentMessage;
+import static com.gtnewhorizon.structurelib.StructureLib.proxy;
+
 import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.net.AlignmentMessage;
+import com.gtnewhorizon.structurelib.structure.IItemSource;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
@@ -11,8 +14,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
-
-import static com.gtnewhorizon.structurelib.StructureLib.proxy;
 
 /**
  * A stable interface into the structure lib's internals. Backwards compatibility is maintained to the maximum extend possible.
@@ -46,7 +47,7 @@ public class StructureLibAPI {
     }
 
     /**
-     * Start current batch of hinting. All hints particles generated during one batch will be considered to belong to one hologram.
+     * End current batch of hinting. All hints particles generated during one batch will be considered to belong to one hologram.
      * <p>
      * You don't need to call this unless your constructable tool didn't call {@link com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility#handle(ItemStack, EntityPlayer, World, int, int, int, int)}
      */
@@ -68,6 +69,14 @@ public class StructureLibAPI {
 
     public static void hintParticle(World w, int x, int y, int z, Block block, int meta) {
         proxy.hintParticle(w, x, y, z, block, meta);
+    }
+
+    /**
+     * Update the tint of given hint particle. Do nothing if particle not found.
+     * @return false if nothing updated. true if updated.
+     */
+    public static boolean updateHintParticleTint(EntityPlayer player, World w, int x, int y, int z, short[] RGBa) {
+        return proxy.updateHintParticleTint(player, w, x, y, z, RGBa);
     }
 
     /**
@@ -108,7 +117,6 @@ public class StructureLibAPI {
         StructureLib.net.sendToAllAround(new AlignmentMessage.AlignmentData(provider), targetPoint);
     }
 
-
     /**
      * Send the ExtendedFacing of this Tile Entity to all players in that dimension. Can be called on server side only.
      *
@@ -132,5 +140,16 @@ public class StructureLibAPI {
 
     public static void setDebugEnabled(boolean enabled) {
         StructureLib.DEBUG_MODE = enabled;
+    }
+
+    /**
+     * Determines if given block can be replaced without much effort. The exact predicate clauses is not stable and
+     * will be changed, but the general idea will always stay the same.
+     *
+     * Use this in your {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, java.util.function.Consumer)}
+     */
+    public static boolean isBlockTriviallyReplaceable(World w, int x, int y, int z, EntityPlayerMP actor) {
+        // TODO extend this function a bit
+        return w.getBlock(x, y, z).isReplaceable(w, x, y, z);
     }
 }

@@ -26,6 +26,7 @@ item.structurelib.constructableTrigger.desc.1=只能在多方块主机上使用�
 item.structurelib.constructableTrigger.desc.2=结构的示意图。 (译者注：请搭高使用)
 item.structurelib.constructableTrigger.desc.3= (创造模式下潜行右键可以直接完成搭建)
 item.structurelib.constructableTrigger.desc.4=此物品堆叠数量会影响显示的机器等级/模式/类型
+item.structurelib.constructableTrigger.too_fast=Please wait %d ticks before another autoplace...
 
 structurelib.blockhint.desc.0=帮助你搭建机器
 structurelib.blockhint.0.name=提示方块：1号
