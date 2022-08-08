@@ -72,6 +72,6 @@ public interface IItemSource {
     }
 
     static IItemSource fromInventory(IInventory inv) {
-        return (p, s, c) -> InventoryUtility.takeFromInventory(new InventoryIterable(inv), p, s, c);
+        return (p, s, c) -> InventoryUtility.takeFromInventory(new InventoryIterable<>(inv), p, s, c, true);
     }
 }
