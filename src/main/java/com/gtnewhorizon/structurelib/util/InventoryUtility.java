@@ -116,13 +116,13 @@ public class InventoryUtility {
             Function<ItemStack, ? extends Inv> extractor) {
         return new ItemStackExtractor<InventoryIterable<Inv>>() {
             @Override
-            public InventoryIterable<Inv> getInventory(ItemStack source) {
+            public InventoryIterable<Inv> getInventory(ItemStack source, EntityPlayerMP player) {
                 Inv inv = extractor.apply(source);
                 return inv != null ? new InventoryIterable<>(inv) : null;
             }
 
             @Override
-            public void markDirty(InventoryIterable<Inv> inv) {
+            public void markDirty(InventoryIterable<Inv> inv, int slotIndex) {
                 inv.getInventory().markDirty();
             }
         };
@@ -181,7 +181,7 @@ public class InventoryUtility {
             ItemStack filter) {
         R inv = provider.getInventory(player);
         if (inv == null) return 0;
-        int taken = takeFromInventory(inv, predicate, simulate, count, true, store, filter);
+        int taken = takeFromInventory(inv, predicate, simulate, count, store, filter, player);
         if (taken > 0) provider.markDirty(inv, -1);
         return taken;
     }
@@ -199,7 +199,7 @@ public class InventoryUtility {
     public static Map<ItemStack, Integer> takeFromInventory(
             Iterable<ItemStack> inv, Predicate<ItemStack> predicate, boolean simulate, int count) {
         Map<ItemStack, Integer> store = new ItemStackMap<>();
-        takeFromInventory(inv, predicate, simulate, count, true, store, null);
+        takeFromInventory(inv, predicate, simulate, count, store, null, null);
         return store;
     }
 
@@ -208,9 +208,9 @@ public class InventoryUtility {
             @Nonnull Predicate<ItemStack> predicate,
             boolean simulate,
             int count,
-            boolean recurse,
             @Nonnull Map<ItemStack, Integer> store,
-            @Nullable ItemStack filter) {
+            @Nullable ItemStack filter,
+            @Nullable EntityPlayerMP player) {
         int found = 0;
         ItemStack copiedFilter = null;
         if (filter != null) {
@@ -237,15 +237,14 @@ public class InventoryUtility {
                 if (!simulate) iterator.remove();
                 if (found == count) return count;
             }
-            if (!recurse) continue;
             for (ItemStackExtractor<?> f : stackExtractors) {
                 int taken = -1;
                 if (filter != null) {
                     copiedFilter.stackSize = count - found;
-                    taken = f.getItem(stack, copiedFilter, simulate);
+                    taken = f.getItem(stack, copiedFilter, simulate, player);
                 }
                 if (taken == -1) {
-                    taken = takeFromStack(predicate, simulate, count - found, store, stack, f, filter);
+                    taken = takeFromStack(predicate, simulate, count - found, store, stack, f, filter, player);
                     found += taken;
                 }
                 if (found >= count) return found;
@@ -261,12 +260,40 @@ public class InventoryUtility {
             Map<ItemStack, Integer> store,
             ItemStack stack,
             ItemStackExtractor<R> f,
-            ItemStack filter) {
-        R inv = f.getInventory(stack);
+            ItemStack filter,
+            EntityPlayerMP player) {
+        R inv = f.getInventory(stack, player);
         if (inv == null) return 0;
-        int taken = takeFromInventory(inv, predicate, simulate, count, false, store, filter);
-        if (taken > 0) f.markDirty(inv);
-        return taken;
+        int found = 0;
+        int slotIndex = -1;
+        for (Iterator<ItemStack> iterator = inv.iterator(); iterator.hasNext(); slotIndex++) {
+            ItemStack stack1 = iterator.next();
+            // invalid stack
+            if (stack1 == null || stack1.getItem() == null || stack1.stackSize <= 0) continue;
+
+            if (predicate.test(stack1)) {
+                found += stack1.stackSize;
+                if (found > count) {
+                    int surplus = found - count;
+                    store.merge(stack1, stack1.stackSize - surplus, Integer::sum);
+                    if (!simulate) {
+                        // leave the surplus in its place
+                        stack1.stackSize = surplus;
+                        f.markDirty(inv, slotIndex);
+                    }
+                    break;
+                }
+                store.merge(stack1, stack1.stackSize, Integer::sum);
+                if (!simulate) {
+                    iterator.remove();
+                    f.markDirty(inv, slotIndex);
+                }
+                if (found == count) {
+                    break;
+                }
+            }
+        }
+        return found;
     }
 
     public interface OptimizedExtractor {
@@ -279,9 +306,10 @@ public class InventoryUtility {
          * @param source    from where an extraction should be attempted
          * @param toExtract stack to extract. should not be mutated! match the NBT tag using EXACT mode.
          * @param simulate  true if only query but does not actually remove
+         * @param player    executor of extraction, or null if from a machine
          * @return amount extracted
          */
-        int extract(ItemStack source, ItemStack toExtract, boolean simulate);
+        int extract(ItemStack source, ItemStack toExtract, boolean simulate, EntityPlayerMP player);
     }
 
     public interface InventoryProvider<R extends Iterable<ItemStack>> {
@@ -294,12 +322,20 @@ public class InventoryUtility {
         /**
          * Extract an inventory from given item stack.
          */
-        R getInventory(ItemStack source);
+        R getInventory(ItemStack source, EntityPlayerMP player);
 
         /**
-         * Callback for the inventory is modified.
+         * Callback for the inventory is modified. This will be called
+         * <ul>
+         *     <li>For each stack modified</li>
+         *     <li>For each stack removed</li>
+         *     <li>Once for each {@link #getInventory(ItemStack, EntityPlayerMP)} after all extraction operation is
+         *     completed, with a slotIndex of -1.</li>
+         * </ul>
+         *
+         * @param slotIndex index of slot removed/modified, or -1 if it's the last call to markDirty()
          */
-        void markDirty(R inv);
+        void markDirty(R inv, int slotIndex);
 
         /**
          * Extract a particular type of item. The extractor can choose to not return all items contained within this item
@@ -312,9 +348,10 @@ public class InventoryUtility {
          * @param source    from where an extraction should be attempted
          * @param toExtract stack to extract. should not be mutated! match the NBT tag using EXACT mode.
          * @param simulate  true if only query but does not actually remove
+         * @param player    executor of extraction, or null if from a machine
          * @return amount extracted, or -1 if this is not implemented
          */
-        default int getItem(ItemStack source, ItemStack toExtract, boolean simulate) {
+        default int getItem(ItemStack source, ItemStack toExtract, boolean simulate, EntityPlayerMP player) {
             return -1;
         }
 
@@ -322,16 +359,16 @@ public class InventoryUtility {
                 @Nonnull OptimizedExtractor optimizedExtractor) {
             return new ItemStackExtractor<Iterable<ItemStack>>() {
                 @Override
-                public Iterable<ItemStack> getInventory(ItemStack source) {
+                public Iterable<ItemStack> getInventory(ItemStack source, EntityPlayerMP player) {
                     return Collections.emptyList();
                 }
 
                 @Override
-                public void markDirty(Iterable<ItemStack> inv) {}
+                public void markDirty(Iterable<ItemStack> inv, int slotIndex) {}
 
                 @Override
-                public int getItem(ItemStack source, ItemStack toExtract, boolean simulate) {
-                    return optimizedExtractor.extract(source, toExtract, simulate);
+                public int getItem(ItemStack source, ItemStack toExtract, boolean simulate, EntityPlayerMP player) {
+                    return optimizedExtractor.extract(source, toExtract, simulate, player);
                 }
             };
         }
