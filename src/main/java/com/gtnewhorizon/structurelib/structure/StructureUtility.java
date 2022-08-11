@@ -2209,14 +2209,15 @@ public class StructureUtility {
                 xyz[1] += basePositionY;
                 xyz[2] += basePositionZ;
 
-                StructureLib.LOGGER.info(
-                        "Multi [{}, {}, {}] {} step @ {} {}",
-                        basePositionX,
-                        basePositionY,
-                        basePositionZ,
-                        iterateType,
-                        Arrays.toString(xyz),
-                        Arrays.toString(abc));
+                if (DEBUG_MODE)
+                    StructureLib.LOGGER.info(
+                            "Multi [{}, {}, {}] {} step @ {} {}",
+                            basePositionX,
+                            basePositionY,
+                            basePositionZ,
+                            iterateType,
+                            Arrays.toString(xyz),
+                            Arrays.toString(abc));
 
                 if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
                     if (!predicate.visit(element, world, xyz[0], xyz[1], xyz[2])) {
