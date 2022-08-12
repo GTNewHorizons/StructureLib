@@ -1,10 +1,11 @@
 package com.gtnewhorizon.structurelib.structure;
 
 import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
+import static com.gtnewhorizon.structurelib.structure.IStructureWalker.ignoreBlockUnloaded;
+import static com.gtnewhorizon.structurelib.structure.IStructureWalker.skipBlockUnloaded;
 
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
-import java.util.Arrays;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -196,136 +197,67 @@ public interface IStructureDefinition<T> {
             return false;
         }
 
-        // change base position to base offset
-        basePositionA = -basePositionA;
-        basePositionB = -basePositionB;
-        basePositionC = -basePositionC;
-
-        int[] abc = new int[] {basePositionA, basePositionB, basePositionC};
-        int[] xyz = new int[3];
-
         if (checkBlocksIfNotNullForceCheckAllIfTrue != null) {
+            boolean success;
             if (checkBlocksIfNotNullForceCheckAllIfTrue) {
-                for (IStructureElement<T> element : elements) {
-                    if (element.isNavigating()) {
-                        abc[0] = (element.resetA() ? basePositionA : abc[0]) + element.getStepA();
-                        abc[1] = (element.resetB() ? basePositionB : abc[1]) + element.getStepB();
-                        abc[2] = (element.resetC() ? basePositionC : abc[2]) + element.getStepC();
-                    } else {
-                        extendedFacing.getWorldOffset(abc, xyz);
-                        xyz[0] += basePositionX;
-                        xyz[1] += basePositionY;
-                        xyz[2] += basePositionZ;
-
-                        if (DEBUG_MODE)
-                            StructureLib.LOGGER.info(
-                                    "Multi [{}, {}, {}] step @ {} {}",
-                                    basePositionX,
-                                    basePositionY,
-                                    basePositionZ,
-                                    Arrays.toString(xyz),
-                                    Arrays.toString(abc));
-
-                        if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
-                            if (!element.check(object, world, xyz[0], xyz[1], xyz[2])) {
-                                if (DEBUG_MODE) {
-                                    StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", "
-                                            + basePositionZ + "] failed @ " + Arrays.toString(xyz) + " "
-                                            + Arrays.toString(abc));
-                                }
-                                return false;
-                            }
-                        } else {
-                            if (DEBUG_MODE) {
-                                StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", "
-                                        + basePositionZ + "] !blockExists @ " + Arrays.toString(xyz) + " "
-                                        + Arrays.toString(abc));
-                            }
-                            return false;
-                        }
-                        abc[0] += 1;
-                    }
-                }
+                success = StructureUtility.iterateV2(
+                        elements,
+                        world,
+                        extendedFacing,
+                        basePositionX,
+                        basePositionY,
+                        basePositionZ,
+                        basePositionA,
+                        basePositionB,
+                        basePositionC,
+                        (e, w, x, y, z) -> e.check(object, w, x, y, z),
+                        "check");
             } else {
-                for (IStructureElement<T> element : elements) {
-                    if (element.isNavigating()) {
-                        abc[0] = (element.resetA() ? basePositionA : abc[0]) + element.getStepA();
-                        abc[1] = (element.resetB() ? basePositionB : abc[1]) + element.getStepB();
-                        abc[2] = (element.resetC() ? basePositionC : abc[2]) + element.getStepC();
-                    } else {
-                        extendedFacing.getWorldOffset(abc, xyz);
-                        xyz[0] += basePositionX;
-                        xyz[1] += basePositionY;
-                        xyz[2] += basePositionZ;
-
-                        StructureLib.LOGGER.info(
-                                "Multi [{}, {}, {}] step @ {} {}",
-                                basePositionX,
-                                basePositionY,
-                                basePositionZ,
-                                Arrays.toString(xyz),
-                                Arrays.toString(abc));
-
-                        if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
-                            if (!element.check(object, world, xyz[0], xyz[1], xyz[2])) {
-                                if (DEBUG_MODE) {
-                                    StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", "
-                                            + basePositionZ + "] failed @ " + Arrays.toString(xyz) + " "
-                                            + Arrays.toString(abc));
-                                }
-                                return false;
-                            }
-                        } else {
-                            if (DEBUG_MODE) {
-                                StructureLib.LOGGER.info("Multi [" + basePositionX + ", " + basePositionY + ", "
-                                        + basePositionZ + "] !blockExists @ " + Arrays.toString(xyz) + " "
-                                        + Arrays.toString(abc));
-                            }
-                        }
-                        abc[0] += 1;
-                    }
-                }
+                success = StructureUtility.iterateV2(
+                        elements,
+                        world,
+                        extendedFacing,
+                        basePositionX,
+                        basePositionY,
+                        basePositionZ,
+                        basePositionA,
+                        basePositionB,
+                        basePositionC,
+                        skipBlockUnloaded((e,w, x, y, z) -> e.check(object,w, x,y, z)),
+                        "check force");
             }
-            if (DEBUG_MODE) {
+            if (DEBUG_MODE && success) {
                 StructureLib.LOGGER.info(
                         "Multi [" + basePositionX + ", " + basePositionY + ", " + basePositionZ + "] pass");
             }
+            return success;
         } else {
             if (hintsOnly) {
-                for (IStructureElement<T> element : elements) {
-                    if (element.isNavigating()) {
-                        abc[0] = (element.resetA() ? basePositionA : abc[0]) + element.getStepA();
-                        abc[1] = (element.resetB() ? basePositionB : abc[1]) + element.getStepB();
-                        abc[2] = (element.resetC() ? basePositionC : abc[2]) + element.getStepC();
-                    } else {
-                        extendedFacing.getWorldOffset(abc, xyz);
-                        xyz[0] += basePositionX;
-                        xyz[1] += basePositionY;
-                        xyz[2] += basePositionZ;
-
-                        element.spawnHint(object, world, xyz[0], xyz[1], xyz[2], trigger);
-
-                        abc[0] += 1;
-                    }
-                }
+                StructureUtility.iterateV2(
+                        elements,
+                        world,
+                        extendedFacing,
+                        basePositionX,
+                        basePositionY,
+                        basePositionZ,
+                        basePositionA,
+                        basePositionB,
+                        basePositionC,
+                        ignoreBlockUnloaded((e, w, x, y, z) -> e.spawnHint(object, world, x, y, z, trigger)),
+                        "spawnHint");
             } else {
-                for (IStructureElement<T> element : elements) {
-                    if (element.isNavigating()) {
-                        abc[0] = (element.resetA() ? basePositionA : abc[0]) + element.getStepA();
-                        abc[1] = (element.resetB() ? basePositionB : abc[1]) + element.getStepB();
-                        abc[2] = (element.resetC() ? basePositionC : abc[2]) + element.getStepC();
-                    } else {
-                        extendedFacing.getWorldOffset(abc, xyz);
-                        xyz[0] += basePositionX;
-                        xyz[1] += basePositionY;
-                        xyz[2] += basePositionZ;
-
-                        if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
-                            element.placeBlock(object, world, xyz[0], xyz[1], xyz[2], trigger);
-                        }
-                        abc[0] += 1;
-                    }
-                }
+                StructureUtility.iterateV2(
+                        elements,
+                        world,
+                        extendedFacing,
+                        basePositionX,
+                        basePositionY,
+                        basePositionZ,
+                        basePositionA,
+                        basePositionB,
+                        basePositionC,
+                        ignoreBlockUnloaded((e, w, x, y, z) -> e.placeBlock(object, world, x, y, z, trigger)),
+                        "placeBlock");
             }
         }
         return true;

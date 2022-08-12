@@ -2244,7 +2244,7 @@ public class StructureUtility {
                                 Arrays.toString(xyz),
                                 Arrays.toString(abc));
                     }
-                    return false;
+                    if (!predicate.blockNotLoaded(element, world, xyz[0], xyz[1], xyz[2])) return false;
                 }
                 abc[0] += 1;
             }
