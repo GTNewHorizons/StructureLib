@@ -76,11 +76,9 @@ public class ConstructableUtility {
             } else if (constructable instanceof ISurvivalConstructable) {
                 int built = ((ISurvivalConstructable) constructable)
                         .survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer(playerMP), playerMP);
-                if (built > 0)
-                    // TODO somehow notify extensions that their inventory might have been modified and need to be
-                    // synced to client or saved
-                    playerMP.inventory.markDirty();
-                else if (built == -1) {
+                if (built > 0) {
+                    playerMP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.built_stat", built));
+                } else if (built == -1) {
                     playerMP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.complete"));
                 }
                 setLastUseTickToStackTag(aStack);

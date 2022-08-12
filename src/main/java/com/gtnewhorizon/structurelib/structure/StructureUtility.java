@@ -427,9 +427,16 @@ public class StructureUtility {
                     IItemSource s,
                     EntityPlayerMP actor,
                     Consumer<IChatComponent> chatter) {
-                if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 Pair<Block, Integer> hint = getHint(trigger);
                 if (hint == null) return PlaceResult.REJECT; // TODO or SKIP?
+                Block block = world.getBlock(x, y, z);
+                int meta = world.getBlockMetadata(x, y, z);
+                TIER tier = tierExtractor.convert(block, meta);
+                if (!Objects.equals(tier, notSet)) {
+                    return Objects.equals(tier, tierExtractor.convert(hint.getKey(), hint.getValue()))
+                            ? PlaceResult.SKIP
+                            : PlaceResult.REJECT;
+                }
                 return StructureUtility.survivalPlaceBlock(
                         hint.getKey(), hint.getValue(), world, x, y, z, s, actor, chatter);
             }
