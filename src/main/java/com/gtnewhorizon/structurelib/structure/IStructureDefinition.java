@@ -223,7 +223,7 @@ public interface IStructureDefinition<T> {
                         basePositionA,
                         basePositionB,
                         basePositionC,
-                        skipBlockUnloaded((e,w, x, y, z) -> e.check(object,w, x,y, z)),
+                        skipBlockUnloaded((e, w, x, y, z) -> e.check(object, w, x, y, z)),
                         "check force");
             }
             if (DEBUG_MODE && success) {
