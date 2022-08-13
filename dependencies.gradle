@@ -1,5 +1,5 @@
 // Add your dependencies here
 
 dependencies {
-
+    compile("com.github.GTNewHorizons:GTNHLib:0.0.1:dev")
 }
