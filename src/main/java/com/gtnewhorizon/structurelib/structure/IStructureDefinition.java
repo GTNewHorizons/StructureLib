@@ -243,7 +243,10 @@ public interface IStructureDefinition<T> {
                         basePositionA,
                         basePositionB,
                         basePositionC,
-                        ignoreBlockUnloaded((e, w, x, y, z) -> e.spawnHint(object, world, x, y, z, trigger)),
+                        ignoreBlockUnloaded((e, w, x, y, z) -> {
+                            e.spawnHint(object, world, x, y, z, trigger);
+                            return true;
+                        }),
                         "spawnHint");
             } else {
                 StructureUtility.iterateV2(
@@ -256,7 +259,10 @@ public interface IStructureDefinition<T> {
                         basePositionA,
                         basePositionB,
                         basePositionC,
-                        ignoreBlockUnloaded((e, w, x, y, z) -> e.placeBlock(object, world, x, y, z, trigger)),
+                        ignoreBlockUnloaded((e, w, x, y, z) -> {
+                            e.placeBlock(object, world, x, y, z, trigger);
+                            return true;
+                        }),
                         "placeBlock");
             }
         }
