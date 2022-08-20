@@ -376,7 +376,7 @@ public class InventoryUtility {
     }
 
     private static class ItemStackCounterImpl implements ItemStackCounter {
-        private final Map<ItemStack, Integer> store = new ItemStackMap<>();
+        private final Map<ItemStack, Integer> store = new ItemStackMap<>(true);
 
         @Override
         public void add(ItemStack stack, int stackSize) {
