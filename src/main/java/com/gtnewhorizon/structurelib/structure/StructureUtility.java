@@ -1,7 +1,8 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
-import static java.lang.Integer.MIN_VALUE;
+import java.util.*;
+import java.util.function.*;
+import javax.annotation.Nullable;
 
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
@@ -13,10 +14,8 @@ import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import cpw.mods.fml.common.registry.GameRegistry;
-import java.util.*;
-import java.util.function.*;
-import javax.annotation.Nullable;
 import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
@@ -31,6 +30,10 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+
+
+import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
+import static java.lang.Integer.MIN_VALUE;
 
 /**
  * Fluent API for structure checking!
@@ -1908,10 +1911,21 @@ public class StructureUtility {
             }
 
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return backing.spawnHint(t, world, x, y, z, ChannelDataAccessor.withChannel(trigger, channel));
+                ItemStack newTrigger = ChannelDataAccessor.withChannel(trigger, channel);
+                // We know spawnHint will only be called on client side, so the lack of player isn't quite an issue
+                // we check if it's null again just in case.
+                if (newTrigger == trigger && StructureLib.getCurrentPlayer() != null)
+                    warnNoExplicitSubChannel(StructureLib.getCurrentPlayer());
+                return backing.spawnHint(t, world, x, y, z, newTrigger);
+            }
+
+            private void warnNoExplicitSubChannel(EntityPlayer currentPlayer) {
+                currentPlayer.addChatComponentMessage(
+                        new ChatComponentTranslation("structurelib.autoplace.warning.no_explicit_channel", channel));
             }
 
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                // I hope a CREATIVE player know what he is doing...
                 return backing.placeBlock(t, world, x, y, z, ChannelDataAccessor.withChannel(trigger, channel));
             }
 
@@ -1925,8 +1939,12 @@ public class StructureUtility {
                     IItemSource s,
                     EntityPlayerMP actor,
                     Consumer<IChatComponent> chatter) {
-                return backing.survivalPlaceBlock(
-                        t, world, x, y, z, ChannelDataAccessor.withChannel(trigger, channel), s, actor, chatter);
+                ItemStack newTrigger = ChannelDataAccessor.withChannel(trigger, channel);
+                if (newTrigger == trigger)
+                    // we will bypass the chatter filter here, as this is a warning that player definitively want to see
+                    // instead of some false positive error messages like item not find
+                    warnNoExplicitSubChannel(actor);
+                return backing.survivalPlaceBlock(t, world, x, y, z, newTrigger, s, actor, chatter);
             }
         };
     }
