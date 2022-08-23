@@ -23,6 +23,7 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.launchwrapper.Launch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,7 +37,7 @@ import org.apache.logging.log4j.Logger;
         acceptableRemoteVersions = "*",
         guiFactory = "com.gtnewhorizon.structurelib.GuiFactory")
 public class StructureLib {
-    public static boolean DEBUG_MODE = Boolean.getBoolean("structurelib.debug");
+    public static boolean DEBUG_MODE;
     public static boolean PANIC_MODE = Boolean.getBoolean("structurelib.panic");
     public static Logger LOGGER = LogManager.getLogger("StructureLib");
 
@@ -53,6 +54,14 @@ public class StructureLib {
         net.registerMessage(AlignmentMessage.ClientHandler.class, AlignmentMessage.AlignmentData.class, 1, Side.CLIENT);
         net.registerMessage(UpdateHintParticleMessage.Handler.class, UpdateHintParticleMessage.class, 2, Side.CLIENT);
         net.registerMessage(SetChannelDataMessage.Handler.class, SetChannelDataMessage.class, 3, Side.SERVER);
+
+        try {
+            DEBUG_MODE = Boolean.parseBoolean(System.getProperty("structurelib.debug"));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            // turn on debug by default in dev mode
+            // this will be overridden if above property is present and set to false
+            DEBUG_MODE = (Boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
+        }
     }
 
     public static final XSTR RANDOM = new XSTR();
