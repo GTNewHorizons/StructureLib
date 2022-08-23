@@ -20,7 +20,6 @@ public class ConstructableUtility {
     // TODO make these configurable and expose this to external world
     public static final int COOLDOWN = 5;
     private static final int BUDGET = 25;
-    public static boolean redBrokenOne = true; // TODO this is horrible
 
     private ConstructableUtility() {}
 
