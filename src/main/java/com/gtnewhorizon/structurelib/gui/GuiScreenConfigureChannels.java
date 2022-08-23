@@ -216,16 +216,13 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
             case Keyboard.KEY_RETURN:
             case Keyboard.KEY_NUMPADENTER:
                 GuiButton add = getButtonList().get(0);
-                if (add.enabled)
-                    doActionPerformed(add);
+                if (add.enabled) doActionPerformed(add);
                 return;
             case Keyboard.KEY_UP:
-                if (list.selectedIndex > 0)
-                    list.setSelection(list.selectedIndex - 1);
+                if (list.selectedIndex > 0) list.setSelection(list.selectedIndex - 1);
                 return;
             case Keyboard.KEY_DOWN:
-                if (list.selectedIndex < list.getNumElements() - 1)
-                    list.setSelection(list.selectedIndex + 1);
+                if (list.selectedIndex < list.getNumElements() - 1) list.setSelection(list.selectedIndex + 1);
                 return;
         }
         if (key.textboxKeyTyped(aChar, aKey)) {

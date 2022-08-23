@@ -1,8 +1,7 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import java.util.*;
-import java.util.function.*;
-import javax.annotation.Nullable;
+import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
+import static java.lang.Integer.MIN_VALUE;
 
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
@@ -14,6 +13,9 @@ import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import cpw.mods.fml.common.registry.GameRegistry;
+import java.util.*;
+import java.util.function.*;
+import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -30,10 +32,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-
-
-import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
-import static java.lang.Integer.MIN_VALUE;
 
 /**
  * Fluent API for structure checking!
