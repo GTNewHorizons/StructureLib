@@ -89,7 +89,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
 
             @Override
             public void setFocused(boolean p_146195_1_) {
-                if (!p_146195_1_ && isFocused()) {
+                if (!p_146195_1_ && isFocused() && !StringUtils.isBlank(getText())) {
                     int result;
                     try {
                         result = Math.max(Integer.parseInt(getText()), 1);
@@ -203,6 +203,31 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
 
     @Override
     protected void keyTyped(char aChar, int aKey) {
+        switch (aKey) {
+            case Keyboard.KEY_TAB:
+                if (key.isFocused()) {
+                    key.setFocused(false);
+                    value.setFocused(true);
+                } else {
+                    key.setFocused(true);
+                    value.setFocused(false);
+                }
+                return;
+            case Keyboard.KEY_RETURN:
+            case Keyboard.KEY_NUMPADENTER:
+                GuiButton add = getButtonList().get(0);
+                if (add.enabled)
+                    doActionPerformed(add);
+                return;
+            case Keyboard.KEY_UP:
+                if (list.selectedIndex > 0)
+                    list.setSelection(list.selectedIndex - 1);
+                return;
+            case Keyboard.KEY_DOWN:
+                if (list.selectedIndex < list.getNumElements() - 1)
+                    list.setSelection(list.selectedIndex + 1);
+                return;
+        }
         if (key.textboxKeyTyped(aChar, aKey)) {
             updateButtons();
             return;
