@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.gtnewhorizon.structurelib.entity.fx.EntityFXBlockHint;
+import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
@@ -147,6 +149,11 @@ public class ClientProxy extends CommonProxy {
     public long getOverworldTime() {
         // there is no overworld, better just hope current world time is ok...
         return Minecraft.getMinecraft().theWorld.getTotalWorldTime();
+    }
+
+    @Override
+    public void uploadChannels(ItemStack trigger) {
+        StructureLib.net.sendToServer(new SetChannelDataMessage(trigger));
     }
 
     private static class HintParticleInfo {

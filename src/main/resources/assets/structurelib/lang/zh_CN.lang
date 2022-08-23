@@ -26,8 +26,17 @@ item.structurelib.constructableTrigger.desc.1=只能在多方块主机上使用�
 item.structurelib.constructableTrigger.desc.2=结构的示意图。 (译者注：请搭高使用)
 item.structurelib.constructableTrigger.desc.3= (潜行右键可以直接完成搭建)
 item.structurelib.constructableTrigger.desc.4=此物品堆叠数量会影响显示的机器等级/模式/类型
+item.structurelib.constructableTrigger.desc.5=按下 §l[左SHIFT]§r 以显示子信道
+item.structurelib.constructableTrigger.desc.lshift.0=包含 %d 个子信道
 item.structurelib.constructableTrigger.too_fast=请在下一次自动搭建前等待%dtick...
+item.structurelib.constructableTrigger.gui.key=信道名:
+item.structurelib.constructableTrigger.gui.value=值:
+item.structurelib.constructableTrigger.gui.add=添加
+item.structurelib.constructableTrigger.gui.set=替换
+item.structurelib.constructableTrigger.gui.unset=删除
+item.structurelib.constructableTrigger.gui.wipe=§4全部清空
 
+structurelib.autoplace.built_stat=已放置 %s 个方块
 structurelib.autoplace.complete=§a这个多方块结构已经完成自动搭建！
 structurelib.autoplace.error.not_enabled=§c这个多方块结构不支持在生存模式下自动搭建！
 structurelib.autoplace.error.no_simple_block=§c建议放置§r%s§c，但没有找到它

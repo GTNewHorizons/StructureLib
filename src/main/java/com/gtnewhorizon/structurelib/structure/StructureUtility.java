@@ -5,6 +5,7 @@ import static java.lang.Integer.MIN_VALUE;
 
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
 import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
@@ -1893,6 +1894,42 @@ public class StructureUtility {
         return defer(keyExtractorCheck, keyExtractor, array.toArray(new IStructureElement[0]));
     }
 
+    // endregion
+
+    // region channels
+
+    /**
+     * See channels.md in docs folder
+     */
+    public static <T> IStructureElement<T> withChannel(String channel, IStructureElement<T> backing) {
+        return new IStructureElement<T>() {
+            public boolean check(T t, World world, int x, int y, int z) {
+                return backing.check(t, world, x, y, z);
+            }
+
+            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return backing.spawnHint(t, world, x, y, z, ChannelDataAccessor.withChannel(trigger, channel));
+            }
+
+            public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return backing.placeBlock(t, world, x, y, z, ChannelDataAccessor.withChannel(trigger, channel));
+            }
+
+            public PlaceResult survivalPlaceBlock(
+                    T t,
+                    World world,
+                    int x,
+                    int y,
+                    int z,
+                    ItemStack trigger,
+                    IItemSource s,
+                    EntityPlayerMP actor,
+                    Consumer<IChatComponent> chatter) {
+                return backing.survivalPlaceBlock(
+                        t, world, x, y, z, ChannelDataAccessor.withChannel(trigger, channel), s, actor, chatter);
+            }
+        };
+    }
     // endregion
 
     /**

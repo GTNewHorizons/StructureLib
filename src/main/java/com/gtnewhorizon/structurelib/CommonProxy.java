@@ -5,6 +5,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
@@ -48,4 +49,6 @@ public class CommonProxy {
     public long getOverworldTime() {
         return MinecraftServer.getServer().getEntityWorld().getTotalWorldTime();
     }
+
+    public void uploadChannels(ItemStack trigger) {}
 }

@@ -1,15 +1,18 @@
 package com.gtnewhorizon.structurelib;
 
 import com.gtnewhorizon.structurelib.block.BlockHint;
+import com.gtnewhorizon.structurelib.command.CommandConfigureChannels;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
+import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
 import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
 import com.gtnewhorizon.structurelib.util.XSTR;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -49,9 +52,13 @@ public class StructureLib {
                 AlignmentMessage.ServerHandler.class, AlignmentMessage.AlignmentQuery.class, 0, Side.SERVER);
         net.registerMessage(AlignmentMessage.ClientHandler.class, AlignmentMessage.AlignmentData.class, 1, Side.CLIENT);
         net.registerMessage(UpdateHintParticleMessage.Handler.class, UpdateHintParticleMessage.class, 2, Side.CLIENT);
+        net.registerMessage(SetChannelDataMessage.Handler.class, SetChannelDataMessage.class, 3, Side.SERVER);
     }
 
     public static final XSTR RANDOM = new XSTR();
+
+    @Mod.Instance
+    static StructureLib INSTANCE;
 
     static Block blockHint;
     static Item itemBlockHint;
@@ -76,6 +83,12 @@ public class StructureLib {
                 itemConstructableTrigger = new ItemConstructableTrigger(),
                 itemConstructableTrigger.getUnlocalizedName());
         proxy.preInit(e);
+        NetworkRegistry.INSTANCE.registerGuiHandler(instance(), new GuiHandler());
+    }
+
+    @Mod.EventHandler
+    public void serverStarting(FMLServerStartingEvent e) {
+        e.registerServerCommand(new CommandConfigureChannels());
     }
 
     public static void addClientSideChatMessages(String... messages) {
@@ -92,5 +105,13 @@ public class StructureLib {
 
     public static long getOverworldTime() {
         return proxy.getOverworldTime();
+    }
+
+    public static StructureLib instance() {
+        return INSTANCE;
+    }
+
+    public CommonProxy proxy() {
+        return proxy;
     }
 }
