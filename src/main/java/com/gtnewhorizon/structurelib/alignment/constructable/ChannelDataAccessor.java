@@ -1,19 +1,17 @@
 package com.gtnewhorizon.structurelib.alignment.constructable;
 
+import static com.gtnewhorizon.structurelib.util.MiscUtils.getTagKeys;
+import static net.minecraftforge.common.util.Constants.NBT.TAG_COMPOUND;
+
+import com.gtnewhorizon.structurelib.StructureLib;
 import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
-
-import com.gtnewhorizon.structurelib.StructureLib;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.Constants.NBT;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-
-
-import static com.gtnewhorizon.structurelib.util.MiscUtils.getTagKeys;
-import static net.minecraftforge.common.util.Constants.NBT.TAG_COMPOUND;
 
 public class ChannelDataAccessor {
     private static final String SECONDARY_HINT_TAG = "channels";

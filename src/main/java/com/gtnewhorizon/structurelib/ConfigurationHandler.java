@@ -15,6 +15,8 @@ public enum ConfigurationHandler {
     private Configuration config;
     private int maxCoexistingHologram;
     private boolean removeCollidingHologram;
+    private int autoPlaceBudget;
+    private int autoPlaceInterval;
 
     ConfigurationHandler() {
         FMLCommonHandler.instance().bus().register(this);
@@ -50,6 +52,25 @@ public enum ConfigurationHandler {
                 "client.hologram",
                 true,
                 "An attempt will be made to remove an existing hologram if it collides with a new hologram.");
+        autoPlaceBudget = config.getInt(
+                "autoPlaceBudget",
+                "common.hologram",
+                25,
+                1,
+                200,
+                "Max number of elements can be placed in one round of auto place.\n"
+                        + "As expected, server side settings will overrides client settings.\n"
+                        + "Certain larger multi might increase these values beyond this configured value.");
+        autoPlaceInterval = config.getInt(
+                "autoPlaceInterval",
+                "common.hologram",
+                300,
+                0,
+                20000,
+                "Unit: milisecond. Minimal interval between two auto place round.\n"
+                        + "As expected, server side settings will overrides client settings.\n"
+                        + "Note this relates to the wall clock, not in game ticks.\n"
+                        + "Value smaller than default is likely to be perceived as no minimal interval whatsoever.");
 
         if (config.hasChanged()) {
             config.save();
@@ -69,6 +90,14 @@ public enum ConfigurationHandler {
 
     public boolean isRemoveCollidingHologram() {
         return removeCollidingHologram;
+    }
+
+    public int getAutoPlaceBudget() {
+        return autoPlaceBudget;
+    }
+
+    public int getAutoPlaceInterval() {
+        return autoPlaceInterval;
     }
 
     Configuration getConfig() {

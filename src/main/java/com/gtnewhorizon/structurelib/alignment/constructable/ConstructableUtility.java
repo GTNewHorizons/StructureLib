@@ -1,14 +1,15 @@
 package com.gtnewhorizon.structurelib.alignment.constructable;
 
+import com.gtnewhorizon.structurelib.ConfigurationHandler;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.IItemSource;
+import java.util.WeakHashMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.world.World;
@@ -17,9 +18,8 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 public class ConstructableUtility {
 
-    // TODO make these configurable and expose this to external world
-    public static final int COOLDOWN = 5;
-    private static final int BUDGET = 25;
+    private static final WeakHashMap<EntityPlayerMP, Long> lastUse = new WeakHashMap<>();
+    private static long clientSideLastUse = 0;
 
     private ConstructableUtility() {}
 
@@ -41,10 +41,11 @@ public class ConstructableUtility {
             // not sneaking - client side will generate hologram. nothing to do on server side
             if (!aPlayer.isSneaking()) return true;
 
-            long timePast = StructureLib.getOverworldTime() - getLastUseTick(aStack);
-            if (timePast < COOLDOWN) {
+            long timePast = System.currentTimeMillis() - getLastUseMilis(aPlayer);
+            if (timePast < ConfigurationHandler.INSTANCE.getAutoPlaceInterval()) {
                 aPlayer.addChatComponentMessage(new ChatComponentTranslation(
-                        "item.structurelib.constructableTrigger.too_fast", COOLDOWN - timePast));
+                        "item.structurelib.constructableTrigger.too_fast",
+                        ConfigurationHandler.INSTANCE.getAutoPlaceInterval() - timePast));
                 return true;
             }
         } else if (!StructureLib.isCurrentPlayer(aPlayer)) {
@@ -74,13 +75,17 @@ public class ConstructableUtility {
                 constructable.construct(aStack, false);
             } else if (constructable instanceof ISurvivalConstructable) {
                 int built = ((ISurvivalConstructable) constructable)
-                        .survivalConstruct(aStack, BUDGET, IItemSource.fromPlayer(playerMP), playerMP);
+                        .survivalConstruct(
+                                aStack,
+                                ConfigurationHandler.INSTANCE.getAutoPlaceBudget(),
+                                IItemSource.fromPlayer(playerMP),
+                                playerMP);
                 if (built > 0) {
                     playerMP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.built_stat", built));
                 } else if (built == -1) {
                     playerMP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.complete"));
                 }
-                setLastUseTickToStackTag(aStack);
+                setLastUseMilis(aPlayer);
             } else {
                 playerMP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.error.not_enabled"));
             }
@@ -89,19 +94,23 @@ public class ConstructableUtility {
         // client side
         // particles and text
         constructable.construct(aStack, true);
-        if (getLastUseTick(aStack) == 0)
+        if (System.currentTimeMillis() - getLastUseMilis(aPlayer) >= 300)
             StructureLib.addClientSideChatMessages(constructable.getStructureDescription(aStack));
+        setLastUseMilis(aPlayer);
         return false;
     }
 
-    private static long getLastUseTick(ItemStack aStack) {
-        return aStack.hasTagCompound() ? aStack.getTagCompound().getLong("LastUse") : 0;
+    private static void setLastUseMilis(EntityPlayer aPlayer) {
+        if (!(aPlayer instanceof EntityPlayerMP))
+            // assume client side
+            clientSideLastUse = System.currentTimeMillis();
+        else lastUse.put((EntityPlayerMP) aPlayer, System.currentTimeMillis());
     }
 
-    private static void setLastUseTickToStackTag(ItemStack aStack) {
-        NBTTagCompound tag = aStack.stackTagCompound;
-        if (tag == null) tag = aStack.stackTagCompound = new NBTTagCompound();
-        // here we force use the overworld tick time, in case the current world is over
-        tag.setLong("LastUse", StructureLib.getOverworldTime());
+    private static long getLastUseMilis(EntityPlayer aPlayer) {
+        if (!(aPlayer instanceof EntityPlayerMP))
+            // assume client side
+            return clientSideLastUse;
+        return lastUse.getOrDefault(aPlayer, 0L);
     }
 }

@@ -9,11 +9,9 @@ import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
 import java.util.List;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import org.lwjgl.input.Keyboard;
 
@@ -73,22 +71,6 @@ public class ItemConstructableTrigger extends Item {
                             "item.structurelib.constructableTrigger.desc.4")); // Quantity affects tier/mode/type
             if (ChannelDataAccessor.hasSubChannel(aStack))
                 aList.add(translateToLocal("item.structurelib.constructableTrigger.desc.5"));
-        }
-    }
-
-    @Override
-    public void onUpdate(
-            ItemStack p_77663_1_, World p_77663_2_, Entity p_77663_3_, int p_77663_4_, boolean p_77663_5_) {
-        // remove LastUse tags if it times out,
-        // so it can stack with other trigger item stacks
-        // don't remove it too soon though, to prevent chat spam
-        // this might be perceived as a hack, but ok this is simple enough to implement
-        if (p_77663_1_.hasTagCompound()
-                && p_77663_1_.getTagCompound().getLong("LastUse") + ConstructableUtility.COOLDOWN * 2
-                        < StructureLib.getOverworldTime()) {
-            NBTTagCompound tag = p_77663_1_.getTagCompound();
-            tag.removeTag("LastUse");
-            if (tag.hasNoTags()) p_77663_1_.setTagCompound(null);
         }
     }
 }
