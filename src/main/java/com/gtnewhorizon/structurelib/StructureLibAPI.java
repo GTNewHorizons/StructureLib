@@ -75,6 +75,14 @@ public class StructureLibAPI {
      * Update the tint of given hint particle. Do nothing if particle not found.
      * @return false if nothing updated. true if updated.
      */
+    public static boolean markHintParticleError(EntityPlayer player, World w, int x, int y, int z) {
+        return proxy.markHintParticleError(player, w, x, y, z);
+    }
+
+    /**
+     * Update the tint of given hint particle. Do nothing if particle not found.
+     * @return false if nothing updated. true if updated.
+     */
     public static boolean updateHintParticleTint(EntityPlayer player, World w, int x, int y, int z, short[] RGBa) {
         return proxy.updateHintParticleTint(player, w, x, y, z, RGBa);
     }

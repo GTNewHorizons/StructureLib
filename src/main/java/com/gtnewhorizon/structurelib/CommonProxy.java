@@ -11,6 +11,9 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
 public class CommonProxy {
+
+    private static final short[] RGBA_RED_TINT = {255, 128, 128, 0};
+
     public void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {}
 
     public void hintParticleTinted(World w, int x, int y, int z, Block block, int meta, short[] RGBa) {}
@@ -51,4 +54,8 @@ public class CommonProxy {
     }
 
     public void uploadChannels(ItemStack trigger) {}
+
+    public boolean markHintParticleError(EntityPlayer player, World w, int x, int y, int z) {
+        return updateHintParticleTint(player, w, x, y, z, RGBA_RED_TINT);
+    }
 }

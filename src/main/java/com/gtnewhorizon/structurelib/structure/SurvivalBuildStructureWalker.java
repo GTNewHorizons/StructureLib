@@ -37,7 +37,7 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T> {
                 if (check) element.check(object, world, x, y, z);
                 return ++built < elementBudget;
             case REJECT:
-                StructureLibAPI.updateHintParticleTint(actor, world, x, y, z, new short[] {255, 128, 128, 0});
+                StructureLibAPI.markHintParticleError(actor, world, x, y, z);
                 return false;
             case ACCEPT_STOP:
                 if (check) element.check(object, world, x, y, z);
