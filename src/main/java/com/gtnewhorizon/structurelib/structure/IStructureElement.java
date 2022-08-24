@@ -97,6 +97,7 @@ public interface IStructureElement<T> {
         /**
          * This element either exists already, or does not yet have an implementation for survivalPlaceBlock, or
          * some other unforeseen situations.
+         * TODO this definition doesn't seem right. Should we separate SKIP from EXISTS, or SKIP from ERROR?
          */
         SKIP,
         /**
