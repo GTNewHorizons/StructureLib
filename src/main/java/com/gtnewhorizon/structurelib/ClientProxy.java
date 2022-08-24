@@ -62,6 +62,10 @@ public class ClientProxy extends CommonProxy {
      * if true rebuild the allHints list from all hintOwners (and sort it)
      */
     private static boolean allHintsDirty = false;
+    /**
+     * counter keeping track of how many renderThrough hint particle we have. enable optimization if no renderThrough
+     */
+    private static int renderThrough;
 
     @Override
     public void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {
@@ -141,12 +145,15 @@ public class ClientProxy extends CommonProxy {
             return false;
         }
         hint.setTint(RGBA_RED_TINT);
-        hint.setRenderThrough(true);
+        hint.setRenderThrough();
         return true;
     }
 
     static void removeGroup(HintGroup group) {
-        for (HintParticleInfo hintParticleInfo : group.getHints()) allHints.remove(hintParticleInfo);
+        for (HintParticleInfo hintParticleInfo : group.getHints()) {
+            allHints.remove(hintParticleInfo);
+            if (hintParticleInfo.renderThrough) renderThrough--;
+        }
         allHintsDirty = true;
     }
 
@@ -247,7 +254,7 @@ public class ClientProxy extends CommonProxy {
             this.y = y;
             this.z = z;
             X = x + 0.25;
-            Y = y + 0.5;
+            Y = y + 0.25;
             Z = z + 0.25;
             this.icons = icons;
             this.tint = tint;
@@ -267,8 +274,12 @@ public class ClientProxy extends CommonProxy {
             this.tint = tint;
         }
 
-        public void setRenderThrough(boolean renderThrough) {
-            this.renderThrough = renderThrough;
+        public void setRenderThrough() {
+            if (!this.renderThrough) {
+                ClientProxy.renderThrough += 1;
+                allHintsDirty = true;
+            }
+            this.renderThrough = true;
         }
 
         @Override
@@ -377,7 +388,8 @@ public class ClientProxy extends CommonProxy {
                     for (HintGroup c : allGroups) allHintsForRender.addAll(c.getHints());
                     sortRequired = true;
                 }
-                if (sortRequired || playerPos.squareDistanceTo(lastPlayerPos) > 1e-4) {
+                if (renderThrough > 0 && (sortRequired || playerPos.squareDistanceTo(lastPlayerPos) > 1e-4)) {
+                    // only sort if there is anything that need depth test disabled
                     // only redo sort if player moved some distance
                     // default is 0.01 block
                     // if there was a full rebuild, go sort it as well
@@ -395,34 +407,45 @@ public class ClientProxy extends CommonProxy {
                 allHintsForRender.clear();
                 allGroups.clear();
                 lastPlayerPos.yCoord = -1e30;
+                renderThrough = 0;
             }
         }
 
         @SubscribeEvent
         public void onRenderWorldLast(RenderWorldLastEvent e) {
+            if (allHintsForRender.isEmpty()) return;
+
+            // seriously, I'm not a OpenGL expert, so I'm probably doing a lot of very stupid stuff here.
+            // Please contribute patches if you find something to optimize.
+
+            GL11.glPushMatrix();
             GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT); // TODO figure out original states
             GL11.glDisable(GL11.GL_CULL_FACE); // we need the back facing rendered because the thing is transparent
             GL11.glEnable(GL11.GL_BLEND); // enable blend so it is transparent
             GL11.glBlendFunc(GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_SRC_ALPHA);
-            //            GL11.glDisable(GL11.GL_DEPTH_TEST); // to draw through these stuff
-            boolean renderThrough = !GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+            // depth test begin as enabled
+            boolean renderThrough = false;
             Minecraft.getMinecraft().renderEngine.bindTexture(TextureMap.locationBlocksTexture);
+            GL11.glTranslated(-RenderManager.renderPosX, -RenderManager.renderPosY, -RenderManager.renderPosZ);
             Tessellator tes = Tessellator.instance;
             tes.startDrawingQuads();
-            tes.setTranslation(-RenderManager.renderPosX, -RenderManager.renderPosY, -RenderManager.renderPosZ);
-            for (HintParticleInfo hint : allHintsForRender) {
+            for (int i = 0, allHintsForRenderSize = allHintsForRender.size(); i < allHintsForRenderSize; i++) {
+                HintParticleInfo hint = allHintsForRender.get(i);
                 if (renderThrough != hint.renderThrough) {
-                    tes.draw();
+                    if (i > 0) {
+                        tes.draw();
+                        tes.startDrawingQuads();
+                    }
                     if (hint.renderThrough) GL11.glDisable(GL11.GL_DEPTH_TEST);
                     else GL11.glEnable(GL11.GL_DEPTH_TEST);
-                    tes.startDrawingQuads();
                     renderThrough = hint.renderThrough;
                 }
                 hint.draw(tes);
             }
-            tes.setTranslation(0, 0, 0);
             tes.draw();
+
             GL11.glPopAttrib();
+            GL11.glPopMatrix();
         }
     }
 }
