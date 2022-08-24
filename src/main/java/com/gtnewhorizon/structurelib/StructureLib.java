@@ -6,6 +6,7 @@ import com.gtnewhorizon.structurelib.item.ItemBlockHint;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
+import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
 import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
 import com.gtnewhorizon.structurelib.util.XSTR;
@@ -54,6 +55,7 @@ public class StructureLib {
         net.registerMessage(AlignmentMessage.ClientHandler.class, AlignmentMessage.AlignmentData.class, 1, Side.CLIENT);
         net.registerMessage(UpdateHintParticleMessage.Handler.class, UpdateHintParticleMessage.class, 2, Side.CLIENT);
         net.registerMessage(SetChannelDataMessage.Handler.class, SetChannelDataMessage.class, 3, Side.SERVER);
+        net.registerMessage(ErrorHintParticleMessage.Handler.class, ErrorHintParticleMessage.class, 4, Side.CLIENT);
 
         try {
             DEBUG_MODE = Boolean.parseBoolean(System.getProperty("structurelib.debug"));

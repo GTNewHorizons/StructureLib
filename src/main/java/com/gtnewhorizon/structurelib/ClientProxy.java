@@ -1,6 +1,6 @@
 package com.gtnewhorizon.structurelib;
 
-import java.util.*;
+import static com.gtnewhorizon.structurelib.StructureLib.RANDOM;
 
 import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
@@ -9,6 +9,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
+import java.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
@@ -28,17 +29,16 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
 import org.lwjgl.opengl.GL11;
 
-
-import static com.gtnewhorizon.structurelib.StructureLib.RANDOM;
-
 public class ClientProxy extends CommonProxy {
 
     private static final short[] RGBA_NO_TINT = {255, 255, 255, 255};
+    private static final short[] RGBA_RED_TINT = {255, 128, 128, 0};
     private static final Map<HintParticleInfo, HintGroup> allHints = new HashMap<>();
     /**
      * All batches of hints.
      */
     private static final List<HintGroup> allGroups = new ArrayList<>();
+
     public static int HOLOGRAM_LIFETIME = 200;
     /**
      * Current batch of hints. Belongs to the same logical multiblock.
@@ -80,7 +80,14 @@ public class ClientProxy extends CommonProxy {
         currentHints.getHints().add(info);
         allHintsDirty = true;
 
-        EntityFX particle = new WeightlessParticleFX(w, x + RANDOM.nextFloat() * 0.5F, y + RANDOM.nextFloat() * 0.5F, z + RANDOM.nextFloat() * 0.5F, 0, 0, 0);
+        EntityFX particle = new WeightlessParticleFX(
+                w,
+                x + RANDOM.nextFloat() * 0.5F,
+                y + RANDOM.nextFloat() * 0.5F,
+                z + RANDOM.nextFloat() * 0.5F,
+                0,
+                0,
+                0);
         particle.setRBGColorF(0, 0.6F * RANDOM.nextFloat(), 0.8f);
         Minecraft.getMinecraft().effectRenderer.addEffect(particle);
     }
@@ -104,16 +111,38 @@ public class ClientProxy extends CommonProxy {
     public boolean updateHintParticleTint(EntityPlayer player, World w, int x, int y, int z, short[] rgBa) {
         if (player instanceof EntityPlayerMP) return super.updateHintParticleTint(player, w, x, y, z, rgBa);
         if (player != getCurrentPlayer()) return false; // how?
+        HintParticleInfo hint = getHintParticleInfo(x, y, z);
+        if (hint == null) {
+            return false;
+        }
+        hint.setTint(rgBa);
+        return true;
+    }
+
+    private static HintParticleInfo getHintParticleInfo(int x, int y, int z) {
         HintParticleInfo info = new HintParticleInfo(x, y, z, null, null);
         HintGroup existing = allHints.get(info);
         if (existing != null) {
             for (HintParticleInfo hint : existing.getHints()) {
-                if (hint.equals(info))
-                    hint.tint = rgBa;
+                if (hint.equals(info)) {
+                    return hint;
+                }
             }
-            return true;
         }
-        return false;
+        return null;
+    }
+
+    @Override
+    public boolean markHintParticleError(EntityPlayer player, World w, int x, int y, int z) {
+        if (player instanceof EntityPlayerMP) return super.markHintParticleError(player, w, x, y, z);
+        if (player != getCurrentPlayer()) return false; // how?
+        HintParticleInfo hint = getHintParticleInfo(x, y, z);
+        if (hint == null) {
+            return false;
+        }
+        hint.setTint(RGBA_RED_TINT);
+        hint.setRenderThrough(true);
+        return true;
     }
 
     static void removeGroup(HintGroup group) {
@@ -149,27 +178,22 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void startHinting(World w) {
-        if (!w.isRemote)
-            return;
-        if (currentHints != null)
-            endHinting(w);
+        if (!w.isRemote) return;
+        if (currentHints != null) endHinting(w);
         currentHints = new HintGroup();
     }
 
     private void ensureHinting() {
-        if (currentHints == null)
-            currentHints = new HintGroup();
+        if (currentHints == null) currentHints = new HintGroup();
     }
 
     @Override
     public void endHinting(World w) {
-        if (!w.isRemote || currentHints == null)
-            return;
+        if (!w.isRemote || currentHints == null) return;
         while (!allGroups.isEmpty() && allGroups.size() >= ConfigurationHandler.INSTANCE.getMaxCoexistingHologram()) {
             allGroups.remove(0);
         }
-        if (!currentHints.getHints().isEmpty())
-            allGroups.add(currentHints);
+        if (!currentHints.getHints().isEmpty()) allGroups.add(currentHints);
         // we use the player existence time here as some worlds don't really advance the time ticker
         currentHints.setCreationTime(getCurrentPlayer().ticksExisted);
         currentHints = null;
@@ -211,10 +235,10 @@ public class ClientProxy extends CommonProxy {
 
     private static class HintParticleInfo {
         private final int x, y, z;
-
         private final double X, Y, Z;
         private final IIcon[] icons;
         private short[] tint;
+        private boolean renderThrough;
 
         private final long creationTime = System.currentTimeMillis(); // use tick time instead maybe
 
@@ -239,6 +263,14 @@ public class ClientProxy extends CommonProxy {
             return x == that.x && y == that.y && z == that.z;
         }
 
+        public void setTint(short[] tint) {
+            this.tint = tint;
+        }
+
+        public void setRenderThrough(boolean renderThrough) {
+            this.renderThrough = renderThrough;
+        }
+
         @Override
         public int hashCode() {
             int result = x;
@@ -259,7 +291,7 @@ public class ClientProxy extends CommonProxy {
                 double U = icons[i].getMaxU();
                 double v = icons[i].getMinV();
                 double V = icons[i].getMaxV();
-                switch (i) {//{DOWN, UP, NORTH, SOUTH, WEST, EAST}
+                switch (i) { // {DOWN, UP, NORTH, SOUTH, WEST, EAST}
                     case 0:
                         tes.addVertexWithUV(X, Y, Z + size, u, V);
                         tes.addVertexWithUV(X, Y, Z, u, v);
@@ -368,17 +400,24 @@ public class ClientProxy extends CommonProxy {
 
         @SubscribeEvent
         public void onRenderWorldLast(RenderWorldLastEvent e) {
-            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);// TODO figure out original states
+            GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT); // TODO figure out original states
             GL11.glDisable(GL11.GL_CULL_FACE); // we need the back facing rendered because the thing is transparent
             GL11.glEnable(GL11.GL_BLEND); // enable blend so it is transparent
             GL11.glBlendFunc(GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_SRC_ALPHA);
-            GL11.glDisable(GL11.GL_DEPTH_TEST); // to draw through these stuff
-//            GL11.glDepthMask(false);
+            //            GL11.glDisable(GL11.GL_DEPTH_TEST); // to draw through these stuff
+            boolean renderThrough = !GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
             Minecraft.getMinecraft().renderEngine.bindTexture(TextureMap.locationBlocksTexture);
             Tessellator tes = Tessellator.instance;
             tes.startDrawingQuads();
             tes.setTranslation(-RenderManager.renderPosX, -RenderManager.renderPosY, -RenderManager.renderPosZ);
             for (HintParticleInfo hint : allHintsForRender) {
+                if (renderThrough != hint.renderThrough) {
+                    tes.draw();
+                    if (hint.renderThrough) GL11.glDisable(GL11.GL_DEPTH_TEST);
+                    else GL11.glEnable(GL11.GL_DEPTH_TEST);
+                    tes.startDrawingQuads();
+                    renderThrough = hint.renderThrough;
+                }
                 hint.draw(tes);
             }
             tes.setTranslation(0, 0, 0);

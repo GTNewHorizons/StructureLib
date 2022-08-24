@@ -1,5 +1,6 @@
 package com.gtnewhorizon.structurelib;
 
+import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
 import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import net.minecraft.block.Block;
@@ -11,9 +12,6 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
 public class CommonProxy {
-
-    private static final short[] RGBA_RED_TINT = {255, 128, 128, 0};
-
     public void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {}
 
     public void hintParticleTinted(World w, int x, int y, int z, Block block, int meta, short[] RGBa) {}
@@ -56,6 +54,11 @@ public class CommonProxy {
     public void uploadChannels(ItemStack trigger) {}
 
     public boolean markHintParticleError(EntityPlayer player, World w, int x, int y, int z) {
-        return updateHintParticleTint(player, w, x, y, z, RGBA_RED_TINT);
+        if (player instanceof EntityPlayerMP) { // just in case
+            StructureLib.net.sendTo(new ErrorHintParticleMessage(x, (short) y, z), (EntityPlayerMP) player);
+            return true;
+        } else {
+            return false;
+        }
     }
 }
