@@ -15,8 +15,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.particle.EntityFX;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.culling.Frustrum;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -71,7 +73,7 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {
         ensureHinting();
-        HintParticleInfo info = new HintParticleInfo(x, y, z, icons, RGBa);
+        HintParticleInfo info = new HintParticleInfo(w, x, y, z, icons, RGBa);
 
         // check and remove colliding holograms
         if (ConfigurationHandler.INSTANCE.isRemoveCollidingHologram()) {
@@ -116,7 +118,7 @@ public class ClientProxy extends CommonProxy {
     public boolean updateHintParticleTint(EntityPlayer player, World w, int x, int y, int z, short[] rgBa) {
         if (player instanceof EntityPlayerMP) return super.updateHintParticleTint(player, w, x, y, z, rgBa);
         if (player != getCurrentPlayer()) return false; // how?
-        HintParticleInfo hint = getHintParticleInfo(x, y, z);
+        HintParticleInfo hint = getHintParticleInfo(w, x, y, z);
         if (hint == null) {
             return false;
         }
@@ -124,8 +126,8 @@ public class ClientProxy extends CommonProxy {
         return true;
     }
 
-    private static HintParticleInfo getHintParticleInfo(int x, int y, int z) {
-        HintParticleInfo info = new HintParticleInfo(x, y, z, null, null);
+    private static HintParticleInfo getHintParticleInfo(World w, int x, int y, int z) {
+        HintParticleInfo info = new HintParticleInfo(w, x, y, z, null, null);
         HintGroup existing = allHints.get(info);
         if (existing != null) {
             for (HintParticleInfo hint : existing.getHints()) {
@@ -141,7 +143,7 @@ public class ClientProxy extends CommonProxy {
     public boolean markHintParticleError(EntityPlayer player, World w, int x, int y, int z) {
         if (player instanceof EntityPlayerMP) return super.markHintParticleError(player, w, x, y, z);
         if (player != getCurrentPlayer()) return false; // how?
-        HintParticleInfo hint = getHintParticleInfo(x, y, z);
+        HintParticleInfo hint = getHintParticleInfo(w, x, y, z);
         if (hint == null) {
             return false;
         }
@@ -242,6 +244,7 @@ public class ClientProxy extends CommonProxy {
     }
 
     private static class HintParticleInfo {
+        private final World w;
         private final int x, y, z;
         private final double X, Y, Z;
         private final IIcon[] icons;
@@ -250,7 +253,8 @@ public class ClientProxy extends CommonProxy {
 
         private final long creationTime = System.currentTimeMillis(); // use tick time instead maybe
 
-        public HintParticleInfo(int x, int y, int z, IIcon[] icons, short[] tint) {
+        public HintParticleInfo(World w, int x, int y, int z, IIcon[] icons, short[] tint) {
+            this.w = w;
             this.x = x;
             this.y = y;
             this.z = z;
@@ -291,10 +295,17 @@ public class ClientProxy extends CommonProxy {
             return result;
         }
 
+        public boolean isInFrustrum(Frustrum frustrum) {
+            return frustrum.isBoxInFrustum(x, y, z, X, Y, Z);
+        }
+
         public void draw(Tessellator tes) {
             double size = 0.5;
 
-            tes.setColorRGBA((int) (tint[0] * .9F), (int) (tint[1] * .95F), (int) (tint[2] * 1F), 160);
+            int brightness = w.blockExists(x, 0, z) ? w.getLightBrightnessForSkyBlocks(x, y, z, 0) : 0;
+            tes.setBrightness(brightness);
+
+            tes.setColorRGBA((int) (tint[0] * .9F), (int) (tint[1] * .95F), (int) (tint[2] * 1F), 192);
 
             for (int i = 0; i < 6; i++) {
                 if (icons[i] == null) continue;
@@ -423,9 +434,20 @@ public class ClientProxy extends CommonProxy {
 
             p.startSection("HintParticle");
             p.startSection("Prepare");
+            Frustrum frustrum = new Frustrum();
+            Entity entitylivingbase = Minecraft.getMinecraft().renderViewEntity;
+            double d0 = entitylivingbase.lastTickPosX
+                    + (entitylivingbase.posX - entitylivingbase.lastTickPosX) * e.partialTicks;
+            double d1 = entitylivingbase.lastTickPosY
+                    + (entitylivingbase.posY - entitylivingbase.lastTickPosY) * e.partialTicks;
+            double d2 = entitylivingbase.lastTickPosZ
+                    + (entitylivingbase.posZ - entitylivingbase.lastTickPosZ) * e.partialTicks;
+            frustrum.setPosition(d0, d1, d2);
+
             GL11.glPushMatrix();
             GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT); // TODO figure out original states
-            GL11.glDisable(GL11.GL_CULL_FACE); // we need the back facing rendered because the thing is transparent
+            // we need the back facing rendered because the thing is transparent
+            GL11.glDisable(GL11.GL_CULL_FACE);
             GL11.glEnable(GL11.GL_BLEND); // enable blend so it is transparent
             GL11.glBlendFunc(GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_SRC_ALPHA);
             // depth test begin as enabled
@@ -436,6 +458,7 @@ public class ClientProxy extends CommonProxy {
             tes.startDrawingQuads();
             for (int i = 0, allHintsForRenderSize = allHintsForRender.size(); i < allHintsForRenderSize; i++) {
                 HintParticleInfo hint = allHintsForRender.get(i);
+                if (!hint.isInFrustrum(frustrum)) continue;
                 if (renderThrough != hint.renderThrough) {
                     if (i > 0) {
                         p.endStartSection("Draw");
