@@ -10,6 +10,7 @@ import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
 import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
 import com.gtnewhorizon.structurelib.util.XSTR;
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -38,6 +39,7 @@ import org.apache.logging.log4j.Logger;
         acceptableRemoteVersions = "*",
         guiFactory = "com.gtnewhorizon.structurelib.GuiFactory")
 public class StructureLib {
+    private static final String STRUCTURECOMPAT_MODID = "structurecompat";
     public static boolean DEBUG_MODE;
     public static boolean PANIC_MODE = Boolean.getBoolean("structurelib.panic");
     public static Logger LOGGER = LogManager.getLogger("StructureLib");
@@ -71,6 +73,8 @@ public class StructureLib {
     @Mod.Instance
     static StructureLib INSTANCE;
 
+    static Object COMPAT;
+
     static Block blockHint;
     static Item itemBlockHint;
     static Item itemFrontRotationTool;
@@ -95,6 +99,13 @@ public class StructureLib {
                 itemConstructableTrigger.getUnlocalizedName());
         proxy.preInit(e);
         NetworkRegistry.INSTANCE.registerGuiHandler(instance(), new GuiHandler());
+
+        if (Loader.isModLoaded(STRUCTURECOMPAT_MODID)) {
+            COMPAT = Loader.instance()
+                    .getIndexedModList()
+                    .get(STRUCTURECOMPAT_MODID)
+                    .getMod();
+        }
     }
 
     @Mod.EventHandler

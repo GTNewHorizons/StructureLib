@@ -226,6 +226,11 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
     }
 
+    static void markTextureUsed(IIcon icon) {
+        if (StructureLib.COMPAT instanceof IStructureCompat)
+            ((IStructureCompat) StructureLib.COMPAT).markTextureUsed(icon);
+    }
+
     private static class HintGroup {
         private final List<HintParticleInfo> hints = new LinkedList<>();
         private int creationTime = -1;
@@ -309,6 +314,8 @@ public class ClientProxy extends CommonProxy {
 
             for (int i = 0; i < 6; i++) {
                 if (icons[i] == null) continue;
+
+                markTextureUsed(icons[i]);
 
                 double u = icons[i].getMinU();
                 double U = icons[i].getMaxU();
