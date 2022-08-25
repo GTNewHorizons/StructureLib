@@ -20,6 +20,7 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.profiler.Profiler;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
@@ -388,10 +389,10 @@ public class ClientProxy extends CommonProxy {
                     for (HintGroup c : allGroups) allHintsForRender.addAll(c.getHints());
                     sortRequired = true;
                 }
-                if (renderThrough > 0 && (sortRequired || playerPos.squareDistanceTo(lastPlayerPos) > 1e-4)) {
+                if (renderThrough > 0 && (sortRequired || playerPos.squareDistanceTo(lastPlayerPos) > 1e-2)) {
                     // only sort if there is anything that need depth test disabled
                     // only redo sort if player moved some distance
-                    // default is 0.01 block
+                    // default is 0.1 block
                     // if there was a full rebuild, go sort it as well
                     allHintsForRender.sort(Comparator.comparingDouble(info -> info.getSquareDistanceTo(playerPos)));
                     resetPlayerLocation();
@@ -416,8 +417,12 @@ public class ClientProxy extends CommonProxy {
             if (allHintsForRender.isEmpty()) return;
 
             // seriously, I'm not a OpenGL expert, so I'm probably doing a lot of very stupid stuff here.
-            // Please contribute patches if you find something to optimize.
+            // Please consider contributing patches if you find something to optimize.
 
+            Profiler p = Minecraft.getMinecraft().mcProfiler;
+
+            p.startSection("HintParticle");
+            p.startSection("Prepare");
             GL11.glPushMatrix();
             GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT); // TODO figure out original states
             GL11.glDisable(GL11.GL_CULL_FACE); // we need the back facing rendered because the thing is transparent
@@ -433,8 +438,10 @@ public class ClientProxy extends CommonProxy {
                 HintParticleInfo hint = allHintsForRender.get(i);
                 if (renderThrough != hint.renderThrough) {
                     if (i > 0) {
+                        p.endStartSection("Draw");
                         tes.draw();
                         tes.startDrawingQuads();
+                        p.endStartSection("Prepare");
                     }
                     if (hint.renderThrough) GL11.glDisable(GL11.GL_DEPTH_TEST);
                     else GL11.glEnable(GL11.GL_DEPTH_TEST);
@@ -442,10 +449,13 @@ public class ClientProxy extends CommonProxy {
                 }
                 hint.draw(tes);
             }
+            p.endStartSection("Draw");
             tes.draw();
+            p.endSection();
 
             GL11.glPopAttrib();
             GL11.glPopMatrix();
+            p.endSection();
         }
     }
 }
