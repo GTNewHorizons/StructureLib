@@ -434,7 +434,8 @@ public class StructureUtility {
                 Block block = world.getBlock(x, y, z);
                 int meta = world.getBlockMetadata(x, y, z);
                 TIER tier = tierExtractor.convert(block, meta);
-                if (Objects.equals(tier, tierExtractor.convert(hint.getKey(), hint.getValue()))) return PlaceResult.SKIP;
+                if (Objects.equals(tier, tierExtractor.convert(hint.getKey(), hint.getValue())))
+                    return PlaceResult.SKIP;
                 return StructureUtility.survivalPlaceBlock(
                         hint.getKey(), hint.getValue(), world, x, y, z, s, actor, chatter);
             }
