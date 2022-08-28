@@ -335,7 +335,7 @@ public enum ExtendedFacing {
     /**
      * Translates relative to front facing offset  to  world offset
      *
-     * @param abcOffset A,B,C offset (facing relative  L-->R,U-->D,F-->B)
+     * @param abcOffset A,B,C offset (facing relative {@code L-->R,U-->D,F-->B})
      * @return X, Y, Z offset in world
      */
     public Vec3 getWorldOffset(Vec3 abcOffset) {
@@ -358,7 +358,7 @@ public enum ExtendedFacing {
      * Translates world offset  to  relative front facing offset
      *
      * @param xyzOffset X,Y,Z offset in world
-     * @return A, B, C offset (facing relative  L-->R,U-->D,F-->B)
+     * @return A, B, C offset (facing relative  {@code L-->R,U-->D,F-->B})
      */
     public Vec3 getOffsetABC(Vec3 xyzOffset) {
         return integerAxisSwap.translate(xyzOffset);

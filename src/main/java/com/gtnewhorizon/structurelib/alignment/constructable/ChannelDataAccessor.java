@@ -3,7 +3,7 @@ package com.gtnewhorizon.structurelib.alignment.constructable;
 import static com.gtnewhorizon.structurelib.util.MiscUtils.getTagKeys;
 import static net.minecraftforge.common.util.Constants.NBT.TAG_COMPOUND;
 
-import com.gtnewhorizon.structurelib.StructureLib;
+import com.gtnewhorizon.structurelib.StructureLibAPI;
 import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
@@ -20,7 +20,8 @@ public class ChannelDataAccessor {
 
     public static ItemStack withChannel(ItemStack masterStack, String channel) {
         if (channel == null || channel.isEmpty()) throw new IllegalArgumentException();
-        if (StructureLib.DEBUG_MODE && !channel.toLowerCase(Locale.ROOT).equals(channel))
+        if (StructureLibAPI.isDebugEnabled()
+                && !channel.toLowerCase(Locale.ROOT).equals(channel))
             throw new IllegalArgumentException("Channel name can be lower case ONLY");
         if (!masterStack.hasTagCompound()
                 || !masterStack.stackTagCompound.hasKey(SECONDARY_HINT_TAG, TAG_COMPOUND)
@@ -41,7 +42,8 @@ public class ChannelDataAccessor {
     }
 
     public static boolean hasSubChannel(ItemStack masterStack, String channel) {
-        if (StructureLib.DEBUG_MODE && !channel.toLowerCase(Locale.ROOT).equals(channel))
+        if (StructureLibAPI.isDebugEnabled()
+                && !channel.toLowerCase(Locale.ROOT).equals(channel))
             throw new IllegalArgumentException("Channel name can be lower case ONLY");
         return !channel.isEmpty()
                 && masterStack.hasTagCompound()
@@ -54,7 +56,8 @@ public class ChannelDataAccessor {
 
     public static int getChannelData(ItemStack masterStack, String channel) {
         if (channel == null || channel.isEmpty()) throw new IllegalArgumentException();
-        if (StructureLib.DEBUG_MODE && !channel.toLowerCase(Locale.ROOT).equals(channel))
+        if (StructureLibAPI.isDebugEnabled()
+                && !channel.toLowerCase(Locale.ROOT).equals(channel))
             throw new IllegalArgumentException("Channel name can be lower case ONLY");
         if (!masterStack.hasTagCompound()
                 || !masterStack.stackTagCompound.hasKey(SECONDARY_HINT_TAG, TAG_COMPOUND)
@@ -67,7 +70,8 @@ public class ChannelDataAccessor {
 
     public static void setChannelData(ItemStack masterStack, String channel, int data) {
         if (channel == null || channel.isEmpty()) throw new IllegalArgumentException();
-        if (StructureLib.DEBUG_MODE && !channel.toLowerCase(Locale.ROOT).equals(channel))
+        if (StructureLibAPI.isDebugEnabled()
+                && !channel.toLowerCase(Locale.ROOT).equals(channel))
             throw new IllegalArgumentException("Channel name can be lower case ONLY");
         if (data <= 0) throw new IllegalArgumentException();
         if (masterStack.stackTagCompound == null) masterStack.stackTagCompound = new NBTTagCompound();
@@ -78,7 +82,8 @@ public class ChannelDataAccessor {
 
     public static void unsetChannelData(ItemStack masterStack, String channel) {
         if (channel == null || channel.isEmpty()) throw new IllegalArgumentException();
-        if (StructureLib.DEBUG_MODE && !channel.toLowerCase(Locale.ROOT).equals(channel))
+        if (StructureLibAPI.isDebugEnabled()
+                && !channel.toLowerCase(Locale.ROOT).equals(channel))
             throw new IllegalArgumentException("Channel name can be lower case ONLY");
         if (masterStack.stackTagCompound == null) masterStack.stackTagCompound = new NBTTagCompound();
         NBTTagCompound main = masterStack.stackTagCompound;

@@ -64,7 +64,7 @@ public class UpdateHintParticleMessage implements IMessage {
                     new short[] {
                         msg.r, msg.g, msg.b, msg.a,
                     });
-            if (StructureLib.DEBUG_MODE)
+            if (StructureLibAPI.isDebugEnabled())
                 LOGGER.debug(
                         "Server instructed to update hint particle at ({}, {}, {}), result {}!",
                         msg.x,

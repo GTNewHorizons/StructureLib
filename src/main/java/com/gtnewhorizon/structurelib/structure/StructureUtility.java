@@ -1,6 +1,5 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
 import static java.lang.Integer.MIN_VALUE;
 
 import com.gtnewhorizon.structurelib.StructureLib;
@@ -255,11 +254,21 @@ public class StructureUtility {
         return PlaceResult.ACCEPT;
     }
 
+    /**
+     * Return a structure element that only allow air (or air equivalents, like Railcraft hidden blocks).
+     * You usually don't need to call this yourselves. Use {@code -} in shape to automatically use this.
+     * Provided nontheless in case you want this as a fallback to something else.
+     */
     @SuppressWarnings("unchecked")
     public static <T> IStructureElement<T> isAir() {
         return AIR;
     }
 
+    /**
+     * Return a structure element that allow anything but air (or air equivalents, like Railcraft hidden blocks).
+     * You usually don't need to call this yourselves. Use {@code +} in shape to automatically use this.
+     * Provided nontheless in case you want this as a fallback to something else.
+     */
     @SuppressWarnings("unchecked")
     public static <T> IStructureElement<T> notAir() {
         return NOT_AIR;
@@ -278,7 +287,9 @@ public class StructureUtility {
     // region hint only
 
     /**
+     * Spawn a hint with given amount of dots.
      * Check always returns: true.
+     * Only useful as a fallback, e.g. {@link #ofBlockUnlocalizedName(String, String, int, IStructureElement)}
      */
     public static <T> IStructureElementNoPlacement<T> ofHint(int dots) {
         int meta = dots - 1;
@@ -297,7 +308,9 @@ public class StructureUtility {
     }
 
     /**
+     * Spawn a hint with given textures.
      * Check always returns: true.
+     * Only useful as a fallback, e.g. {@link #ofBlockUnlocalizedName(String, String, int, IStructureElement)}
      */
     public static <T> IStructureElementNoPlacement<T> ofHintDeferred(Supplier<IIcon[]> icons) {
         return new IStructureElementNoPlacement<T>() {
@@ -315,7 +328,9 @@ public class StructureUtility {
     }
 
     /**
+     * Spawn a hint with given amount of textures and tint.
      * Check always returns: true.
+     * Only useful as a fallback, e.g. {@link #ofBlockUnlocalizedName(String, String, int, IStructureElement)}
      */
     public static <T> IStructureElementNoPlacement<T> ofHintDeferred(Supplier<IIcon[]> icons, short[] RGBa) {
         return new IStructureElementNoPlacement<T>() {
@@ -339,6 +354,9 @@ public class StructureUtility {
     /**
      * A more primitive variant of {@link #ofBlocksTiered(ITierConverter, List, Object, BiConsumer, Function)}
      * Main difference is this one is check only.
+     * <p>
+     * Note that if tierExtractor returns a null, this block will be rejected immediately. This makes null a potent
+     * candidate for notSet.
      *
      * @see #ofBlocksTiered(ITierConverter, Object, BiConsumer, Function)
      */
@@ -355,8 +373,21 @@ public class StructureUtility {
             Block block = world.getBlock(x, y, z);
             int meta = world.getBlockMetadata(x, y, z);
             TIER tier = tierExtractor.convert(block, meta);
+            if (tier == null) return false;
             TIER current = getter.apply(t);
             if (Objects.equals(notSet, current)) {
+                if (Objects.equals(notSet, tier)) {
+                    if (StructureLib.PANIC_MODE) {
+                        throw new AssertionError("tierExtractor should never return notSet: " + notSet);
+                    } else {
+                        StructureLib.LOGGER.error("#########################################");
+                        StructureLib.LOGGER.error("#########################################");
+                        StructureLib.LOGGER.error(
+                                "tierExtractor should never return notSet: {}", notSet, new Throwable());
+                        StructureLib.LOGGER.error("#########################################");
+                        StructureLib.LOGGER.error("#########################################");
+                    }
+                }
                 setter.accept(t, tier);
                 return true;
             }
@@ -368,15 +399,43 @@ public class StructureUtility {
      * Element representing a component with different tiers. Player can use more blueprint to get hints denoting more
      * advanced components.
      * <p>
-     * There is yet no TileEntity counter part of this utility. Feel free to submit a PR to add it.
+     * Implementation wise, this allows a block only when we don't yet have a tier, or the block at that location has
+     * the same tier as we already have.
+     * <p>
+     * There is yet no TileEntity counterpart of this utility. Feel free to submit a PR to add it.
+     * <p>
+     * <b>Example:</b>
+     * <p>
+     * Assume you have 16 tier, each map to one block's 16 different meta. You will usually want something like this
+     * <pre>
+     * public class Tile extends TileEntity {
+     *     private static final Block B = getTargetBlock();
+     *     private static final IStructureDefinition&lt;Tile&gt; S = IStructureDefinition.&lt;Tile&gt;builder()
+     *            // ... addShape, and other elements
+     *            .addElement('c', ofBlocksTiered((b, m) -&gt; b == B ? m : null,
+     *                                            IntStream.range(0, 16).mapToObj(i -&gt; Pair.of(B, i)).collect(Collectors.toList()),
+     *                                            -1,
+     *                                            (t, m) -&gt; t.tier = m,
+     *                                            t -&gt; t.tier))
+     *            .build();
+     *     private int tier;
      *
+     *     public boolean check() {
+     *         tier = -1;
+     *         if (!S.check(...))
+     *             return false;
+     *         return isTierAcceptable(tier);
+     *     }
+     * }
+     * </pre>
+     *
+     * @param tierExtractor a function to extract tier info from a block.
      * @param allKnownTiers All known tiers as of calling. Can be empty or null. No hint will be spawned if empty or null. Cannot have null elements.
      *                      First element denotes the most primitive tier. Last element denotes the most advanced tier.
-     *                      If not all tiers are available at definition construction time, use {@link #lazy(Supplier)} or its overloads to delay a little bit.
+     *                      If not all tiers are available at definition construction time, use {@link #lazy(Supplier)} or its overloads to delay a bit.
      * @param notSet        The value returned from {@code getter} when there were no tier info found in T yet. Can be null.
      * @param getter        a function to retrieve the current tier from T
      * @param setter        a function to set the current tier into T
-     * @param tierExtractor a function to extract tier info from a block.
      */
     public static <T, TIER> IStructureElement<T> ofBlocksTiered(
             ITierConverter<TIER> tierExtractor,
@@ -445,6 +504,8 @@ public class StructureUtility {
     /**
      * Denote a block using unlocalized names. This can be useful to get around mod loading order issues.
      * <p>
+     * <b>DUE TO HISTORICAL REASONS, THIS WAS CALLED ofBlockUnlocalizedName, BUT IT ACTUALLY USES REGISTRY NAME INSTEAD.</b>
+     * <p>
      * While no immediate error will be thrown, client code should ensure said mod is loaded and
      * said mod is present, otherwise bad things will happen later!
      */
@@ -455,14 +516,16 @@ public class StructureUtility {
     /**
      * Denote a block using unlocalized names. This can be useful to get around mod loading order issues.
      * <p>
+     * <b>DUE TO HISTORICAL REASONS, THIS WAS CALLED ofBlockUnlocalizedName, BUT IT ACTUALLY USES REGISTRY NAME INSTEAD.</b>
+     * <p>
      * While no immediate error will be thrown, client code should ensure said mod is loaded and
-     * said mod is present, otherwise bad things will happen later!
+     * said mod is present, otherwise the element will effectively become an {@link #error()}.
      * <p>
      * Will place block or hint using the given meta if wildcard is true.
      */
     public static <T> IStructureElement<T> ofBlockUnlocalizedName(
-            String modid, String unlocalizedName, int meta, boolean wildcard) {
-        if (StringUtils.isBlank(unlocalizedName)) throw new IllegalArgumentException();
+            String modid, String registryName, int meta, boolean wildcard) {
+        if (StringUtils.isBlank(registryName)) throw new IllegalArgumentException();
         if (meta < 0) throw new IllegalArgumentException();
         if (meta > 15) throw new IllegalArgumentException();
         if (StringUtils.isBlank(modid)) throw new IllegalArgumentException();
@@ -470,7 +533,7 @@ public class StructureUtility {
             private Block block;
 
             private Block getBlock() {
-                if (block == null) block = GameRegistry.findBlock(modid, unlocalizedName);
+                if (block == null) block = GameRegistry.findBlock(modid, registryName);
                 return block;
             }
 
@@ -515,8 +578,11 @@ public class StructureUtility {
      * Similiar to the other overload, but allows client code to specify a fallback in case said block was not found later
      * when the element got called.
      * <p>
-     * This is slightly different to using the other overload and another element in a {@link #ofChain(IStructureElement[])},
-     * as that combination would cause crash, where this won't.
+     * <b>DUE TO HISTORICAL REASONS, THIS WAS CALLED ofBlockUnlocalizedName, BUT IT ACTUALLY USES REGISTRY NAME INSTEAD.</b>
+     * <p>
+     * This is slightly different to using the other overload and another element in a {@link #ofChain(IStructureElement[])}.
+     * Here fallback will only ever be used if this fails, where ofChain would form an OR relationship even if the mod
+     * is loaded and the block exists in registry.
      */
     public static <T> IStructureElement<T> ofBlockUnlocalizedName(
             String modid, String unlocalizedName, int meta, IStructureElement<T> fallback) {
@@ -578,7 +644,14 @@ public class StructureUtility {
     }
 
     /**
-     * Does not allow Block duplicates (with different meta)
+     * Accept a set of blocks. Less cumbersome to use than {@link #ofBlocksMapHint(Map, Block, int)} when for any accepted
+     * block type we accept only one meta for each.
+     * <p>
+     * Does not have autoplace.
+     * @param blocsMap Accepted (block, meta) pairs.
+     * @param hintBlock hint block to use
+     * @param hintMeta hint meta to use
+     * @see #ofBlocksMapHint(Map, Block, int)
      */
     public static <T> IStructureElementNoPlacement<T> ofBlocksFlatHint(
             Map<Block, Integer> blocsMap, Block hintBlock, int hintMeta) {
@@ -601,7 +674,13 @@ public class StructureUtility {
     }
 
     /**
-     * Allows block duplicates (with different meta)
+     * Accept a set of blocks.
+     * <p>
+     * Does not have autoplace.
+     * @param blocsMap Accepted (block, meta) pairs.
+     * @param hintBlock hint block to use
+     * @param hintMeta hint meta to use
+     * @see #ofBlocksFlatHint(Map, Block, int)
      */
     public static <T> IStructureElementNoPlacement<T> ofBlocksMapHint(
             Map<Block, Collection<Integer>> blocsMap, Block hintBlock, int hintMeta) {
@@ -629,6 +708,9 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * Accept one (block, meta). Spawn hint particles using an alternative block and meta. Not very useful...
+     */
     public static <T> IStructureElementNoPlacement<T> ofBlockHint(
             Block block, int meta, Block hintBlock, int hintMeta) {
         if (block == null || hintBlock == null) {
@@ -649,10 +731,19 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * Accept one (block, meta). Same as {@link #ofBlock(Block, int)}, except it explicitly turns off creative/survival
+     * build.
+     */
     public static <T> IStructureElementNoPlacement<T> ofBlockHint(Block block, int meta) {
         return ofBlockHint(block, meta, block, meta);
     }
 
+    /**
+     * Add a block using block adder. Spawn hints using given hint block and meta.
+     * <p>
+     * Useful when your logic is very complex. Does not support autoplace.
+     */
     public static <T> IStructureElementNoPlacement<T> ofBlockAdderHint(
             IBlockAdder<T> iBlockAdder, Block hintBlock, int hintMeta) {
         if (iBlockAdder == null || hintBlock == null) {
@@ -674,7 +765,12 @@ public class StructureUtility {
     }
 
     /**
-     * Does not allow Block duplicates (with different meta)
+     * Accept a set of blocks. Less cumbersome to use than {@link #ofBlocksMap(Map, Block, int)} when for any accepted
+     * block type we accept only one meta for each.
+     * @param blocsMap Accepted (block, meta) pairs.
+     * @param defaultBlock default block to place/spawn hint
+     * @param defaultMeta default meta to place/spawn hint
+     * @see #ofBlocksMapHint(Map, Block, int)
      */
     public static <T> IStructureElement<T> ofBlocksFlat(
             Map<Block, Integer> blocsMap, Block defaultBlock, int defaultMeta) {
@@ -757,7 +853,11 @@ public class StructureUtility {
     }
 
     /**
-     * Allows block duplicates (with different meta)
+     * Accept a set of blocks.
+     * @param blocsMap Accepted (block, meta) pairs.
+     * @param defaultBlock default block to place/spawn hint
+     * @param defaultMeta default meta to place/spawn hint
+     * @see #ofBlocksMapHint(Map, Block, int)
      */
     public static <T> IStructureElement<T> ofBlocksMap(
             Map<Block, Collection<Integer>> blocsMap, Block defaultBlock, int defaultMeta) {
@@ -846,6 +946,13 @@ public class StructureUtility {
         }
     }
 
+    /**
+     * Accept a block. Spawn hint/autoplace using another.
+     * @param block accepted block
+     * @param meta accepted meta
+     * @param defaultBlock hint block
+     * @param defaultMeta hint meta
+     */
     public static <T> IStructureElement<T> ofBlock(Block block, int meta, Block defaultBlock, int defaultMeta) {
         if (block == null || defaultBlock == null) {
             throw new IllegalArgumentException();
@@ -926,7 +1033,7 @@ public class StructureUtility {
     }
 
     /**
-     * Same as above but ignores target meta id
+     * Same as {@link #ofBlock(Block, int, Block, int)} but ignores target meta id
      */
     public static <T> IStructureElement<T> ofBlockAnyMeta(Block block, Block defaultBlock, int defaultMeta) {
         if (block == null || defaultBlock == null) {
@@ -1005,19 +1112,22 @@ public class StructureUtility {
         }
     }
 
+    /**
+     * Accept a single block with a fixed meta. Most primitive form of structure.
+     */
     public static <T> IStructureElement<T> ofBlock(Block block, int meta) {
         return ofBlock(block, meta, block, meta);
     }
 
     /**
-     * Same as above but ignores target meta id
+     * Accept a single block, but accept any meta.
      */
     public static <T> IStructureElement<T> ofBlockAnyMeta(Block block) {
         return ofBlockAnyMeta(block, block, 0);
     }
 
     /**
-     * Same as above but allows to set hint particle render
+     * Accept a single block, but accept any meta. Spawn hint/autoplace using given meta.
      */
     public static <T> IStructureElement<T> ofBlockAnyMeta(Block block, int defaultMeta) {
         return ofBlockAnyMeta(block, block, defaultMeta);
@@ -1027,6 +1137,11 @@ public class StructureUtility {
 
     // region adders
 
+    /**
+     * Add a block using block adder. Spawn hints/autoplace using given hint block and meta.
+     * <p>
+     * Useful when your logic is very complex.
+     */
     public static <T> IStructureElement<T> ofBlockAdder(
             IBlockAdder<T> iBlockAdder, Block defaultBlock, int defaultMeta) {
         if (iBlockAdder == null || defaultBlock == null) {
@@ -1285,6 +1400,20 @@ public class StructureUtility {
     }
 
     /**
+     * This allows you to compose different {@link IStructureElement} to form a <b>OR</b> chain.
+     * As with any other OR operator, this one exhibits short-circuiting behavior, i.e. it will not call next structure element
+     * if previous one succeeded. (*)
+     * <p>
+     * This allows you e.g. accept both a glass block using {@link #ofBlock(Block, int, Block, int)} and a piece of air
+     * using {@link #isAir()}.
+     * It will not attempt to capture any errors though, so next one will not be tried if previous one would crash.
+     * <p>
+     * (*): For survival auto place, it will
+     * * REJECT, if all structure element REJECT
+     * * SKIP, if 1 or more structure element SKIP and the rest structure element (0 or more) REJECT
+     * * any other result, **immediately** upon any structure element returns these other results.
+     * This behavior is not 100% fixed and might change later on, but we will send the notice on a best effort basis.
+     * <p>
      * Take care while chaining, as it will try to call every structure element until it returns true.
      * If none does it will finally return false.
      */
@@ -1351,6 +1480,9 @@ public class StructureUtility {
     /**
      * Similar to defer, but caches the first returned element returned and won't call it again.
      * Initialization is not thread safe.
+     * These both allow the structure element **constructor** to access properties only present on the context object
+     * (e.g. GT5 multiblock controller), e.g. hatch texture index to use.
+     * Use `lazy` if the data you access will remain constant across different context object.
      */
     public static <T> IStructureElementDeferred<T> lazy(Supplier<IStructureElement<T>> to) {
         if (to == null) {
@@ -1360,8 +1492,15 @@ public class StructureUtility {
     }
 
     /**
+     * This will defer the actual instantiation of structure element until the <b>first time</b> structure code is actually called.
+     * <p>
      * Similar to defer, but caches the first returned element returned and won't call it again.
      * Initialization is not thread safe.
+     * This will allow the structure element <b>constructor</b> to access properties only present on the context object
+     * (e.g. GT5 multiblock controller), e.g. hatch texture index to use.
+     * Use this if the data you access will remain constant.
+     *
+     * @param to create structure element from the first context object passed in
      */
     public static <T> IStructureElementDeferred<T> lazy(Function<T, IStructureElement<T>> to) {
         if (to == null) {
@@ -1370,6 +1509,18 @@ public class StructureUtility {
         return new LazyStructureElement<>(to);
     }
 
+    /**
+     * This will defer the actual instantiation of structure element until the structure code is actually called.
+     * This will allow the structure element <b>constructor</b> to access properties only present on the context object
+     * (e.g. GT5 multiblock controller), e.g. hatch texture index to use.
+     * Use this if it might change for the same structure definition, e.g. if your structure might switch mode and
+     * change some parameter, while basically remain the same shape.
+     * Using this while {@link #lazy(Supplier)} is enough will not break anything, but would incur unnecessary
+     * performance overhead.
+     * @param to
+     * @return
+     * @param <T>
+     */
     public static <T> IStructureElementDeferred<T> defer(Supplier<IStructureElement<T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
@@ -2266,7 +2417,7 @@ public class StructureUtility {
                 xyz[1] += basePositionY;
                 xyz[2] += basePositionZ;
 
-                if (DEBUG_MODE)
+                if (StructureLibAPI.isDebugEnabled())
                     StructureLib.LOGGER.info(
                             "Multi [{}, {}, {}] {} step @ {} {}",
                             basePositionX,
@@ -2278,7 +2429,7 @@ public class StructureUtility {
 
                 if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
                     if (!predicate.visit(element, world, xyz[0], xyz[1], xyz[2])) {
-                        if (DEBUG_MODE) {
+                        if (StructureLibAPI.isDebugEnabled()) {
                             StructureLib.LOGGER.info(
                                     "Multi [{}, {}, {}] {} stop @ {} {}",
                                     basePositionX,
@@ -2291,7 +2442,7 @@ public class StructureUtility {
                         return false;
                     }
                 } else {
-                    if (DEBUG_MODE) {
+                    if (StructureLibAPI.isDebugEnabled()) {
                         StructureLib.LOGGER.info(
                                 "Multi [{}, {}, {}] {} !blockExists @ {} {}",
                                 basePositionX,

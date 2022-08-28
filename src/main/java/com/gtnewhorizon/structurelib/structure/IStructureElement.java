@@ -1,6 +1,5 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
 import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
 import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 
@@ -39,7 +38,7 @@ public interface IStructureElement<T> {
             EntityPlayerMP actor,
             Consumer<IChatComponent> chatter) {
         if (PANIC_MODE) throw new RuntimeException("Panic Tripwire hit");
-        if (DEBUG_MODE)
+        if (StructureLibAPI.isDebugEnabled())
             LOGGER.error(
                     "Default implementation of survivalPlaceBlock hit! Things aren't going to work well! IStructureElement class: {}",
                     getClass().getName());

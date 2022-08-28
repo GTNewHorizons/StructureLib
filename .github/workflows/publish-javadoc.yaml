@@ -1,0 +1,29 @@
+name: Deploy Javadoc
+description: 'Automatically  generate Javadoc from current project and deploy it with GitHub Page on gh-pages branch.'
+
+on:
+  push:
+    branches:
+      - master
+      - feature/doc
+    tags:
+      - '*'
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v2
+      with:
+        java-version: 8
+        distribution: 'adopt'
+    - name: Generate Javadoc
+      run: gradle spotlessCheck javadoc
+    - name: Deploy 🚀
+      uses: JamesIves/github-pages-deploy-action@4.4.0
+      with:
+        clean: true
+        folder: build/docs/
+        target-folder: ${{ github.ref_name }}

@@ -2,6 +2,7 @@ package com.gtnewhorizon.structurelib;
 
 import static com.gtnewhorizon.structurelib.StructureLib.proxy;
 
+import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
@@ -55,25 +56,66 @@ public class StructureLibAPI {
         proxy.endHinting(w);
     }
 
+    /**
+     * Generate a new hint particle on client side at given location using given textures with a tint.
+     * @param w World to spawn. Usually the client world.
+     * @param x x coord
+     * @param y y coord
+     * @param z z coord
+     * @param icons 6 texture. in forge direction order.
+     * @param RGBa a 4 short array. tint in rgba form. currently alpha channel is ignored, but we might change this later on.
+     */
     public static void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {
         proxy.hintParticleTinted(w, x, y, z, icons, RGBa);
     }
 
+    /**
+     * Generate a new hint particle on client side at given location using textures from given block with a tint.
+     * @param w World to spawn. Usually the client world.
+     * @param x x coord
+     * @param y y coord
+     * @param z z coord
+     * @param block block to take texture from
+     * @param meta the meta of block to take texture from
+     * @param RGBa a 4 short array. tint in rgba form. currently alpha channel is ignored, but we might change this later on.
+     */
     public static void hintParticleTinted(World w, int x, int y, int z, Block block, int meta, short[] RGBa) {
         proxy.hintParticleTinted(w, x, y, z, block, meta, RGBa);
     }
 
+    /**
+     * Generate a new hint particle on client side at given location using given textures.
+     * @param w World to spawn. Usually the client world.
+     * @param x x coord
+     * @param y y coord
+     * @param z z coord
+     * @param icons 6 texture. in forge direction order.
+     */
     public static void hintParticle(World w, int x, int y, int z, IIcon[] icons) {
         proxy.hintParticle(w, x, y, z, icons);
     }
 
+    /**
+     * Generate a new hint particle on client side at given location using textures from given block.
+     * @param w World to spawn. Usually the client world.
+     * @param x x coord
+     * @param y y coord
+     * @param z z coord
+     * @param block block to take texture from
+     * @param meta the meta of block to take texture from
+     */
     public static void hintParticle(World w, int x, int y, int z, Block block, int meta) {
         proxy.hintParticle(w, x, y, z, block, meta);
     }
 
     /**
      * Update the tint of given hint particle. Do nothing if particle not found.
-     * @return false if nothing updated. true if updated.
+     *
+     * Can be called on either client side or server side.
+     * Server side will schedule a network message to update it for this player only.
+     * Will do nothing if no hint particle is found at given location.
+     *
+     * @return false if nothing updated. true if updated or update instruction sent.
      */
     public static boolean markHintParticleError(EntityPlayer player, World w, int x, int y, int z) {
         return proxy.markHintParticleError(player, w, x, y, z);
@@ -81,6 +123,7 @@ public class StructureLibAPI {
 
     /**
      * Update the tint of given hint particle. Do nothing if particle not found.
+     *
      * @return false if nothing updated. true if updated.
      */
     public static boolean updateHintParticleTint(EntityPlayer player, World w, int x, int y, int z, short[] RGBa) {
@@ -88,9 +131,11 @@ public class StructureLibAPI {
     }
 
     /**
-     * Query the ExtendedFacing of this tile entity.
+     * Query the ExtendedFacing of this tile entity from client side. Can be sent only on client side.
      * The ExtendedFacing will later be set onto given tile entity via {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)}
      * upon arrival of server reply.
+     * <p>
+     * The server side will query the {@link ExtendedFacing} of this provider using {@link IAlignment#getExtendedFacing()}
      *
      * @throws IllegalArgumentException if is not tile entity or provided a null alignment
      */
@@ -100,6 +145,8 @@ public class StructureLibAPI {
 
     /**
      * Send the ExtendedFacing of this Tile Entity to all players. Can be called on server side only.
+     * <p>
+     * The receiving tile entity will receive the {@link ExtendedFacing} via its {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)} method.
      *
      * @throws IllegalArgumentException if is not tile entity or provided a null alignment
      */
@@ -109,6 +156,8 @@ public class StructureLibAPI {
 
     /**
      * Send the ExtendedFacing of this Tile Entity to given player. Can be called on server side only.
+     * <p>
+     * The receiving tile entity will receive the {@link ExtendedFacing} via its {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)} method.
      *
      * @throws IllegalArgumentException if is not tile entity or provided a null alignment
      */
@@ -118,6 +167,8 @@ public class StructureLibAPI {
 
     /**
      * Send the ExtendedFacing of this Tile Entity to all players around target point. Can be called on server side only.
+     * <p>
+     * The receiving tile entity will receive the {@link ExtendedFacing} via its {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)} method.
      *
      * @throws IllegalArgumentException if is not tile entity or provided a null alignment
      */
@@ -127,6 +178,8 @@ public class StructureLibAPI {
 
     /**
      * Send the ExtendedFacing of this Tile Entity to all players in that dimension. Can be called on server side only.
+     * <p>
+     * The receiving tile entity will receive the {@link ExtendedFacing} via its {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)} method.
      *
      * @throws IllegalArgumentException if is not tile entity or provided a null alignment
      */
@@ -134,14 +187,25 @@ public class StructureLibAPI {
         StructureLib.net.sendToDimension(new AlignmentMessage.AlignmentData(provider), dimension.provider.dimensionId);
     }
 
+    /**
+     * Get the Block for StructureLib supplied hint block.
+     */
     public static Block getBlockHint() {
         return StructureLib.blockHint;
     }
 
+    /**
+     * Get the ItemBlock for StructureLib supplied hint block.
+     */
     public static Item getItemBlockHint() {
         return StructureLib.itemBlockHint;
     }
 
+    /**
+     * Check if structure debug mode is on.
+     *
+     * @return true if debug mode is on
+     */
     public static boolean isDebugEnabled() {
         return StructureLib.DEBUG_MODE;
     }
@@ -153,11 +217,12 @@ public class StructureLibAPI {
     /**
      * Determines if given block can be replaced without much effort. The exact predicate clauses is not stable and
      * will be changed, but the general idea will always stay the same.
-     *
+     * <p>
      * Use this in your {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, java.util.function.Consumer)}
      */
     public static boolean isBlockTriviallyReplaceable(World w, int x, int y, int z, EntityPlayerMP actor) {
         // TODO extend this function a bit
-        return w.getBlock(x, y, z).isReplaceable(w, x, y, z);
+        Block block = w.getBlock(x, y, z);
+        return block.isAir(w, x, y, z) || block.isReplaceable(w, x, y, z);
     }
 }

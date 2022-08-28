@@ -1,0 +1,219 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+    <TITLE>API Overview</TITLE>
+</HEAD>
+<BODY>
+StructureLib API documentation.
+
+<h1>Key API class outline</h1>
+<p>
+    Here we outline a few key API classes/interfaces.
+</p>
+
+<h2> {@link com.gtnewhorizon.structurelib.structure.IStructureDefinition}</h2>
+<p>
+    This is the structure definition of your multi.
+    You will have one `IStructureDefinition` for each multi.
+</p>
+
+<h2> {@link com.gtnewhorizon.structurelib.structure.IStructureElement}</h2>
+<p>
+    These are how you define which block will be accepted.
+</p>
+
+<h2> {@link com.gtnewhorizon.structurelib.structure.StructureUtility}</h2>
+<p>
+    This is the standard library of {@link com.gtnewhorizon.structurelib.structure.IStructureElement
+    IStructureElement}s.
+    The Standard Library contains structure elements that handle basic block element and elements that allow composing
+    these basic elements.
+</p>
+
+<h2> {@link com.gtnewhorizon.structurelib.alignment.constructable.IConstructable}</h2>
+<p>
+    This interface should be implemented by tile entities that support creative autoplacing and hint particle emitting.
+    You will usually want to have a backing {@link com.gtnewhorizon.structurelib.structure.IStructureDefinition
+    IStructureDefinition}
+    and call its {@link com.gtnewhorizon.structurelib.structure.IStructureDefinition#build(Object, ItemStack, String,
+    World, ExtendedFacing, int, int, int, int, int, int) build()}
+    or {@link com.gtnewhorizon.structurelib.structure.IStructureDefinition#hints(Object, ItemStack, String, World,
+    ExtendedFacing, int, int, int, int, int, int) hints()} method here.
+</p>
+
+<h2> {@link com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable}</h2>
+<p>
+    This interface is an enhancement over {@link com.gtnewhorizon.structurelib.alignment.constructable.IConstructable
+    IConstructable}.
+    If your tile entities also support survival autoplacing then you should implement this.
+    You will usually want to have a backing {@link com.gtnewhorizon.structurelib.structure.IStructureDefinition
+    IStructureDefinition}
+    and call its {@link com.gtnewhorizon.structurelib.structure.IStructureDefinition#survivalBuild(Object, ItemStack,
+    String, World, ExtendedFacing, int, int, int, int, int, int, int, IItemSource, EntityPlayerMP, boolean)
+    survivalBuild()}.
+</p>
+
+<h2>{@link com.gtnewhorizon.structurelib.alignment.constructable.IConstructableProvider}</h2>
+<p>
+    This interface should be implemented on tile entities that will delegate all constructable or survival construable
+    functionality to some other class.
+    This is mostly only to support gregtech meta tile entity system.
+</p>
+<p>
+    Return null if the delegate does not exist.
+</p>
+
+<h2>{@link com.gtnewhorizon.structurelib.util.InventoryUtility}</h2>
+<p>
+    This class backs the standard implementations of {@link com.gtnewhorizon.structurelib.structure.IItemSource}.
+    You might want to register new inventory provider or inventory extractor there to facilitate survival auto place.
+</p>
+
+<h2>{@link com.gtnewhorizon.structurelib.alignment.IAlignmentProvider}, {@link
+    com.gtnewhorizon.structurelib.alignment.IAlignment} and {@link
+    com.gtnewhorizon.structurelib.alignment.IAlignmentLimits}</h2>
+<p>
+    These interfaces will be used to implement rotation.
+    Provide a framework to rotate the block.
+    You can skip this if you store ExtendedFacing and do rotation in other means.
+</p>
+
+<h2>{@link com.gtnewhorizon.structurelib.StructureLibAPI}</h2>
+<p>
+    This class contains the low level utility used for implementing new {@link
+    com.gtnewhorizon.structurelib.structure.IStructureElement}.
+    You will also need methods in this class to while implementing rotation.
+</p>
+<p>
+    <b>IF THERE IS A SAME NAMED METHOD IN OTHER CLASS, ONLY USE METHODS FOUND IN THIS CLASS, NOT OTHER CLASS.</b>
+    This abstraction is necessary so we can change how underlying code work (e.g. how hint particles are rendered)
+    without
+    breaking client code.
+</p>
+
+<h1>Important Concepts</h1>
+<h2>Context Object</h2>
+<p>
+    Context Object are what you pass to {@link
+    com.gtnewhorizon.structurelib.structure.IStructureDefinition#check(Object, String, World, ExtendedFacing, int, int,
+    int, int, int, int, boolean)} and alike as first parameter. It will hold the necessary states for {@link
+    com.gtnewhorizon.structurelib.structure.IStructureElement}. It's usually, but not necessarily, the multiblock controller.
+</p>
+<p>
+    Standard structure element library offers method to switch context objects if needed.
+</p>
+
+<h2>Trigger Item</h2>
+<p>
+    Trigger Item is the item used to trigger hint spawn, creative build and survival auto place.
+    The trigger item will be passed to relevant classes as an indicator of structure tier.
+    The item type and stack tag compound of this item stack are opaque objects that should not be parsed.
+</p>
+
+<h2>Channels</h2>
+
+<p>
+    Trigger item carries the player's choice of structure tier by its stack size.
+    When one multi have multiple tiered component that can have interleaving tier, this becomes an obnoxious
+    restriction, as
+    one ItemStack cannot have two stack sizes at the same time.
+    Here we use the <i>channels</i> to bypass this restriction.
+</p>
+
+<p>
+    Basically, channels are information stored on the trigger item's NBT tags.
+    One trigger item can carry multiple channels.
+    Each channel can be identified with lower case strings and has the value being one positive Java int.
+    There will be one and only one master channel and 0 or more sub channel.
+    When a non-existent sub channel is queried, master channel will be used instead to fill its place.
+</p>
+
+<p>
+    Structure Definition Author and/or Structure Element Author can choose whether they use a channel and which channel
+    to use.
+</p>
+
+<p>
+    Structure Element Author will usually not need to consider channels, i.e. proceed as if this concept does not exist,
+    unless it must take input from multiple channels.
+</p>
+
+<p>
+    Structure Definition Author will consider how to map each channel to each tiered component.
+    He will be using `com.gtnewhorizon.structurelib.structure.StructureUtility.withChannel` to direct structure element
+    on which channel to use.
+    Conceptually, it will return an ItemStack with the master channel being the value of selected channel.
+    In implementation, withChannel will return a new ItemStack with same item, nbt but different stack size.
+</p>
+
+<h3>why is this called channel?</h3>
+
+Just give me a better name and I'd do the renaming.
+
+<h3>Examples</h3>
+
+<h4>For Structure Definition Author</h4>
+
+<p>GT++ Chemical Plant is a multi with 4 distinctly tiered component.</p>
+
+<p>It will use
+<ul>
+    <li>master channel for its outer shell</li>
+    <li>channel `"casing"` for machine casings</li>
+    <li>channel `"pipe"` for pipe casings</li>
+    <li>channel `"coil"` for heating coils</li>
+</ul>
+Its structure code will then look like
+<pre>
+.addElement('a', shellStructureElement())
+.addElement('b', withChannel("casing", machineCasingStructureElement()))
+.addElement('c', withChannel("pipe", pipeCasingStructureElement()))
+.addElement('d', withChannel("coil", coilStructureElement()))
+</pre>
+whereas all these structure elements are designed without considering channels whatsoever
+
+<h4> Multi channel input Structure Element</h4>
+
+<p>
+    Suppose your hatch element has a required facing and can accept arbitrary meta tile entity, so it will need both
+    meta id
+    and facing input.
+</p>
+
+<p>
+    It will use
+<ul>
+    <li>master channel for its facing</li>
+    <li>channel `"id"` for meta tile entity id</li>
+</ul>
+<p>
+    Its code will then look like
+<pre>
+import com.gtnewhorizon.structurelib.structure.IStructureElement;
+
+public class MyHatchElement&lt;T> implements IStructureElement&lt;T> {
+    //...
+    @Override
+    public PlaceResult survivalPlaceBlock(
+            Object o,
+            World world,
+            int x,
+            int y,
+            int z,
+            ItemStack trigger,
+            IItemSource s,
+            EntityPlayerMP actor,
+            Consumer chatter) {
+        if (shouldSkip(o, world, x, y, z)) return PlaceResult.SKIP;
+        if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
+        ItemStack taken = s.takeOne(filterByID(ChannelDataAccessor.getChannelData(trigger, "id")).andThen(filterByFacing(trigger.stackSize)));
+        if (taken == null) return PlaceResult.REJECT;
+        return StructureUtility.survivalPlaceBlock(taken, ItemStackPredicate.NBTMode.IGNORE, null, true, world, x, y, z, s, actor);
+    }
+}
+</pre>
+
+The code for placeBlock() and spawnHint() will be left as an exercise for the reader.
+
+</BODY>
+</HTML>

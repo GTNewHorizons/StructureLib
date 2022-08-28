@@ -41,7 +41,7 @@ public class ErrorHintParticleMessage implements IMessage {
         public IMessage onMessage(ErrorHintParticleMessage msg, MessageContext ctx) {
             boolean updateResult = StructureLibAPI.markHintParticleError(
                     StructureLib.getCurrentPlayer(), StructureLib.getCurrentPlayer().worldObj, msg.x, msg.y, msg.z);
-            if (StructureLib.DEBUG_MODE)
+            if (StructureLibAPI.isDebugEnabled())
                 LOGGER.debug(
                         "Server instructed to mark hint particle at ({}, {}, {}) error, result {}!",
                         msg.x,

@@ -1,5 +1,6 @@
 # StructureLib Developer Guide v0.1-SNAPSHOT
 
+[//]: # (TODO move these to javadoc )
 ## `IStructureDefinition`
 
 `IStructureDefinition` is the structure definition of your multi. You will have one `IStructureDefinition` for each multi.
@@ -32,6 +33,48 @@ For more complex usage, you can define your own subclass, e.g. GregTech 5 Unoffi
 `ofFrame()` and `buildHatchAdder()` in its `GT_StructureUtility` class.
 
 Here we will detail a few more complex `IStructureElement` that comes with standard library.
+We will also cover a few common utilities here.
+
+### `ofChain`
+
+`ofChain` allows you to compose different `IStructureElement` to form a **OR** chain.
+As with any other OR operator, this one exhibits short-circuiting behavior, i.e. it will not call next structure element
+if previous one succeeded. (*)
+
+This allows you e.g. accept both a glass block using `ofBlock()` and a piece of air using `ofAir()`.
+It will not attempt to try next structure element if it errors though.
+
+(*): For survival auto place, it will
+* REJECT, if all structure element REJECT
+* SKIP, if 1 or more structure element SKIP and the rest structure element (0 or more) REJECT
+* any other result, **immediately** upon any structure element returns these other results.
+This behavior is not 100% fixed and might change later on, but we will send the notice with best effort.
+
+### `defer` and `lazy`
+
+`defer` will defer the actual instantiation of structure element until the structure code is actually called.
+`lazy` will defer the actual instantiation of structure element until the **first time** structure code is actually called.
+
+These both allow the structure element **constructor** to access properties only present on the context object
+(e.g. GT5 multiblock controller), e.g. hatch texture index to use.
+
+Use `lazy` if the data you access tends to remain constant.
+Using `defer` will not break per se, but would incur unnecessary performance overhead.
+
+Use `defer` if it might change for the same structure definition, e.g. if your structure might switch mode and change
+some parameter, while basically remain the same shape.
+
+### `onlyIf`
+
+`onlyIf` will return false if given predicate returns false, or call the downstream structure element if otherwise.
+
+Basically a `if` block for structure code.
+
+### `ofBlock`, `ofBlockFlatMap`, `ofBlockAnyMeta`, `ofBlockUnlocalizedName`, `ofBlocksMap`
+
+These are quite similar.
+They accept a few predefined blocks as the structure element.
+Their main difference is how these predefined blocks are supplied to the IStructureElement.
 
 ### `ofBlocksTiered`
 
