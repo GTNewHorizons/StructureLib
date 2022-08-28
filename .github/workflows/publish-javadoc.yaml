@@ -1,5 +1,4 @@
 name: Deploy Javadoc
-description: 'Automatically  generate Javadoc from current project and deploy it with GitHub Page on gh-pages branch.'
 
 on:
   push:
