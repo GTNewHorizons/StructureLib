@@ -1,0 +1,24 @@
+javadoc {
+    inputs.file  "src/main/javadoc/overview.html"
+
+    include "com/gtnewhorizon/structurelib/alignment/**"
+    include "com/gtnewhorizon/structurelib/constructable/**"
+    include "com/gtnewhorizon/structurelib/structure/**"
+    include "com/gtnewhorizon/structurelib/util/**"
+    include "com/gtnewhorizon/structurelib/StructureLibAPI.java"
+
+    options {
+        overview "src/main/javadoc/overview.html"
+        links 'https://docs.oracle.com/javase/8/docs/api/'
+        links 'https://skmedix.github.io/ForgeJavaDocs/javadoc/forge/1.7.10-10.13.4.1614/'
+    }
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+}

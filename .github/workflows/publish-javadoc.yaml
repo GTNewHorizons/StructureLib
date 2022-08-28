@@ -18,9 +18,10 @@ jobs:
       - uses: actions/setup-java@v2
         with:
           java-version: 8
-          distribution: 'adopt'
+          distribution: 'temurin'
+          cache: gradle
       - name: Generate Javadoc
-        run: gradle spotlessCheck javadoc
+        run: gradle --no-daemon spotlessCheck javadoc
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.4.0
         with:
