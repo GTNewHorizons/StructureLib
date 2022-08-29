@@ -39,17 +39,33 @@
             overflow: hidden;
             position: fixed;
         }
+
+        .navbar-left {
+            float: left;
+        }
+
+        .navbar-right {
+            float: right;
+        }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
 <div class="navbar">
     <div class="navbar-content">
-        <label for="version-select">Select version/branch: </label>
-        <select id="version-select"></select>
-        <button id="use-version" disabled>Switch Version</button>
-        <button id="refresh-version" disabled>Refresh Version</button>
-        <i id="reload-indicator" class="fa fa-spinner fa-spin" style="font-size:24px" hidden></i>
-        <span>Current Version: <span id="current-select"></span></span>
+        <div class="navbar-left">
+            <span>Current Version: <input disabled id="current-select"></span>
+            <label for="version-select">Select version/branch: </label>
+            <select id="version-select"></select>
+            <button id="use-version" disabled>Switch Version</button>
+            <button id="refresh-version" disabled>Refresh Version</button>
+            <i id="reload-indicator" class="fa fa-spinner fa-spin hidden" style="font-size:24px"></i>
+        </div>
+        <div class="navbar-right">
+        </div>
     </div>
 </div>
 <div class="framebox">
@@ -60,48 +76,50 @@
         const cacheKey = 'structurelib-doc-versions';
         const lastUseKey = 'structurelib-doc-last-use-version';
         function reload_versions() {
-            let i = document.getElementById('reload-indicator')
-            if (!i.hidden)
-                return
-            i.hidden = false
+            document.getElementById('reload-indicator').classList.remove('hidden')
             document.getElementById('use-version').disabled = true
             document.getElementById('refresh-version').disabled = true
             fetch("https://api.github.com/repos/GTNewHorizons/StructureLib/git/trees/gh-pages")
                 .then((res) => {
                     res.json().then((rawVersions) => {
-                        let versions = rawVersions['tree'].filter((e) => e['type'] === 'tree')
+                        let versions = rawVersions['tree'].filter((e) => e['type'] === 'tree' && e['path'] !== 'feature')
                             .map((e) => e['path'])
+                        versions.push('feature/doc')
                         localStorage.setItem(cacheKey, JSON.stringify(versions))
-                        add_versions(versions)
-                        i.hidden = true
-                        document.getElementById('use-version').disabled = false
-                        document.getElementById('refresh-version').disabled = false
+                        set_versions(versions)
                     })
                 })
         }
-        function add_versions(versions) {
+        function set_versions(versions) {
             let select = document.getElementById('version-select')
             select.textContent = ''
             versions.forEach((e) => {
-                // language=HTML
-                select.append(`<option value="${e}">${e}</option>`)
+                let child = document.createElement('option')
+                child.text = e
+                child.value = e
+                select.appendChild(child)
+                document.getElementById('reload-indicator').classList.add('hidden')
+                document.getElementById('use-version').disabled = false
+                document.getElementById('refresh-version').disabled = false
             })
         }
         function set_version(version) {
-            document.getElementById('current-select').textContent = version
-            document.getElementById('frame').src = version + '/javadoc'
+            document.getElementById('current-select').value = version
+            document.getElementById('frame').src = 'https://gtnewhorizons.github.io/StructureLib/' + version + '/javadoc'
             localStorage.setItem(lastUseKey, version)
         }
 
         let versionsJson = localStorage.getItem(cacheKey)
+        console.log('versionsJson', versionsJson)
         if (!versionsJson) {
             reload_versions()
         } else {
-            add_versions(JSON.parse(versionsJson))
+            set_versions(JSON.parse(versionsJson))
         }
 
         let lastUse = localStorage.getItem(lastUseKey)
-        if (!lastUse) {
+        console.log('lastUse', lastUse)
+        if (lastUse) {
             set_version(lastUse)
         }
 
