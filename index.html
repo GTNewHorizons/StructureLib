@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>StructureLib API Documentation Index</title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="description" content="Automatically generated API documentation for StructureLib.">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Look, I'm not a frontend developer. Laugh at my JS/HTML/CSS as you wish. I won't feel ashamed. I made this to work.-->
+    <style>
+        .navbar {
+            top: 0;
+            position: fixed;
+            height: 40px;
+            width: 100%;
+            background-color: #4D7A97;
+            color: #FFFFFF;
+        }
+
+        .navbar-content {
+            margin: 8px;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .framebox {
+            top: 40px;
+        }
+
+        .framebox, iframe {
+            width: 100%;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            border: none;
+            overflow: hidden;
+            position: fixed;
+        }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <div class="navbar-content">
+        <label for="version-select">Select version/branch: </label>
+        <select id="version-select"></select>
+        <button id="use-version" disabled>Switch Version</button>
+        <button id="refresh-version" disabled>Refresh Version</button>
+        <i id="reload-indicator" class="fa fa-spinner fa-spin" style="font-size:24px" hidden></i>
+        <span>Current Version: <span id="current-select"></span></span>
+    </div>
+</div>
+<div class="framebox">
+    <iframe id="frame"></iframe>
+</div>
+<script type="application/javascript">
+    (function () {
+        const cacheKey = 'structurelib-doc-versions';
+        const lastUseKey = 'structurelib-doc-last-use-version';
+        function reload_versions() {
+            let i = document.getElementById('reload-indicator')
+            if (!i.hidden)
+                return
+            i.hidden = false
+            document.getElementById('use-version').disabled = true
+            document.getElementById('refresh-version').disabled = true
+            fetch("https://api.github.com/repos/GTNewHorizons/StructureLib/git/trees/gh-pages")
+                .then((res) => {
+                    res.json().then((rawVersions) => {
+                        let versions = rawVersions['tree'].filter((e) => e['type'] === 'tree')
+                            .map((e) => e['path'])
+                        localStorage.setItem(cacheKey, JSON.stringify(versions))
+                        add_versions(versions)
+                        i.hidden = true
+                        document.getElementById('use-version').disabled = false
+                        document.getElementById('refresh-version').disabled = false
+                    })
+                })
+        }
+        function add_versions(versions) {
+            let select = document.getElementById('version-select')
+            select.textContent = ''
+            versions.forEach((e) => {
+                // language=HTML
+                select.append(`<option value="${e}">${e}</option>`)
+            })
+        }
+        function set_version(version) {
+            document.getElementById('current-select').textContent = version
+            document.getElementById('frame').src = version + '/javadoc'
+            localStorage.setItem(lastUseKey, version)
+        }
+
+        let versionsJson = localStorage.getItem(cacheKey)
+        if (!versionsJson) {
+            reload_versions()
+        } else {
+            add_versions(JSON.parse(versionsJson))
+        }
+
+        let lastUse = localStorage.getItem(lastUseKey)
+        if (!lastUse) {
+            set_version(lastUse)
+        }
+
+        document.getElementById('use-version').onclick = (e) => {
+            set_version(document.getElementById('version-select').value)
+        }
+
+        document.getElementById('refresh-version').onclick = reload_versions
+    })()
+</script>
+</body>
+</html>
