@@ -79,6 +79,18 @@
             document.getElementById('reload-indicator').classList.remove('hidden')
             document.getElementById('use-version').disabled = true
             document.getElementById('refresh-version').disabled = true
+            fetch("https://gtnewhorizons.github.io/StructureLib/index.txt")
+                .then((res) => {
+                    if (!res.ok)
+                        reload_versions_fallback()
+                    res.text().then(
+                        (text) => set_versions(text.split('\n').map(String.prototype.trim).filter((e) => e.length !== 0)),
+                        reload_versions_fallback
+                    )
+                })
+
+        }
+        function reload_versions_fallback() {
             fetch("https://api.github.com/repos/GTNewHorizons/StructureLib/git/trees/gh-pages")
                 .then((res) => {
                     res.json().then((rawVersions) => {
