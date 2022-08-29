@@ -1347,7 +1347,7 @@ public class StructureUtility {
 
     /**
      * Call a callback if downstream element returned false in check.
-     * @param onCheckPass side effect
+     * @param onFail side effect
      * @param element downstream
      */
     public static <B extends IStructureElement<T>, T> IStructureElement<T> onElementFail(
