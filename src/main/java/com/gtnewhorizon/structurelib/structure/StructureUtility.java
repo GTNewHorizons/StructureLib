@@ -357,6 +357,8 @@ public class StructureUtility {
      * <p>
      * Note that if tierExtractor returns a null, this block will be rejected immediately. This makes null a potent
      * candidate for notSet.
+     * <p>
+     * See documentation on the other overload for more information.
      *
      * @see #ofBlocksTiered(ITierConverter, Object, BiConsumer, Function)
      */
@@ -399,10 +401,26 @@ public class StructureUtility {
      * Element representing a component with different tiers. Player can use more blueprint to get hints denoting more
      * advanced components.
      * <p>
+     * This assumes you will reset the backing storage, and on the first occurrence getter would return notSet.
+     * You can also make getter to return other value to forcefully select a certain tier, but you're probably better
+     * off using block adders or {@link #ofBlock(Block, int, Block, int)} and its overloads
+     * <p>
      * Implementation wise, this allows a block only when we don't yet have a tier, or the block at that location has
      * the same tier as we already have.
      * <p>
      * There is yet no TileEntity counterpart of this utility. Feel free to submit a PR to add it.
+     * <p>
+     * For most typical use cases, you will NOT want to return notSet from your tierExtractor. If you do so, we will
+     * have this kind of chain of events:
+     * <ul>
+     * <li>at check start, tier is reset to notSet
+     * <li>at first occurrence, ofBlocksTiered finds your current tier is notSet, and the block's tier is notSet, so it's accepted
+     * <li>at 2nd, 3rd..., same thing in 2 happens
+     * <li>at last occurrence, player placed a valid block with a tier not notSet. ofBlocksTiered now sets your current
+     * tier to this tier, and accept the block
+     * <li>check got notified structure is sound, and tier is not notSet. it marks the structure as complete and start doing its business
+     * <li>Player enjoy a (probably) hilariously shaped multi and (probably) reduced build cost.
+     * </ul>
      * <p>
      * <b>Example:</b>
      * <p>
@@ -1178,6 +1196,8 @@ public class StructureUtility {
                         IItemSource s,
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
+                    if (world.getBlock(x, y, z) == defaultBlock && world.getBlockMetadata(x, y, z) == defaultMeta)
+                        return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
                             defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
@@ -1213,6 +1233,8 @@ public class StructureUtility {
                         IItemSource s,
                         EntityPlayerMP actor,
                         Consumer<IChatComponent> chatter) {
+                    if (world.getBlock(x, y, z) == defaultBlock && world.getBlockMetadata(x, y, z) == defaultMeta)
+                        return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
                             defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
@@ -1224,6 +1246,10 @@ public class StructureUtility {
         return ofBlockAdder(iBlockAdder, StructureLibAPI.getBlockHint(), dots - 1);
     }
 
+    /**
+     * Try to add a structure element with a tile entity. Note that tile adder will be called with a null argument at
+     * locations without tile entity.
+     */
     public static <T> IStructureElementNoPlacement<T> ofTileAdder(
             ITileAdder<T> iTileAdder, Block hintBlock, int hintMeta) {
         if (iTileAdder == null || hintBlock == null) {
@@ -1245,6 +1271,10 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * Try to add a structure element with a particular type of tile entity. Note that tile adder will not be called at
+     * locations without a tile entity.
+     */
     public static <T, E> IStructureElementNoPlacement<T> ofSpecificTileAdder(
             BiPredicate<T, E> iTileAdder, Class<E> tileClass, Block hintBlock, int hintMeta) {
         if (iTileAdder == null || hintBlock == null || tileClass == null) {
@@ -1272,6 +1302,11 @@ public class StructureUtility {
 
     // region side effects
 
+    /**
+     * Call a callback if downstream element returned true in check.
+     * @param onCheckPass side effect
+     * @param element downstream
+     */
     public static <B extends IStructureElement<T>, T> IStructureElement<T> onElementPass(
             Consumer<T> onCheckPass, B element) {
         return new IStructureElement<T>() {
@@ -1310,6 +1345,11 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * Call a callback if downstream element returned false in check.
+     * @param onCheckPass side effect
+     * @param element downstream
+     */
     public static <B extends IStructureElement<T>, T> IStructureElement<T> onElementFail(
             Consumer<T> onFail, B element) {
         return new IStructureElement<T>() {
@@ -1352,6 +1392,8 @@ public class StructureUtility {
 
     /**
      * Enable this structure element only if given predicate returns true.
+     * <p>
+     * Return SKIP when survival auto place if given predicate returns false.
      */
     public static <T> IStructureElement<T> onlyIf(
             Predicate<? super T> predicate, IStructureElement<? super T> downstream) {
@@ -1360,6 +1402,7 @@ public class StructureUtility {
 
     /**
      * Enable this structure element only if given predicate returns true.
+     * @param placeResultWhenDisabled value to return for survival auto place when predicate returns false
      */
     public static <T> IStructureElement<T> onlyIf(
             Predicate<? super T> predicate,
@@ -1431,8 +1474,10 @@ public class StructureUtility {
     }
 
     /**
-     * Take care while chaining, as it will try to call every structure element until it returns true.
-     * If none does it will finally return false.
+     * This allows you to compose different {@link IStructureElement} to form a <b>OR</b> chain.
+     * <p>
+     * Practically no difference with the other overload.
+     * @see #ofChain(IStructureElement[])
      */
     @SuppressWarnings("unchecked")
     public static <T> IStructureElementChain<T> ofChain(List<IStructureElement<T>> elementChain) {
@@ -1440,8 +1485,15 @@ public class StructureUtility {
     }
 
     // region context
-    public static <CTX, T extends IWithExtendedContext<CTX>, E extends IStructureElement<CTX>>
-            IStructureElement<T> withContext(E elem) {
+
+    /**
+     * Switch to the extended context object in the downstream element
+     * @param elem downstream element
+     * @param <CTX> extended context type
+     * @param <T> existing context object type
+     */
+    public static <CTX, T extends IWithExtendedContext<CTX>> IStructureElement<T> withContext(
+            IStructureElement<CTX> elem) {
         return new IStructureElement<T>() {
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -1517,9 +1569,7 @@ public class StructureUtility {
      * change some parameter, while basically remain the same shape.
      * Using this while {@link #lazy(Supplier)} is enough will not break anything, but would incur unnecessary
      * performance overhead.
-     * @param to
-     * @return
-     * @param <T>
+     * @param to downstream element supplier
      */
     public static <T> IStructureElementDeferred<T> defer(Supplier<IStructureElement<T>> to) {
         if (to == null) {
@@ -1557,6 +1607,16 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * This will defer the actual instantiation of structure element until the structure code is actually called.
+     * This will allow the structure element <b>constructor</b> to access properties only present on the context object
+     * (e.g. GT5 multiblock controller), e.g. hatch texture index to use.
+     * Use this if it might change for the same structure definition, e.g. if your structure might switch mode and
+     * change some parameter, while basically remain the same shape.
+     * Using this while {@link #lazy(Supplier)} is enough will not break anything, but would incur unnecessary
+     * performance overhead.
+     * @param to downstream element supplier
+     */
     public static <T> IStructureElementDeferred<T> defer(Function<T, IStructureElement<T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
@@ -1593,7 +1653,36 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * This is the switch block for structure code.
+     * <p>
+     * This allows you to extract or compute a key from context object, and lookup a map for actual structure element
+     * to use.
+     *
+     * @param keyExtractor extract a key from the context object
+     * @param map all possible structure element
+     * @deprecated renamed to partitionBy
+     */
+    @Deprecated
     public static <T, K> IStructureElementDeferred<T> defer(
+            Function<T, K> keyExtractor, Map<K, IStructureElement<T>> map) {
+        return partitionBy(keyExtractor, map);
+    }
+
+    /**
+     * This is the switch block for structure code.
+     * <p>
+     * This allows you to extract or compute a key from context object, and lookup a map for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns a key
+     * not found in map.
+     * <p>
+     * Do pay attention to what properties your map has though. You need to pay attention to how they consider equality
+     * and how they consider null key/values. Guava ImmutableMap is usually a good enough choice.
+     *
+     * @param keyExtractor extract a key from the context object
+     * @param map all possible structure element
+     */
+    public static <T, K> IStructureElementDeferred<T> partitionBy(
             Function<T, K> keyExtractor, Map<K, IStructureElement<T>> map) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
@@ -1630,6 +1719,20 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * This is the switch block for structure code, with default case support.
+     * <p>
+     * This allows you to extract or compute a key from context object, and lookup a map for actual structure element
+     * to use. The fallback will only be used when keyExtractor returns a value not found in given map. This will play
+     * nicely in combination with {@link #error()}
+     * <p>
+     * Do pay attention to what properties your map has though. You need to pay attention to how they consider equality
+     * and how they consider null key/values. Guava ImmutableMap is usually a good enough choice.
+     *
+     * @param keyExtractor extract a key from the context object
+     * @param map all possible structure element
+     * @param defaultElem element to use when keyExtractor returns a value not found in given map
+     */
     public static <T, K> IStructureElementDeferred<T> defer(
             Function<T, K> keyExtractor, Map<K, IStructureElement<T>> map, IStructureElement<T> defaultElem) {
         if (keyExtractor == null || map == null) {
@@ -1668,6 +1771,18 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * This is the switch block for structure code.
+     * <p>
+     * This allows you to extract or compute an index from context object, and lookup an array for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns an index
+     * not within the array bound
+     * <p>
+     * Do pay place null values in the array.
+     *
+     * @param keyExtractor extract an index from the context object
+     * @param array all possible structure element
+     */
     @SafeVarargs
     public static <T> IStructureElementDeferred<T> defer(
             Function<T, Integer> keyExtractor, IStructureElement<T>... array) {
@@ -1706,12 +1821,37 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * This is the switch block for structure code.
+     * <p>
+     * This allows you to extract or compute an index from context object, and lookup an array for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns an index
+     * not within the array bound
+     * <p>
+     * Do pay place null values in the array.
+     *
+     * @param keyExtractor extract an index from the context object
+     * @param array all possible structure element
+     */
     @SuppressWarnings("unchecked")
     public static <T> IStructureElementDeferred<T> defer(
             Function<T, Integer> keyExtractor, List<IStructureElement<T>> array) {
         return defer(keyExtractor, array.toArray(new IStructureElement[0]));
     }
 
+    /**
+     * This will defer the actual instantiation of structure element until the structure code is actually called.
+     * This will allow the structure element <b>constructor</b> to access properties only present on the context object
+     * (e.g. GT5 multiblock controller), e.g. hatch texture index to use.
+     * Use this if it might change for the same structure definition, e.g. if your structure might switch mode and
+     * change some parameter, while basically remain the same shape.
+     * Using this while {@link #lazy(Supplier)} is enough will not break anything, but would incur unnecessary
+     * performance overhead.
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     *
+     * @param to downstream element supplier
+     */
     public static <T> IStructureElementDeferred<T> defer(BiFunction<T, ItemStack, IStructureElement<T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
@@ -1748,6 +1888,21 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * This is the switch block for structure code.
+     * <p>
+     * This allows you to extract or compute a key from context object, and lookup a map for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns a key
+     * not found in map.
+     * <p>
+     * Do pay attention to what properties your map has though. You need to pay attention to how they consider equality
+     * and how they consider null key/values. Guava ImmutableMap is usually a good enough choice.
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     *
+     * @param keyExtractor extract a key from the context object and trigger item
+     * @param map all possible structure element
+     */
     public static <T, K> IStructureElementDeferred<T> defer(
             BiFunction<T, ItemStack, K> keyExtractor, Map<K, IStructureElement<T>> map) {
         if (keyExtractor == null || map == null) {
@@ -1786,6 +1941,22 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * This is the switch block for structure code, with default case support.
+     * <p>
+     * This allows you to extract or compute a key from context object, and lookup a map for actual structure element
+     * to use. The fallback will only be used when keyExtractor returns a value not found in given map. This will play
+     * nicely in combination with {@link #error()}
+     * <p>
+     * Do pay attention to what properties your map has though. You need to pay attention to how they consider equality
+     * and how they consider null key/values. Guava ImmutableMap is usually a good enough choice.
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     *
+     * @param keyExtractor extract a key from the context object and trigger item
+     * @param map all possible structure element
+     * @param defaultElem element to use when keyExtractor returns a value not found in given map
+     */
     public static <T, K> IStructureElementDeferred<T> defer(
             BiFunction<T, ItemStack, K> keyExtractor,
             Map<K, IStructureElement<T>> map,
@@ -1829,6 +2000,20 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * This is the switch block for structure code.
+     * <p>
+     * This allows you to extract or compute an index from context object, and lookup an array for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns an index
+     * not within the array bound
+     * <p>
+     * Do pay place null values in the array.
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     *
+     * @param keyExtractor extract a key from the context object and trigger item
+     * @param array all possible structure element
+     */
     @SafeVarargs
     public static <T> IStructureElementDeferred<T> defer(
             BiFunction<T, ItemStack, Integer> keyExtractor, IStructureElement<T>... array) {
@@ -1868,12 +2053,41 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * This is the switch block for structure code.
+     * <p>
+     * This allows you to extract or compute an index from context object, and lookup an array for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns an index
+     * not within the array bound
+     * <p>
+     * Do pay place null values in the array.
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     *
+     * @param keyExtractor extract a key from the context object and trigger item
+     * @param array all possible structure element
+     */
     @SuppressWarnings("unchecked")
     public static <T> IStructureElementDeferred<T> defer(
             BiFunction<T, ItemStack, Integer> keyExtractor, List<IStructureElement<T>> array) {
         return defer(keyExtractor, array.toArray(new IStructureElement[0]));
     }
 
+    /**
+     * This will defer the actual instantiation of structure element until the <b>first time</b> structure code is actually called.
+     * <p>
+     * Similar to defer, but caches the first returned element returned and won't call it again.
+     * Initialization is not thread safe.
+     * This will allow the structure element <b>constructor</b> to access properties only present on the context object
+     * (e.g. GT5 multiblock controller), e.g. hatch texture index to use.
+     * Use this if the data you access will remain constant.
+     * <p>
+     * This variant will override the check function of the structure element from second function with the one returned
+     * from the structure element from first function.
+     *
+     * @param toCheck override the check function with the returned element
+     * @param to create structure element from the context object passed in
+     */
     public static <T> IStructureElementDeferred<T> defer(
             Function<T, IStructureElement<T>> toCheck, BiFunction<T, ItemStack, IStructureElement<T>> to) {
         if (to == null) {
@@ -1911,6 +2125,25 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * This is the switch block for structure code.
+     * <p>
+     * This allows you to extract or compute a key from context object, and lookup a map for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns a key
+     * not found in map.
+     * <p>
+     * Do pay attention to what properties your map has though. You need to pay attention to how they consider equality
+     * and how they consider null key/values. Guava ImmutableMap is usually a good enough choice.
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     * <p>
+     * This variant will override the check function of the structure element from second function with the one returned
+     * from the structure element from first function.
+     *
+     * @param keyExtractorCheck key extractor of the structure element that will be used for check.
+     * @param keyExtractor extract a key from the context object and trigger item
+     * @param map all possible structure element
+     */
     public static <T, K> IStructureElementDeferred<T> defer(
             Function<T, K> keyExtractorCheck,
             BiFunction<T, ItemStack, K> keyExtractor,
@@ -1951,6 +2184,24 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * This is the switch block for structure code, with default case.
+     * <p>
+     * This allows you to extract or compute a key from context object, and lookup a map for actual structure element
+     * to use. defaultElem will be used if either extractor returned a key not found in map.
+     * <p>
+     * Do pay attention to what properties your map has though. You need to pay attention to how they consider equality
+     * and how they consider null key/values. Guava ImmutableMap is usually a good enough choice.
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     * <p>
+     * This variant will override the check function of the structure element from second function with the one returned
+     * from the structure element from first function.
+     *
+     * @param keyExtractorCheck key extractor of the structure element that will be used for check.
+     * @param keyExtractor extract a key from the context object and trigger item
+     * @param map all possible structure element
+     */
     public static <T, K> IStructureElementDeferred<T> defer(
             Function<T, K> keyExtractorCheck,
             BiFunction<T, ItemStack, K> keyExtractor,
@@ -1994,6 +2245,24 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * This is the switch block for structure code, with default case.
+     * <p>
+     * This allows you to extract or compute an index from context object, and lookup an array for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns an index
+     * not within the array bound
+     * <p>
+     * Do pay place null values in the array.
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     * <p>
+     * This variant will override the check function of the structure element from second function with the one returned
+     * from the structure element from first function.
+     *
+     * @param keyExtractorCheck key extractor of the structure element that will be used for check.
+     * @param keyExtractor extract a key from the context object and trigger item
+     * @param array all possible structure element
+     */
     @SafeVarargs
     public static <T> IStructureElementDeferred<T> defer(
             Function<T, Integer> keyExtractorCheck,
@@ -2035,6 +2304,22 @@ public class StructureUtility {
         };
     }
 
+    /**
+     * This is the switch block for structure code, with default case.
+     * <p>
+     * This allows you to extract or compute an index from context object, and lookup an array for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns an index
+     * not within the array bound
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     * <p>
+     * This variant will override the check function of the structure element from second function with the one returned
+     * from the structure element from first function.
+     *
+     * @param keyExtractorCheck key extractor of the structure element that will be used for check.
+     * @param keyExtractor extract a key from the context object and trigger item
+     * @param array all possible structure element
+     */
     @SuppressWarnings("unchecked")
     public static <T> IStructureElementDeferred<T> defer(
             Function<T, Integer> keyExtractorCheck,
