@@ -78,6 +78,12 @@ StructureLib API documentation.
     You can skip this if you store ExtendedFacing and do rotation in other means.
 </p>
 
+<h2>{@link com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor}</h2>
+<p>
+    This class contains the accessors for channel data held on a trigger item. See <a href="#channels">below</a> for more
+    information.
+</p>
+
 <h2>{@link com.gtnewhorizon.structurelib.StructureLibAPI}</h2>
 <p>
     This class contains the low level utility used for implementing new {@link
@@ -108,6 +114,11 @@ StructureLib API documentation.
     Trigger Item is the item used to trigger hint spawn, creative build and survival auto place.
     The trigger item will be passed to relevant classes as an indicator of structure tier.
     The item type and stack tag compound of this item stack are opaque objects that should not be parsed.
+</p>
+<p>
+    StructureLib comes with a trigger item implementation.
+    It does register it to the game registries, but does not come with a recipe.
+    Usually there is no reason to reimplement this on your own.
 </p>
 
 <h2><a href="#channels" id="channels">Channels</a></h2>

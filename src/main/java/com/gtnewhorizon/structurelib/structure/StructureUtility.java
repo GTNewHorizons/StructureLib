@@ -40,7 +40,7 @@ import org.apache.commons.lang3.tuple.Pair;
  * <h1>If block</h1>
  * Provide if block, allowing downstream call only if user specified conditions are meet (i.e. predicate returns true)
  * <ul>
- *     <li>{@link #onlyIf(Predicate, IStructureElement, PlaceResult)} and its overloads</li>
+ *     <li>{@link #onlyIf(Predicate, IStructureElement)} and its overloads</li>
  * </ul>
  * <h1>Switch block</h1>
  * Provide switch block, allowing to select a downstream element by using a key or index computed from trigger item
