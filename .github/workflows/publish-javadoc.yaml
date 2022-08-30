@@ -44,9 +44,24 @@ jobs:
           git add $TARGET_FOLDER
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-          git commit -m "Deploy javadoc from ref TARGET_FOLDER"
+          git commit -m "Deploy javadoc from ref $TARGET_FOLDER"
           git push
         env:
           TARGET_FOLDER: ${{ github.ref_name }}
           COMMIT_AUTHOR: ${{ github.pusher.name }}
           COMMIT_EMAIL: ${{ github.pusher.email }}
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
+      - name: Generate Index
+        shell: bash
+        run: |
+          find . -name javadoc -type d -print | sed 's#^\./\(.*\)/javadoc$#\1#' > index.txt
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          # Upload entire repository
+          path: '.'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
