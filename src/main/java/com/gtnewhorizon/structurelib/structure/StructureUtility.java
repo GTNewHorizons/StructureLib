@@ -33,9 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
- * Fluent API for structure checking!
- * <p>
- * (Just import static this class to have a nice fluent syntax while defining structure definitions)
+ *
  */
 public class StructureUtility {
     private static final String NICE_CHARS =
@@ -157,7 +155,15 @@ public class StructureUtility {
     private StructureUtility() {}
 
     /**
+     * This is a helper method for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
+     *
+     * This method will try to look up an {@link ItemBlock} for given block and meta from {@code s} and place it at given
+     * location.
      * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
+     * This method might yield error messages to the player only if there is likely a programming error or exploit.
+     *
+     * @param s       drain resources from this place
+     * @param actor   source of action. cannot be null.
      */
     public static PlaceResult survivalPlaceBlock(
             Block block, int meta, World world, int x, int y, int z, IItemSource s, EntityPlayerMP actor) {
@@ -165,7 +171,17 @@ public class StructureUtility {
     }
 
     /**
+     * This is a helper method for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
+     *
+     * This method will try to look up an {@link ItemBlock} for given block and meta from {@code s} and place it at given
+     * location.
      * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
+     * This method might yield error messages to the player only if there is likely a programming error or exploit.
+     * This method might yield error messages to the chatter.
+     *
+     * @param s       drain resources from this place
+     * @param actor   source of action. cannot be null.
+     * @param chatter normal error destination. can be null to suppress them.
      */
     public static PlaceResult survivalPlaceBlock(
             Block block,
@@ -200,9 +216,16 @@ public class StructureUtility {
     }
 
     /**
+     * This is a helper method for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
+     *
+     * This method will try to look up an {@link ItemBlock} for given block and meta from {@code s} and place it at given
+     * location.
      * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
+     * This method might yield error messages to the player only if there is likely a programming error or exploit.
      *
      * @param stack   a valid stack with stack size of exactly 1. Must be of an ItemBlock!
+     * @param s       drain resources from this place
+     * @param actor   source of action. cannot be null.
      */
     public static PlaceResult survivalPlaceBlock(
             ItemStack stack,
@@ -219,10 +242,18 @@ public class StructureUtility {
     }
 
     /**
+     * This is a helper method for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
+     *
+     * This method will try to look up an {@link ItemBlock} for given block and meta from {@code s} and place it at given
+     * location.
      * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
+     * This method might yield error messages to the player only if there is likely a programming error or exploit.
+     * This method might yield error messages to the chatter.
      *
      * @param stack   a valid stack with stack size of exactly 1. Must be of an ItemBlock!
-     * @param chatter pass in null to suppress error output, or just use the other overload
+     * @param s       drain resources from this place
+     * @param actor   source of action. cannot be null.
+     * @param chatter normal error destination. can be null to suppress them.
      */
     public static PlaceResult survivalPlaceBlock(
             ItemStack stack,

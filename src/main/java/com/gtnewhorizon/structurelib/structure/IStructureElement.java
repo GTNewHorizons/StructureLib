@@ -5,6 +5,7 @@ import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import java.util.function.Consumer;
+import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
@@ -22,10 +23,16 @@ public interface IStructureElement<T> {
 
     /**
      * Try place the block by taking resource from given IItemSource.
+     * <p>
+     * You might want to use {@link StructureUtility#survivalPlaceBlock(Block, int, World, int, int, int, IItemSource, EntityPlayerMP)}
+     * or its overloads to implement this.
      *
+     * @param trigger trigger item
      * @param s       drain resources from this place
-     * @param actor   source of action.
-     * @param chatter
+     * @param actor   source of action. for very critical errors you can also just send the error messages here, bypassing
+     *                any filter that chatter might have.
+     * @param chatter send error messages here. Caller will choose an appropriate way to forward it to player if the
+     *                other fallbacks also fails.
      */
     default PlaceResult survivalPlaceBlock(
             T t,
@@ -114,7 +121,7 @@ public interface IStructureElement<T> {
         ACCEPT,
         /**
          * Combination of ACCEPT and STOP.
-         *
+         * <p>
          * Element placed successfully. To proceed further would require stopping the placement and wait for next round.
          */
         ACCEPT_STOP;
