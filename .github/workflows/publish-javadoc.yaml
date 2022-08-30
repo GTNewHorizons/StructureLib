@@ -45,6 +45,7 @@ jobs:
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git commit -m "Deploy javadoc from ref TARGET_FOLDER"
+          git push
         env:
           TARGET_FOLDER: ${{ github.ref_name }}
           COMMIT_AUTHOR: ${{ github.pusher.name }}
