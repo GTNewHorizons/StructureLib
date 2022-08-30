@@ -8,8 +8,12 @@ on:
     tags:
       - '*'
 
+permissions:
+  contents: write
+
 jobs:
   javadoc:
+    concurrency: javadoc-publish
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -29,8 +33,17 @@ jobs:
         run: ./gradlew --no-daemon spotlessCheck javadoc
 
       - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4.4.0
-        with:
-          clean: true
-          folder: build/docs/
-          target-folder: ${{ github.ref_name }}
+        shell: /bin/bash
+        run: |
+          mv build/docs $RUNNER_TEMP/docs_output
+          rm build -rf
+          git checkout gh-pages
+          mkdir -p $TARGET_FOLDER
+          rm -rf $TARGET_FOLDER
+          mv $RUNNER_TEMP/docs_output $TARGET_FOLDER -v
+          git add $TARGET_FOLDER
+          git commit -m "Deploy javadoc from ref TARGET_FOLDER"
+        env:
+          TARGET_FOLDER: ${{ github.ref_name }}
+          COMMIT_AUTHOR: ${{ github.pusher.name }}
+          COMMIT_EMAIL: ${{ github.pusher.email }}

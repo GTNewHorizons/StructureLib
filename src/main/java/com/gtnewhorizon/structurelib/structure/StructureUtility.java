@@ -2,6 +2,7 @@ package com.gtnewhorizon.structurelib.structure;
 
 import static java.lang.Integer.MIN_VALUE;
 
+
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
@@ -12,9 +13,11 @@ import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import cpw.mods.fml.common.registry.GameRegistry;
+
 import java.util.*;
 import java.util.function.*;
 import javax.annotation.Nullable;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -33,11 +36,58 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
- *
+ * A brief index
+ * <h1>Control blocks</h1>
+ * A lot of these might seem to make more sense as a default function on {@link IStructureElement}. However, in that
+ * case javac generic will often fail to infer the type for you, so we have to define them as static methods
+ * <h1>If block</h1>
+ * Provide if block, allowing downstream call only if user specified conditions are meet (i.e. predicate returns true)
+ * <ul>
+ *     <li>{@link #onlyIf(Predicate, IStructureElement, PlaceResult)} and its overloads</li>
+ * </ul>
+ * <h1>Switch block</h1>
+ * Provide switch block, allowing to select a downstream element by using a key or index computed from trigger item
+ * and/or context object.
+ * <ul>
+ *     <li>{@link #partitionBy(Function, IStructureElement[])} and its overloads</li>
+ * </ul>
+ * <h1>Or Chain</h1>
+ * Provide a short-circuiting OR chain.
+ * <ul>
+ *     <li>{@link #ofChain(IStructureElement[])} and its overloads</li>
+ * </ul>
+ * <h2>Side effect</h2>
+ * Provide callbacks on various occasion
+ * <ul>
+ *     <li>{@link #onElementPass(Consumer, IStructureElement)}: Call an callback upon element check success </li>
+ *     <li>{@link #onElementFail(Consumer, IStructureElement)}: Call an callback upon element check failure </li>
+ * </ul>
+ * <h1>Primitives</h1>
+ * <h2>Error statement</h2>
+ * Unconditionally return false.
+ * <ul>
+ *     <li> {@link #error()}</li>
+ * </ul>
+ * <h2>Context Object Change</h2>
+ * Switch the context object.
+ * <ul>
+ *     <li> {@link #withContext(IStructureElement)}: switch context to the extended context</li>
+ * </ul>
+ * <h2>Channel Change</h2>
+ * Change the channel. See <a href="{@docRoot}/overview-summary.html#channels">Channels section on overview</a> for more information.
+ * <ul>
+ *     <li> {@link #withChannel(String, IStructureElement)}: switch channel using {@link ChannelDataAccessor#withChannel(ItemStack, String)} when a trigger item is present.</li>
+ * </ul>
+ * <h2>Spawn hint particle</h2>
+ * Just spawn a hint. Do nothing otherwise. Useful when you want to override the hint provided by another structure element,
+ * or as a fallback to a structure element that is check only.
+ * <ul>
+ *     <li> {@link #ofHint(int)}, {@link #ofHintDeferred(Supplier)} and its overloads</li>
+ * </ul>
  */
 public class StructureUtility {
     private static final String NICE_CHARS =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz=|!@#$%&()[]{};:<>/?_,.*^'`";
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz=|!@#$%&()[]{};:<>/?_,.*^'`";
 
     @SuppressWarnings("rawtypes")
     private static final Map<Vec3Impl, IStructureNavigate> STEP = new HashMap<>();
@@ -63,15 +113,15 @@ public class StructureUtility {
 
         @Override
         public PlaceResult survivalPlaceBlock(
-                Object o,
-                World world,
-                int x,
-                int y,
-                int z,
-                ItemStack trigger,
-                IItemSource s,
-                EntityPlayerMP actor,
-                Consumer chatter) {
+            Object o,
+            World world,
+            int x,
+            int y,
+            int z,
+            ItemStack trigger,
+            IItemSource s,
+            EntityPlayerMP actor,
+            Consumer chatter) {
             if (check(o, world, x, y, z)) return PlaceResult.SKIP;
             if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
             world.setBlock(x, y, z, Blocks.air, 0, 2);
@@ -100,15 +150,15 @@ public class StructureUtility {
 
         @Override
         public PlaceResult survivalPlaceBlock(
-                Object o,
-                World world,
-                int x,
-                int y,
-                int z,
-                ItemStack trigger,
-                IItemSource s,
-                EntityPlayerMP actor,
-                Consumer chatter) {
+            Object o,
+            World world,
+            int x,
+            int y,
+            int z,
+            ItemStack trigger,
+            IItemSource s,
+            EntityPlayerMP actor,
+            Consumer chatter) {
             if (check(o, world, x, y, z)) return PlaceResult.SKIP;
             // user should place anything here.
             // maybe make this configurable, but for now we try to take some cobble from user
@@ -139,40 +189,41 @@ public class StructureUtility {
 
         @Override
         public PlaceResult survivalPlaceBlock(
-                Object o,
-                World world,
-                int x,
-                int y,
-                int z,
-                ItemStack trigger,
-                IItemSource s,
-                EntityPlayerMP actor,
-                Consumer chatter) {
+            Object o,
+            World world,
+            int x,
+            int y,
+            int z,
+            ItemStack trigger,
+            IItemSource s,
+            EntityPlayerMP actor,
+            Consumer chatter) {
             return PlaceResult.REJECT;
         }
     };
 
-    private StructureUtility() {}
+    private StructureUtility() {
+    }
 
     /**
      * This is a helper method for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
-     *
+     * <p>
      * This method will try to look up an {@link ItemBlock} for given block and meta from {@code s} and place it at given
      * location.
      * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
      * This method might yield error messages to the player only if there is likely a programming error or exploit.
      *
-     * @param s       drain resources from this place
-     * @param actor   source of action. cannot be null.
+     * @param s     drain resources from this place
+     * @param actor source of action. cannot be null.
      */
     public static PlaceResult survivalPlaceBlock(
-            Block block, int meta, World world, int x, int y, int z, IItemSource s, EntityPlayerMP actor) {
+        Block block, int meta, World world, int x, int y, int z, IItemSource s, EntityPlayerMP actor) {
         return survivalPlaceBlock(block, meta, world, x, y, z, s, actor, null);
     }
 
     /**
      * This is a helper method for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
-     *
+     * <p>
      * This method will try to look up an {@link ItemBlock} for given block and meta from {@code s} and place it at given
      * location.
      * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
@@ -184,26 +235,26 @@ public class StructureUtility {
      * @param chatter normal error destination. can be null to suppress them.
      */
     public static PlaceResult survivalPlaceBlock(
-            Block block,
-            int meta,
-            World world,
-            int x,
-            int y,
-            int z,
-            IItemSource s,
-            EntityPlayerMP actor,
-            Consumer<IChatComponent> chatter) {
+        Block block,
+        int meta,
+        World world,
+        int x,
+        int y,
+        int z,
+        IItemSource s,
+        EntityPlayerMP actor,
+        Consumer<IChatComponent> chatter) {
         if (block == null) throw new NullPointerException();
         if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
         Item itemBlock = Item.getItemFromBlock(block);
         int itemMeta = itemBlock instanceof ISpecialItemBlock
-                ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta)
-                : meta;
+            ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta)
+            : meta;
         if (!s.takeOne(new ItemStack(itemBlock, 1, itemMeta), false)) {
             if (chatter != null)
                 chatter.accept(new ChatComponentTranslation(
-                        "structurelib.autoplace.error.no_simple_block",
-                        new ItemStack(itemBlock, 1, itemMeta).func_151000_E()));
+                    "structurelib.autoplace.error.no_simple_block",
+                    new ItemStack(itemBlock, 1, itemMeta).func_151000_E()));
             return PlaceResult.REJECT;
         }
         if (block instanceof ICustomBlockSetting) {
@@ -217,33 +268,33 @@ public class StructureUtility {
 
     /**
      * This is a helper method for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
-     *
+     * <p>
      * This method will try to look up an {@link ItemBlock} for given block and meta from {@code s} and place it at given
      * location.
      * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
      * This method might yield error messages to the player only if there is likely a programming error or exploit.
      *
-     * @param stack   a valid stack with stack size of exactly 1. Must be of an ItemBlock!
-     * @param s       drain resources from this place
-     * @param actor   source of action. cannot be null.
+     * @param stack a valid stack with stack size of exactly 1. Must be of an ItemBlock!
+     * @param s     drain resources from this place
+     * @param actor source of action. cannot be null.
      */
     public static PlaceResult survivalPlaceBlock(
-            ItemStack stack,
-            NBTMode nbtMode,
-            NBTTagCompound tag,
-            boolean assumeStackPresent,
-            World world,
-            int x,
-            int y,
-            int z,
-            IItemSource s,
-            EntityPlayerMP actor) {
+        ItemStack stack,
+        NBTMode nbtMode,
+        NBTTagCompound tag,
+        boolean assumeStackPresent,
+        World world,
+        int x,
+        int y,
+        int z,
+        IItemSource s,
+        EntityPlayerMP actor) {
         return survivalPlaceBlock(stack, nbtMode, tag, assumeStackPresent, world, x, y, z, s, actor, null);
     }
 
     /**
      * This is a helper method for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
-     *
+     * <p>
      * This method will try to look up an {@link ItemBlock} for given block and meta from {@code s} and place it at given
      * location.
      * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
@@ -256,17 +307,17 @@ public class StructureUtility {
      * @param chatter normal error destination. can be null to suppress them.
      */
     public static PlaceResult survivalPlaceBlock(
-            ItemStack stack,
-            NBTMode nbtMode,
-            NBTTagCompound tag,
-            boolean assumeStackPresent,
-            World world,
-            int x,
-            int y,
-            int z,
-            IItemSource s,
-            EntityPlayerMP actor,
-            @Nullable Consumer<IChatComponent> chatter) {
+        ItemStack stack,
+        NBTMode nbtMode,
+        NBTTagCompound tag,
+        boolean assumeStackPresent,
+        World world,
+        int x,
+        int y,
+        int z,
+        IItemSource s,
+        EntityPlayerMP actor,
+        @Nullable Consumer<IChatComponent> chatter) {
         if (stack == null) throw new NullPointerException();
         if (stack.stackSize != 1) throw new IllegalArgumentException();
         if (!(stack.getItem() instanceof ItemBlock)) throw new IllegalArgumentException();
@@ -274,7 +325,7 @@ public class StructureUtility {
         if (!assumeStackPresent && !s.takeOne(stack, true)) {
             if (chatter != null)
                 chatter.accept(new ChatComponentTranslation(
-                        "structurelib.autoplace.error.no_item_stack", stack.func_151000_E()));
+                    "structurelib.autoplace.error.no_item_stack", stack.func_151000_E()));
             return PlaceResult.REJECT;
         }
         if (!stack.copy().tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f))
@@ -394,10 +445,10 @@ public class StructureUtility {
      * @see #ofBlocksTiered(ITierConverter, Object, BiConsumer, Function)
      */
     public static <T, TIER> IStructureElementCheckOnly<T> ofBlocksTiered(
-            ITierConverter<TIER> tierExtractor,
-            @Nullable TIER notSet,
-            BiConsumer<T, TIER> setter,
-            Function<T, TIER> getter) {
+        ITierConverter<TIER> tierExtractor,
+        @Nullable TIER notSet,
+        BiConsumer<T, TIER> setter,
+        Function<T, TIER> getter) {
         if (tierExtractor == null) throw new IllegalArgumentException();
         if (setter == null) throw new IllegalArgumentException();
         if (getter == null) throw new IllegalArgumentException();
@@ -416,7 +467,7 @@ public class StructureUtility {
                         StructureLib.LOGGER.error("#########################################");
                         StructureLib.LOGGER.error("#########################################");
                         StructureLib.LOGGER.error(
-                                "tierExtractor should never return notSet: {}", notSet, new Throwable());
+                            "tierExtractor should never return notSet: {}", notSet, new Throwable());
                         StructureLib.LOGGER.error("#########################################");
                         StructureLib.LOGGER.error("#########################################");
                     }
@@ -487,11 +538,11 @@ public class StructureUtility {
      * @param setter        a function to set the current tier into T
      */
     public static <T, TIER> IStructureElement<T> ofBlocksTiered(
-            ITierConverter<TIER> tierExtractor,
-            @Nullable List<Pair<Block, Integer>> allKnownTiers,
-            @Nullable TIER notSet,
-            BiConsumer<T, TIER> setter,
-            Function<T, TIER> getter) {
+        ITierConverter<TIER> tierExtractor,
+        @Nullable List<Pair<Block, Integer>> allKnownTiers,
+        @Nullable TIER notSet,
+        BiConsumer<T, TIER> setter,
+        Function<T, TIER> getter) {
         List<Pair<Block, Integer>> hints = allKnownTiers == null ? Collections.emptyList() : allKnownTiers;
         if (hints.stream().anyMatch(Objects::isNull)) throw new IllegalArgumentException();
         IStructureElementCheckOnly<T> check = ofBlocksTiered(tierExtractor, notSet, setter, getter);
@@ -528,15 +579,15 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 Pair<Block, Integer> hint = getHint(trigger);
                 if (hint == null) return PlaceResult.REJECT; // TODO or SKIP?
                 Block block = world.getBlock(x, y, z);
@@ -545,7 +596,7 @@ public class StructureUtility {
                 if (Objects.equals(tier, tierExtractor.convert(hint.getKey(), hint.getValue())))
                     return PlaceResult.SKIP;
                 return StructureUtility.survivalPlaceBlock(
-                        hint.getKey(), hint.getValue(), world, x, y, z, s, actor, chatter);
+                    hint.getKey(), hint.getValue(), world, x, y, z, s, actor, chatter);
             }
         };
     }
@@ -573,7 +624,7 @@ public class StructureUtility {
      * Will place block or hint using the given meta if wildcard is true.
      */
     public static <T> IStructureElement<T> ofBlockUnlocalizedName(
-            String modid, String registryName, int meta, boolean wildcard) {
+        String modid, String registryName, int meta, boolean wildcard) {
         if (StringUtils.isBlank(registryName)) throw new IllegalArgumentException();
         if (meta < 0) throw new IllegalArgumentException();
         if (meta > 15) throw new IllegalArgumentException();
@@ -607,15 +658,15 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 if (getBlock() == null) return PlaceResult.REJECT;
                 return StructureUtility.survivalPlaceBlock(getBlock(), meta, world, x, y, z, s, actor, chatter);
@@ -634,7 +685,7 @@ public class StructureUtility {
      * is loaded and the block exists in registry.
      */
     public static <T> IStructureElement<T> ofBlockUnlocalizedName(
-            String modid, String unlocalizedName, int meta, IStructureElement<T> fallback) {
+        String modid, String unlocalizedName, int meta, IStructureElement<T> fallback) {
         if (StringUtils.isBlank(unlocalizedName)) throw new IllegalArgumentException();
         if (meta < 0) throw new IllegalArgumentException();
         if (meta > 15) throw new IllegalArgumentException();
@@ -676,15 +727,15 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 if (init()) return StructureUtility.survivalPlaceBlock(block, meta, world, x, y, z, s, actor, chatter);
                 return fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
@@ -697,13 +748,14 @@ public class StructureUtility {
      * block type we accept only one meta for each.
      * <p>
      * Does not have autoplace.
-     * @param blocsMap Accepted (block, meta) pairs.
+     *
+     * @param blocsMap  Accepted (block, meta) pairs.
      * @param hintBlock hint block to use
-     * @param hintMeta hint meta to use
+     * @param hintMeta  hint meta to use
      * @see #ofBlocksMapHint(Map, Block, int)
      */
     public static <T> IStructureElementNoPlacement<T> ofBlocksFlatHint(
-            Map<Block, Integer> blocsMap, Block hintBlock, int hintMeta) {
+        Map<Block, Integer> blocsMap, Block hintBlock, int hintMeta) {
         if (blocsMap == null || blocsMap.isEmpty() || hintBlock == null) {
             throw new IllegalArgumentException();
         }
@@ -726,13 +778,14 @@ public class StructureUtility {
      * Accept a set of blocks.
      * <p>
      * Does not have autoplace.
-     * @param blocsMap Accepted (block, meta) pairs.
+     *
+     * @param blocsMap  Accepted (block, meta) pairs.
      * @param hintBlock hint block to use
-     * @param hintMeta hint meta to use
+     * @param hintMeta  hint meta to use
      * @see #ofBlocksFlatHint(Map, Block, int)
      */
     public static <T> IStructureElementNoPlacement<T> ofBlocksMapHint(
-            Map<Block, Collection<Integer>> blocsMap, Block hintBlock, int hintMeta) {
+        Map<Block, Collection<Integer>> blocsMap, Block hintBlock, int hintMeta) {
         if (blocsMap == null || blocsMap.isEmpty() || hintBlock == null) {
             throw new IllegalArgumentException();
         }
@@ -746,7 +799,7 @@ public class StructureUtility {
             public boolean check(T t, World world, int x, int y, int z) {
                 Block worldBlock = world.getBlock(x, y, z);
                 return blocsMap.getOrDefault(worldBlock, Collections.emptySet())
-                        .contains(worldBlock.getDamageValue(world, x, y, z));
+                    .contains(worldBlock.getDamageValue(world, x, y, z));
             }
 
             @Override
@@ -761,7 +814,7 @@ public class StructureUtility {
      * Accept one (block, meta). Spawn hint particles using an alternative block and meta. Not very useful...
      */
     public static <T> IStructureElementNoPlacement<T> ofBlockHint(
-            Block block, int meta, Block hintBlock, int hintMeta) {
+        Block block, int meta, Block hintBlock, int hintMeta) {
         if (block == null || hintBlock == null) {
             throw new IllegalArgumentException();
         }
@@ -794,7 +847,7 @@ public class StructureUtility {
      * Useful when your logic is very complex. Does not support autoplace.
      */
     public static <T> IStructureElementNoPlacement<T> ofBlockAdderHint(
-            IBlockAdder<T> iBlockAdder, Block hintBlock, int hintMeta) {
+        IBlockAdder<T> iBlockAdder, Block hintBlock, int hintMeta) {
         if (iBlockAdder == null || hintBlock == null) {
             throw new IllegalArgumentException();
         }
@@ -816,13 +869,14 @@ public class StructureUtility {
     /**
      * Accept a set of blocks. Less cumbersome to use than {@link #ofBlocksMap(Map, Block, int)} when for any accepted
      * block type we accept only one meta for each.
-     * @param blocsMap Accepted (block, meta) pairs.
+     *
+     * @param blocsMap     Accepted (block, meta) pairs.
      * @param defaultBlock default block to place/spawn hint
-     * @param defaultMeta default meta to place/spawn hint
+     * @param defaultMeta  default meta to place/spawn hint
      * @see #ofBlocksMapHint(Map, Block, int)
      */
     public static <T> IStructureElement<T> ofBlocksFlat(
-            Map<Block, Integer> blocsMap, Block defaultBlock, int defaultMeta) {
+        Map<Block, Integer> blocsMap, Block defaultBlock, int defaultMeta) {
         if (blocsMap == null || blocsMap.isEmpty() || defaultBlock == null) {
             throw new IllegalArgumentException();
         }
@@ -848,18 +902,18 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
+                    T t,
+                    World world,
+                    int x,
+                    int y,
+                    int z,
+                    ItemStack trigger,
+                    IItemSource s,
+                    EntityPlayerMP actor,
+                    Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                        defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         } else {
@@ -884,18 +938,18 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
+                    T t,
+                    World world,
+                    int x,
+                    int y,
+                    int z,
+                    ItemStack trigger,
+                    IItemSource s,
+                    EntityPlayerMP actor,
+                    Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                        defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         }
@@ -903,13 +957,14 @@ public class StructureUtility {
 
     /**
      * Accept a set of blocks.
-     * @param blocsMap Accepted (block, meta) pairs.
+     *
+     * @param blocsMap     Accepted (block, meta) pairs.
      * @param defaultBlock default block to place/spawn hint
-     * @param defaultMeta default meta to place/spawn hint
+     * @param defaultMeta  default meta to place/spawn hint
      * @see #ofBlocksMapHint(Map, Block, int)
      */
     public static <T> IStructureElement<T> ofBlocksMap(
-            Map<Block, Collection<Integer>> blocsMap, Block defaultBlock, int defaultMeta) {
+        Map<Block, Collection<Integer>> blocsMap, Block defaultBlock, int defaultMeta) {
         if (blocsMap == null || blocsMap.isEmpty() || defaultBlock == null) {
             throw new IllegalArgumentException();
         }
@@ -924,7 +979,7 @@ public class StructureUtility {
                 public boolean check(T t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
                     return blocsMap.getOrDefault(worldBlock, Collections.emptySet())
-                            .contains(worldBlock.getDamageValue(world, x, y, z));
+                        .contains(worldBlock.getDamageValue(world, x, y, z));
                 }
 
                 @Override
@@ -941,18 +996,18 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
+                    T t,
+                    World world,
+                    int x,
+                    int y,
+                    int z,
+                    ItemStack trigger,
+                    IItemSource s,
+                    EntityPlayerMP actor,
+                    Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                        defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         } else {
@@ -961,7 +1016,7 @@ public class StructureUtility {
                 public boolean check(T t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
                     return blocsMap.getOrDefault(worldBlock, Collections.emptySet())
-                            .contains(worldBlock.getDamageValue(world, x, y, z));
+                        .contains(worldBlock.getDamageValue(world, x, y, z));
                 }
 
                 @Override
@@ -978,18 +1033,18 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
+                    T t,
+                    World world,
+                    int x,
+                    int y,
+                    int z,
+                    ItemStack trigger,
+                    IItemSource s,
+                    EntityPlayerMP actor,
+                    Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                        defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         }
@@ -997,10 +1052,11 @@ public class StructureUtility {
 
     /**
      * Accept a block. Spawn hint/autoplace using another.
-     * @param block accepted block
-     * @param meta accepted meta
+     *
+     * @param block        accepted block
+     * @param meta         accepted meta
      * @param defaultBlock hint block
-     * @param defaultMeta hint meta
+     * @param defaultMeta  hint meta
      */
     public static <T> IStructureElement<T> ofBlock(Block block, int meta, Block defaultBlock, int defaultMeta) {
         if (block == null || defaultBlock == null) {
@@ -1028,18 +1084,18 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
+                    T t,
+                    World world,
+                    int x,
+                    int y,
+                    int z,
+                    ItemStack trigger,
+                    IItemSource s,
+                    EntityPlayerMP actor,
+                    Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                        defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         } else {
@@ -1064,18 +1120,18 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
+                    T t,
+                    World world,
+                    int x,
+                    int y,
+                    int z,
+                    ItemStack trigger,
+                    IItemSource s,
+                    EntityPlayerMP actor,
+                    Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                        defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         }
@@ -1109,18 +1165,18 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
+                    T t,
+                    World world,
+                    int x,
+                    int y,
+                    int z,
+                    ItemStack trigger,
+                    IItemSource s,
+                    EntityPlayerMP actor,
+                    Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                        defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         } else {
@@ -1144,18 +1200,18 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
+                    T t,
+                    World world,
+                    int x,
+                    int y,
+                    int z,
+                    ItemStack trigger,
+                    IItemSource s,
+                    EntityPlayerMP actor,
+                    Consumer<IChatComponent> chatter) {
                     if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                        defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         }
@@ -1192,7 +1248,7 @@ public class StructureUtility {
      * Useful when your logic is very complex.
      */
     public static <T> IStructureElement<T> ofBlockAdder(
-            IBlockAdder<T> iBlockAdder, Block defaultBlock, int defaultMeta) {
+        IBlockAdder<T> iBlockAdder, Block defaultBlock, int defaultMeta) {
         if (iBlockAdder == null || defaultBlock == null) {
             throw new IllegalArgumentException();
         }
@@ -1218,19 +1274,19 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
+                    T t,
+                    World world,
+                    int x,
+                    int y,
+                    int z,
+                    ItemStack trigger,
+                    IItemSource s,
+                    EntityPlayerMP actor,
+                    Consumer<IChatComponent> chatter) {
                     if (world.getBlock(x, y, z) == defaultBlock && world.getBlockMetadata(x, y, z) == defaultMeta)
                         return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                        defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         } else {
@@ -1255,19 +1311,19 @@ public class StructureUtility {
 
                 @Override
                 public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
+                    T t,
+                    World world,
+                    int x,
+                    int y,
+                    int z,
+                    ItemStack trigger,
+                    IItemSource s,
+                    EntityPlayerMP actor,
+                    Consumer<IChatComponent> chatter) {
                     if (world.getBlock(x, y, z) == defaultBlock && world.getBlockMetadata(x, y, z) == defaultMeta)
                         return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                        defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
                 }
             };
         }
@@ -1282,7 +1338,7 @@ public class StructureUtility {
      * locations without tile entity.
      */
     public static <T> IStructureElementNoPlacement<T> ofTileAdder(
-            ITileAdder<T> iTileAdder, Block hintBlock, int hintMeta) {
+        ITileAdder<T> iTileAdder, Block hintBlock, int hintMeta) {
         if (iTileAdder == null || hintBlock == null) {
             throw new IllegalArgumentException();
         }
@@ -1307,7 +1363,7 @@ public class StructureUtility {
      * locations without a tile entity.
      */
     public static <T, E> IStructureElementNoPlacement<T> ofSpecificTileAdder(
-            BiPredicate<T, E> iTileAdder, Class<E> tileClass, Block hintBlock, int hintMeta) {
+        BiPredicate<T, E> iTileAdder, Class<E> tileClass, Block hintBlock, int hintMeta) {
         if (iTileAdder == null || hintBlock == null || tileClass == null) {
             throw new IllegalArgumentException();
         }
@@ -1335,11 +1391,12 @@ public class StructureUtility {
 
     /**
      * Call a callback if downstream element returned true in check.
+     *
      * @param onCheckPass side effect
-     * @param element downstream
+     * @param element     downstream
      */
     public static <B extends IStructureElement<T>, T> IStructureElement<T> onElementPass(
-            Consumer<T> onCheckPass, B element) {
+        Consumer<T> onCheckPass, B element) {
         return new IStructureElement<T>() {
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -1362,15 +1419,15 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
@@ -1378,11 +1435,12 @@ public class StructureUtility {
 
     /**
      * Call a callback if downstream element returned false in check.
-     * @param onFail side effect
+     *
+     * @param onFail  side effect
      * @param element downstream
      */
     public static <B extends IStructureElement<T>, T> IStructureElement<T> onElementFail(
-            Consumer<T> onFail, B element) {
+        Consumer<T> onFail, B element) {
         return new IStructureElement<T>() {
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -1405,15 +1463,15 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
@@ -1427,18 +1485,19 @@ public class StructureUtility {
      * Return SKIP when survival auto place if given predicate returns false.
      */
     public static <T> IStructureElement<T> onlyIf(
-            Predicate<? super T> predicate, IStructureElement<? super T> downstream) {
+        Predicate<? super T> predicate, IStructureElement<? super T> downstream) {
         return onlyIf(predicate, downstream, PlaceResult.SKIP);
     }
 
     /**
      * Enable this structure element only if given predicate returns true.
+     *
      * @param placeResultWhenDisabled value to return for survival auto place when predicate returns false
      */
     public static <T> IStructureElement<T> onlyIf(
-            Predicate<? super T> predicate,
-            IStructureElement<? super T> downstream,
-            PlaceResult placeResultWhenDisabled) {
+        Predicate<? super T> predicate,
+        IStructureElement<? super T> downstream,
+        PlaceResult placeResultWhenDisabled) {
         return new IStructureElement<T>() {
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -1457,15 +1516,15 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 if (predicate.test(t))
                     return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
                 return placeResultWhenDisabled;
@@ -1508,6 +1567,7 @@ public class StructureUtility {
      * This allows you to compose different {@link IStructureElement} to form a <b>OR</b> chain.
      * <p>
      * Practically no difference with the other overload.
+     *
      * @see #ofChain(IStructureElement[])
      */
     @SuppressWarnings("unchecked")
@@ -1519,12 +1579,13 @@ public class StructureUtility {
 
     /**
      * Switch to the extended context object in the downstream element
-     * @param elem downstream element
+     *
+     * @param elem  downstream element
      * @param <CTX> extended context type
-     * @param <T> existing context object type
+     * @param <T>   existing context object type
      */
     public static <CTX, T extends IWithExtendedContext<CTX>> IStructureElement<T> withContext(
-            IStructureElement<CTX> elem) {
+        IStructureElement<CTX> elem) {
         return new IStructureElement<T>() {
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -1543,15 +1604,15 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return elem.survivalPlaceBlock(t.getCurrentContext(), world, x, y, z, trigger, s, actor, chatter);
             }
         };
@@ -1600,6 +1661,7 @@ public class StructureUtility {
      * change some parameter, while basically remain the same shape.
      * Using this while {@link #lazy(Supplier)} is enough will not break anything, but would incur unnecessary
      * performance overhead.
+     *
      * @param to downstream element supplier
      */
     public static <T> IStructureElementDeferred<T> defer(Supplier<IStructureElement<T>> to) {
@@ -1624,15 +1686,15 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return to.get().survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
@@ -1646,6 +1708,7 @@ public class StructureUtility {
      * change some parameter, while basically remain the same shape.
      * Using this while {@link #lazy(Supplier)} is enough will not break anything, but would incur unnecessary
      * performance overhead.
+     *
      * @param to downstream element supplier
      */
     public static <T> IStructureElementDeferred<T> defer(Function<T, IStructureElement<T>> to) {
@@ -1670,15 +1733,15 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return to.apply(t).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
@@ -1691,12 +1754,12 @@ public class StructureUtility {
      * to use.
      *
      * @param keyExtractor extract a key from the context object
-     * @param map all possible structure element
+     * @param map          all possible structure element
      * @deprecated renamed to partitionBy
      */
     @Deprecated
     public static <T, K> IStructureElementDeferred<T> defer(
-            Function<T, K> keyExtractor, Map<K, IStructureElement<T>> map) {
+        Function<T, K> keyExtractor, Map<K, IStructureElement<T>> map) {
         return partitionBy(keyExtractor, map);
     }
 
@@ -1711,10 +1774,10 @@ public class StructureUtility {
      * and how they consider null key/values. Guava ImmutableMap is usually a good enough choice.
      *
      * @param keyExtractor extract a key from the context object
-     * @param map all possible structure element
+     * @param map          all possible structure element
      */
     public static <T, K> IStructureElementDeferred<T> partitionBy(
-            Function<T, K> keyExtractor, Map<K, IStructureElement<T>> map) {
+        Function<T, K> keyExtractor, Map<K, IStructureElement<T>> map) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
@@ -1736,15 +1799,15 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return map.get(keyExtractor.apply(t)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
@@ -1761,11 +1824,32 @@ public class StructureUtility {
      * and how they consider null key/values. Guava ImmutableMap is usually a good enough choice.
      *
      * @param keyExtractor extract a key from the context object
-     * @param map all possible structure element
-     * @param defaultElem element to use when keyExtractor returns a value not found in given map
+     * @param map          all possible structure element
+     * @param defaultElem  element to use when keyExtractor returns a value not found in given map
+     * @deprecated renamed to partitionBy
      */
+    @Deprecated
     public static <T, K> IStructureElementDeferred<T> defer(
-            Function<T, K> keyExtractor, Map<K, IStructureElement<T>> map, IStructureElement<T> defaultElem) {
+        Function<T, K> keyExtractor, Map<K, IStructureElement<T>> map, IStructureElement<T> defaultElem) {
+        return partitionBy(keyExtractor, map, defaultElem);
+    }
+
+    /**
+     * This is the switch block for structure code, with default case support.
+     * <p>
+     * This allows you to extract or compute a key from context object, and lookup a map for actual structure element
+     * to use. The fallback will only be used when keyExtractor returns a value not found in given map. This will play
+     * nicely in combination with {@link #error()}
+     * <p>
+     * Do pay attention to what properties your map has though. You need to pay attention to how they consider equality
+     * and how they consider null key/values. Guava ImmutableMap is usually a good enough choice.
+     *
+     * @param keyExtractor extract a key from the context object
+     * @param map          all possible structure element
+     * @param defaultElem  element to use when keyExtractor returns a value not found in given map
+     */
+    public static <T, K> IStructureElementDeferred<T> partitionBy(
+        Function<T, K> keyExtractor, Map<K, IStructureElement<T>> map, IStructureElement<T> defaultElem) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
@@ -1787,17 +1871,17 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return map.getOrDefault(keyExtractor.apply(t), defaultElem)
-                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+                    .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1812,11 +1896,30 @@ public class StructureUtility {
      * Do pay place null values in the array.
      *
      * @param keyExtractor extract an index from the context object
-     * @param array all possible structure element
+     * @param array        all possible structure element
+     * @deprecated renamed to partitionBy
      */
     @SafeVarargs
     public static <T> IStructureElementDeferred<T> defer(
-            Function<T, Integer> keyExtractor, IStructureElement<T>... array) {
+        Function<T, Integer> keyExtractor, IStructureElement<T>... array) {
+        return partitionBy(keyExtractor, array);
+    }
+
+    /**
+     * This is the switch block for structure code.
+     * <p>
+     * This allows you to extract or compute an index from context object, and lookup an array for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns an index
+     * not within the array bound
+     * <p>
+     * Do pay place null values in the array.
+     *
+     * @param keyExtractor extract an index from the context object
+     * @param array        all possible structure element
+     */
+    @SafeVarargs
+    public static <T> IStructureElementDeferred<T> partitionBy(
+        Function<T, Integer> keyExtractor, IStructureElement<T>... array) {
         if (keyExtractor == null || array == null) {
             throw new IllegalArgumentException();
         }
@@ -1838,15 +1941,15 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return array[keyExtractor.apply(t)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
@@ -1862,11 +1965,30 @@ public class StructureUtility {
      * Do pay place null values in the array.
      *
      * @param keyExtractor extract an index from the context object
-     * @param array all possible structure element
+     * @param array        all possible structure element
+     * @deprecated renamed to partitionBy
      */
     @SuppressWarnings("unchecked")
     public static <T> IStructureElementDeferred<T> defer(
-            Function<T, Integer> keyExtractor, List<IStructureElement<T>> array) {
+        Function<T, Integer> keyExtractor, List<IStructureElement<T>> array) {
+        return partitionBy(keyExtractor, array);
+    }
+
+    /**
+     * This is the switch block for structure code.
+     * <p>
+     * This allows you to extract or compute an index from context object, and lookup an array for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns an index
+     * not within the array bound
+     * <p>
+     * Do pay place null values in the array.
+     *
+     * @param keyExtractor extract an index from the context object
+     * @param array        all possible structure element
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> IStructureElementDeferred<T> partitionBy(
+        Function<T, Integer> keyExtractor, List<IStructureElement<T>> array) {
         return defer(keyExtractor, array.toArray(new IStructureElement[0]));
     }
 
@@ -1905,15 +2027,15 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
@@ -1932,10 +2054,32 @@ public class StructureUtility {
      * This variant also passes the trigger item to the function, allowing it to get more info.
      *
      * @param keyExtractor extract a key from the context object and trigger item
-     * @param map all possible structure element
+     * @param map          all possible structure element
+     * @deprecated renamed to partitionBy
      */
+    @Deprecated
     public static <T, K> IStructureElementDeferred<T> defer(
-            BiFunction<T, ItemStack, K> keyExtractor, Map<K, IStructureElement<T>> map) {
+        BiFunction<T, ItemStack, K> keyExtractor, Map<K, IStructureElement<T>> map) {
+        return partitionBy(keyExtractor, map);
+    }
+
+    /**
+     * This is the switch block for structure code.
+     * <p>
+     * This allows you to extract or compute a key from context object, and lookup a map for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns a key
+     * not found in map.
+     * <p>
+     * Do pay attention to what properties your map has though. You need to pay attention to how they consider equality
+     * and how they consider null key/values. Guava ImmutableMap is usually a good enough choice.
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     *
+     * @param keyExtractor extract a key from the context object and trigger item
+     * @param map          all possible structure element
+     */
+    public static <T, K> IStructureElementDeferred<T> partitionBy(
+        BiFunction<T, ItemStack, K> keyExtractor, Map<K, IStructureElement<T>> map) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
@@ -1957,17 +2101,17 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return map.get(keyExtractor.apply(t, trigger))
-                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+                    .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -1985,13 +2129,38 @@ public class StructureUtility {
      * This variant also passes the trigger item to the function, allowing it to get more info.
      *
      * @param keyExtractor extract a key from the context object and trigger item
-     * @param map all possible structure element
-     * @param defaultElem element to use when keyExtractor returns a value not found in given map
+     * @param map          all possible structure element
+     * @param defaultElem  element to use when keyExtractor returns a value not found in given map
+     * @deprecated renamed to partitionBy
      */
+    @Deprecated
     public static <T, K> IStructureElementDeferred<T> defer(
-            BiFunction<T, ItemStack, K> keyExtractor,
-            Map<K, IStructureElement<T>> map,
-            IStructureElement<T> defaultElem) {
+        BiFunction<T, ItemStack, K> keyExtractor,
+        Map<K, IStructureElement<T>> map,
+        IStructureElement<T> defaultElem) {
+        return partitionBy(keyExtractor, map, defaultElem);
+    }
+
+    /**
+     * This is the switch block for structure code, with default case support.
+     * <p>
+     * This allows you to extract or compute a key from context object, and lookup a map for actual structure element
+     * to use. The fallback will only be used when keyExtractor returns a value not found in given map. This will play
+     * nicely in combination with {@link #error()}
+     * <p>
+     * Do pay attention to what properties your map has though. You need to pay attention to how they consider equality
+     * and how they consider null key/values. Guava ImmutableMap is usually a good enough choice.
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     *
+     * @param keyExtractor extract a key from the context object and trigger item
+     * @param map          all possible structure element
+     * @param defaultElem  element to use when keyExtractor returns a value not found in given map
+     */
+    public static <T, K> IStructureElementDeferred<T> partitionBy(
+        BiFunction<T, ItemStack, K> keyExtractor,
+        Map<K, IStructureElement<T>> map,
+        IStructureElement<T> defaultElem) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
@@ -1999,34 +2168,34 @@ public class StructureUtility {
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
                 return map.getOrDefault(keyExtractor.apply(t, null), defaultElem)
-                        .check(t, world, x, y, z);
+                    .check(t, world, x, y, z);
             }
 
             @Override
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .placeBlock(t, world, x, y, z, trigger);
+                    .placeBlock(t, world, x, y, z, trigger);
             }
 
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .spawnHint(t, world, x, y, z, trigger);
+                    .spawnHint(t, world, x, y, z, trigger);
             }
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+                    .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -2043,11 +2212,11 @@ public class StructureUtility {
      * This variant also passes the trigger item to the function, allowing it to get more info.
      *
      * @param keyExtractor extract a key from the context object and trigger item
-     * @param array all possible structure element
+     * @param array        all possible structure element
      */
     @SafeVarargs
     public static <T> IStructureElementDeferred<T> defer(
-            BiFunction<T, ItemStack, Integer> keyExtractor, IStructureElement<T>... array) {
+        BiFunction<T, ItemStack, Integer> keyExtractor, IStructureElement<T>... array) {
         if (keyExtractor == null || array == null) {
             throw new IllegalArgumentException();
         }
@@ -2069,17 +2238,17 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(
-                        t, world, x, y, z, trigger, s, actor, chatter);
+                    t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -2096,11 +2265,11 @@ public class StructureUtility {
      * This variant also passes the trigger item to the function, allowing it to get more info.
      *
      * @param keyExtractor extract a key from the context object and trigger item
-     * @param array all possible structure element
+     * @param array        all possible structure element
      */
     @SuppressWarnings("unchecked")
     public static <T> IStructureElementDeferred<T> defer(
-            BiFunction<T, ItemStack, Integer> keyExtractor, List<IStructureElement<T>> array) {
+        BiFunction<T, ItemStack, Integer> keyExtractor, List<IStructureElement<T>> array) {
         return defer(keyExtractor, array.toArray(new IStructureElement[0]));
     }
 
@@ -2117,10 +2286,10 @@ public class StructureUtility {
      * from the structure element from first function.
      *
      * @param toCheck override the check function with the returned element
-     * @param to create structure element from the context object passed in
+     * @param to      create structure element from the context object passed in
      */
     public static <T> IStructureElementDeferred<T> defer(
-            Function<T, IStructureElement<T>> toCheck, BiFunction<T, ItemStack, IStructureElement<T>> to) {
+        Function<T, IStructureElement<T>> toCheck, BiFunction<T, ItemStack, IStructureElement<T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
         }
@@ -2142,15 +2311,15 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
@@ -2172,13 +2341,41 @@ public class StructureUtility {
      * from the structure element from first function.
      *
      * @param keyExtractorCheck key extractor of the structure element that will be used for check.
-     * @param keyExtractor extract a key from the context object and trigger item
-     * @param map all possible structure element
+     * @param keyExtractor      extract a key from the context object and trigger item
+     * @param map               all possible structure element
+     * @deprecated renamed to partitionBy
      */
+    @Deprecated
     public static <T, K> IStructureElementDeferred<T> defer(
-            Function<T, K> keyExtractorCheck,
-            BiFunction<T, ItemStack, K> keyExtractor,
-            Map<K, IStructureElement<T>> map) {
+        Function<T, K> keyExtractorCheck,
+        BiFunction<T, ItemStack, K> keyExtractor,
+        Map<K, IStructureElement<T>> map) {
+        return partitionBy(keyExtractorCheck, keyExtractor, map);
+    }
+
+    /**
+     * This is the switch block for structure code.
+     * <p>
+     * This allows you to extract or compute a key from context object, and lookup a map for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns a key
+     * not found in map.
+     * <p>
+     * Do pay attention to what properties your map has though. You need to pay attention to how they consider equality
+     * and how they consider null key/values. Guava ImmutableMap is usually a good enough choice.
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     * <p>
+     * This variant will override the check function of the structure element from second function with the one returned
+     * from the structure element from first function.
+     *
+     * @param keyExtractorCheck key extractor of the structure element that will be used for check.
+     * @param keyExtractor      extract a key from the context object and trigger item
+     * @param map               all possible structure element
+     */
+    public static <T, K> IStructureElementDeferred<T> partitionBy(
+        Function<T, K> keyExtractorCheck,
+        BiFunction<T, ItemStack, K> keyExtractor,
+        Map<K, IStructureElement<T>> map) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
@@ -2200,17 +2397,17 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return map.get(keyExtractor.apply(t, trigger))
-                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+                    .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -2230,14 +2427,42 @@ public class StructureUtility {
      * from the structure element from first function.
      *
      * @param keyExtractorCheck key extractor of the structure element that will be used for check.
-     * @param keyExtractor extract a key from the context object and trigger item
-     * @param map all possible structure element
+     * @param keyExtractor      extract a key from the context object and trigger item
+     * @param map               all possible structure element
+     * @deprecated renamed to partitionBy
      */
+    @Deprecated
     public static <T, K> IStructureElementDeferred<T> defer(
-            Function<T, K> keyExtractorCheck,
-            BiFunction<T, ItemStack, K> keyExtractor,
-            Map<K, IStructureElement<T>> map,
-            IStructureElement<T> defaultElem) {
+        Function<T, K> keyExtractorCheck,
+        BiFunction<T, ItemStack, K> keyExtractor,
+        Map<K, IStructureElement<T>> map,
+        IStructureElement<T> defaultElem) {
+        return partitionBy(keyExtractorCheck, keyExtractor, map, defaultElem);
+    }
+
+    /**
+     * This is the switch block for structure code, with default case.
+     * <p>
+     * This allows you to extract or compute a key from context object, and lookup a map for actual structure element
+     * to use. defaultElem will be used if either extractor returned a key not found in map.
+     * <p>
+     * Do pay attention to what properties your map has though. You need to pay attention to how they consider equality
+     * and how they consider null key/values. Guava ImmutableMap is usually a good enough choice.
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     * <p>
+     * This variant will override the check function of the structure element from second function with the one returned
+     * from the structure element from first function.
+     *
+     * @param keyExtractorCheck key extractor of the structure element that will be used for check.
+     * @param keyExtractor      extract a key from the context object and trigger item
+     * @param map               all possible structure element
+     */
+    public static <T, K> IStructureElementDeferred<T> partitionBy(
+        Function<T, K> keyExtractorCheck,
+        BiFunction<T, ItemStack, K> keyExtractor,
+        Map<K, IStructureElement<T>> map,
+        IStructureElement<T> defaultElem) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
@@ -2250,28 +2475,28 @@ public class StructureUtility {
             @Override
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .placeBlock(t, world, x, y, z, trigger);
+                    .placeBlock(t, world, x, y, z, trigger);
             }
 
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .spawnHint(t, world, x, y, z, trigger);
+                    .spawnHint(t, world, x, y, z, trigger);
             }
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+                    .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -2291,14 +2516,41 @@ public class StructureUtility {
      * from the structure element from first function.
      *
      * @param keyExtractorCheck key extractor of the structure element that will be used for check.
-     * @param keyExtractor extract a key from the context object and trigger item
-     * @param array all possible structure element
+     * @param keyExtractor      extract a key from the context object and trigger item
+     * @param array             all possible structure element
+     * @deprecated renamed to partitionBy
      */
     @SafeVarargs
     public static <T> IStructureElementDeferred<T> defer(
-            Function<T, Integer> keyExtractorCheck,
-            BiFunction<T, ItemStack, Integer> keyExtractor,
-            IStructureElement<T>... array) {
+        Function<T, Integer> keyExtractorCheck,
+        BiFunction<T, ItemStack, Integer> keyExtractor,
+        IStructureElement<T>... array) {
+        return partitionBy(keyExtractorCheck, keyExtractor, array);
+    }
+
+    /**
+     * This is the switch block for structure code, with default case.
+     * <p>
+     * This allows you to extract or compute an index from context object, and lookup an array for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns an index
+     * not within the array bound
+     * <p>
+     * Do pay place null values in the array.
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     * <p>
+     * This variant will override the check function of the structure element from second function with the one returned
+     * from the structure element from first function.
+     *
+     * @param keyExtractorCheck key extractor of the structure element that will be used for check.
+     * @param keyExtractor      extract a key from the context object and trigger item
+     * @param array             all possible structure element
+     */
+    @SafeVarargs
+    public static <T> IStructureElementDeferred<T> partitionBy(
+        Function<T, Integer> keyExtractorCheck,
+        BiFunction<T, ItemStack, Integer> keyExtractor,
+        IStructureElement<T>... array) {
         if (keyExtractor == null || array == null) {
             throw new IllegalArgumentException();
         }
@@ -2320,17 +2572,17 @@ public class StructureUtility {
 
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(
-                        t, world, x, y, z, trigger, s, actor, chatter);
+                    t, world, x, y, z, trigger, s, actor, chatter);
             }
         };
     }
@@ -2348,14 +2600,39 @@ public class StructureUtility {
      * from the structure element from first function.
      *
      * @param keyExtractorCheck key extractor of the structure element that will be used for check.
-     * @param keyExtractor extract a key from the context object and trigger item
-     * @param array all possible structure element
+     * @param keyExtractor      extract a key from the context object and trigger item
+     * @param array             all possible structure element
+     * @deprecated renamed to partitionBy
      */
     @SuppressWarnings("unchecked")
     public static <T> IStructureElementDeferred<T> defer(
-            Function<T, Integer> keyExtractorCheck,
-            BiFunction<T, ItemStack, Integer> keyExtractor,
-            List<IStructureElement<T>> array) {
+        Function<T, Integer> keyExtractorCheck,
+        BiFunction<T, ItemStack, Integer> keyExtractor,
+        List<IStructureElement<T>> array) {
+        return partitionBy(keyExtractorCheck, keyExtractor, array);
+    }
+
+    /**
+     * This is the switch block for structure code, with default case.
+     * <p>
+     * This allows you to extract or compute an index from context object, and lookup an array for actual structure element
+     * to use. This will usually, but not guaranteed, to throw an exception at runtime if keyExtractor returns an index
+     * not within the array bound
+     * <p>
+     * This variant also passes the trigger item to the function, allowing it to get more info.
+     * <p>
+     * This variant will override the check function of the structure element from second function with the one returned
+     * from the structure element from first function.
+     *
+     * @param keyExtractorCheck key extractor of the structure element that will be used for check.
+     * @param keyExtractor      extract a key from the context object and trigger item
+     * @param array             all possible structure element
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> IStructureElementDeferred<T> partitionBy(
+        Function<T, Integer> keyExtractorCheck,
+        BiFunction<T, ItemStack, Integer> keyExtractor,
+        List<IStructureElement<T>> array) {
         return defer(keyExtractorCheck, keyExtractor, array.toArray(new IStructureElement[0]));
     }
 
@@ -2383,7 +2660,7 @@ public class StructureUtility {
 
             private void warnNoExplicitSubChannel(EntityPlayer currentPlayer) {
                 currentPlayer.addChatComponentMessage(
-                        new ChatComponentTranslation("structurelib.autoplace.warning.no_explicit_channel", channel));
+                    new ChatComponentTranslation("structurelib.autoplace.warning.no_explicit_channel", channel));
             }
 
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
@@ -2392,15 +2669,15 @@ public class StructureUtility {
             }
 
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                T t,
+                World world,
+                int x,
+                int y,
+                int z,
+                ItemStack trigger,
+                IItemSource s,
+                EntityPlayerMP actor,
+                Consumer<IChatComponent> chatter) {
                 ItemStack newTrigger = ChannelDataAccessor.withChannel(trigger, channel);
                 if (newTrigger == trigger)
                     // we will bypass the chatter filter here, as this is a warning that player definitively want to see
@@ -2518,54 +2795,54 @@ public class StructureUtility {
      * @param tileEntityClassifier return a string that denote the type of a tile entity, or null if it's nothing special. useful if the tile entity cannot be simply distinguished via getClass.
      */
     public static String getPseudoJavaCode(
-            World world,
-            ExtendedFacing extendedFacing,
-            int basePositionX,
-            int basePositionY,
-            int basePositionZ,
-            int basePositionA,
-            int basePositionB,
-            int basePositionC,
-            Function<? super TileEntity, String> tileEntityClassifier,
-            int sizeA,
-            int sizeB,
-            int sizeC,
-            boolean transpose) {
+        World world,
+        ExtendedFacing extendedFacing,
+        int basePositionX,
+        int basePositionY,
+        int basePositionZ,
+        int basePositionA,
+        int basePositionB,
+        int basePositionC,
+        Function<? super TileEntity, String> tileEntityClassifier,
+        int sizeA,
+        int sizeB,
+        int sizeC,
+        boolean transpose) {
         Map<Block, Set<Integer>> blocks = new TreeMap<>(Comparator.comparing(Block::getUnlocalizedName));
         Set<Class<? extends TileEntity>> tiles = new HashSet<>();
         Set<String> specialTiles = new HashSet<>();
         iterate(
-                world,
-                extendedFacing,
-                basePositionX,
-                basePositionY,
-                basePositionZ,
-                basePositionA,
-                basePositionB,
-                basePositionC,
-                sizeA,
-                sizeB,
-                sizeC,
-                ((w, x, y, z) -> {
-                    TileEntity tileEntity = w.getTileEntity(x, y, z);
-                    if (tileEntity == null) {
-                        Block block = w.getBlock(x, y, z);
-                        if (block != null && block != Blocks.air) {
-                            blocks.compute(block, (b, set) -> {
-                                if (set == null) {
-                                    set = new TreeSet<>();
-                                }
-                                set.add(block.getDamageValue(world, x, y, z));
-                                return set;
-                            });
-                        }
-                    } else {
-                        String classification = tileEntityClassifier.apply(tileEntity);
-                        if (classification == null) {
-                            tiles.add(tileEntity.getClass());
-                        } else specialTiles.add(classification);
+            world,
+            extendedFacing,
+            basePositionX,
+            basePositionY,
+            basePositionZ,
+            basePositionA,
+            basePositionB,
+            basePositionC,
+            sizeA,
+            sizeB,
+            sizeC,
+            ((w, x, y, z) -> {
+                TileEntity tileEntity = w.getTileEntity(x, y, z);
+                if (tileEntity == null) {
+                    Block block = w.getBlock(x, y, z);
+                    if (block != null && block != Blocks.air) {
+                        blocks.compute(block, (b, set) -> {
+                            if (set == null) {
+                                set = new TreeSet<>();
+                            }
+                            set.add(block.getDamageValue(world, x, y, z));
+                            return set;
+                        });
                     }
-                }));
+                } else {
+                    String classification = tileEntityClassifier.apply(tileEntity);
+                    if (classification == null) {
+                        tiles.add(tileEntity.getClass());
+                    } else specialTiles.add(classification);
+                }
+            }));
         Map<String, Character> map = new HashMap<>();
         StringBuilder builder = new StringBuilder();
         {
@@ -2582,11 +2859,11 @@ public class StructureUtility {
                     }
                     map.put(block.getUnlocalizedName() + '\0' + meta, c);
                     builder.append(c)
-                            .append(" -> ofBlock...(")
-                            .append(block.getUnlocalizedName())
-                            .append(", ")
-                            .append(meta)
-                            .append(", ...);\n");
+                        .append(" -> ofBlock...(")
+                        .append(block.getUnlocalizedName())
+                        .append(", ")
+                        .append(meta)
+                        .append(", ...);\n");
                 }
             }
             builder.append("\nTiles:\n");
@@ -2606,96 +2883,96 @@ public class StructureUtility {
                 }
                 map.put(tile, c);
                 builder.append(c)
-                        .append(" -> ofSpecialTileAdder(")
-                        .append(tile)
-                        .append(", ...); // You will probably want to change it to something else\n");
+                    .append(" -> ofSpecialTileAdder(")
+                    .append(tile)
+                    .append(", ...); // You will probably want to change it to something else\n");
             }
         }
         builder.append("\nOffsets:\n")
-                .append(basePositionA)
-                .append(' ')
-                .append(basePositionB)
-                .append(' ')
-                .append(basePositionC)
-                .append('\n');
+            .append(basePositionA)
+            .append(' ')
+            .append(basePositionB)
+            .append(' ')
+            .append(basePositionC)
+            .append('\n');
         if (transpose) {
             builder.append("\nTransposed Scan:\n").append("new String[][]{\n").append("    {\"");
             iterate(
-                    world,
-                    extendedFacing,
-                    basePositionX,
-                    basePositionY,
-                    basePositionZ,
-                    basePositionA,
-                    basePositionB,
-                    basePositionC,
-                    true,
-                    sizeA,
-                    sizeB,
-                    sizeC,
-                    ((w, x, y, z) -> {
-                        TileEntity tileEntity = w.getTileEntity(x, y, z);
-                        if (tileEntity == null) {
-                            Block block = w.getBlock(x, y, z);
-                            if (block != null && block != Blocks.air) {
-                                builder.append(map.get(
-                                        block.getUnlocalizedName() + '\0' + block.getDamageValue(world, x, y, z)));
-                            } else {
-                                builder.append(' ');
-                            }
+                world,
+                extendedFacing,
+                basePositionX,
+                basePositionY,
+                basePositionZ,
+                basePositionA,
+                basePositionB,
+                basePositionC,
+                true,
+                sizeA,
+                sizeB,
+                sizeC,
+                ((w, x, y, z) -> {
+                    TileEntity tileEntity = w.getTileEntity(x, y, z);
+                    if (tileEntity == null) {
+                        Block block = w.getBlock(x, y, z);
+                        if (block != null && block != Blocks.air) {
+                            builder.append(map.get(
+                                block.getUnlocalizedName() + '\0' + block.getDamageValue(world, x, y, z)));
                         } else {
-                            String classification = tileEntityClassifier.apply(tileEntity);
-                            if (classification == null) {
-                                classification = tileEntity.getClass().getCanonicalName();
-                            }
-                            builder.append(map.get(classification));
+                            builder.append(' ');
                         }
-                    }),
-                    () -> builder.append("\",\""),
-                    () -> {
-                        builder.setLength(builder.length() - 2);
-                        builder.append("},\n    {\"");
-                    });
+                    } else {
+                        String classification = tileEntityClassifier.apply(tileEntity);
+                        if (classification == null) {
+                            classification = tileEntity.getClass().getCanonicalName();
+                        }
+                        builder.append(map.get(classification));
+                    }
+                }),
+                () -> builder.append("\",\""),
+                () -> {
+                    builder.setLength(builder.length() - 2);
+                    builder.append("},\n    {\"");
+                });
             builder.setLength(builder.length() - 8);
             builder.append("\n}\n\n");
         } else {
             builder.append("\nNormal Scan:\n").append("new String[][]{{\n").append("    \"");
             iterate(
-                    world,
-                    extendedFacing,
-                    basePositionX,
-                    basePositionY,
-                    basePositionZ,
-                    basePositionA,
-                    basePositionB,
-                    basePositionC,
-                    false,
-                    sizeA,
-                    sizeB,
-                    sizeC,
-                    ((w, x, y, z) -> {
-                        TileEntity tileEntity = w.getTileEntity(x, y, z);
-                        if (tileEntity == null) {
-                            Block block = w.getBlock(x, y, z);
-                            if (block != null && block != Blocks.air) {
-                                builder.append(map.get(
-                                        block.getUnlocalizedName() + '\0' + block.getDamageValue(world, x, y, z)));
-                            } else {
-                                builder.append(' ');
-                            }
+                world,
+                extendedFacing,
+                basePositionX,
+                basePositionY,
+                basePositionZ,
+                basePositionA,
+                basePositionB,
+                basePositionC,
+                false,
+                sizeA,
+                sizeB,
+                sizeC,
+                ((w, x, y, z) -> {
+                    TileEntity tileEntity = w.getTileEntity(x, y, z);
+                    if (tileEntity == null) {
+                        Block block = w.getBlock(x, y, z);
+                        if (block != null && block != Blocks.air) {
+                            builder.append(map.get(
+                                block.getUnlocalizedName() + '\0' + block.getDamageValue(world, x, y, z)));
                         } else {
-                            String classification = tileEntityClassifier.apply(tileEntity);
-                            if (classification == null) {
-                                classification = tileEntity.getClass().getCanonicalName();
-                            }
-                            builder.append(map.get(classification));
+                            builder.append(' ');
                         }
-                    }),
-                    () -> builder.append("\",\n").append("    \""),
-                    () -> {
-                        builder.setLength(builder.length() - 7);
-                        builder.append("\n").append("},{\n").append("    \"");
-                    });
+                    } else {
+                        String classification = tileEntityClassifier.apply(tileEntity);
+                        if (classification == null) {
+                            classification = tileEntity.getClass().getCanonicalName();
+                        }
+                        builder.append(map.get(classification));
+                    }
+                }),
+                () -> builder.append("\",\n").append("    \""),
+                () -> {
+                    builder.setLength(builder.length() - 7);
+                    builder.append("\n").append("},{\n").append("    \"");
+                });
             builder.setLength(builder.length() - 8);
             builder.append("}\n\n");
         }
@@ -2703,23 +2980,23 @@ public class StructureUtility {
     }
 
     static <T> boolean iterateV2(
-            IStructureElement<T>[] elements,
-            World world,
-            ExtendedFacing extendedFacing,
-            int basePositionX,
-            int basePositionY,
-            int basePositionZ,
-            int basePositionA,
-            int basePositionB,
-            int basePositionC,
-            IStructureWalker<T> predicate,
-            String iterateType) {
+        IStructureElement<T>[] elements,
+        World world,
+        ExtendedFacing extendedFacing,
+        int basePositionX,
+        int basePositionY,
+        int basePositionZ,
+        int basePositionA,
+        int basePositionB,
+        int basePositionC,
+        IStructureWalker<T> predicate,
+        String iterateType) {
         // change base position to base offset
         basePositionA = -basePositionA;
         basePositionB = -basePositionB;
         basePositionC = -basePositionC;
 
-        int[] abc = new int[] {basePositionA, basePositionB, basePositionC};
+        int[] abc = new int[]{basePositionA, basePositionB, basePositionC};
         int[] xyz = new int[3];
 
         for (IStructureElement<T> element : elements) {
@@ -2735,38 +3012,38 @@ public class StructureUtility {
 
                 if (StructureLibAPI.isDebugEnabled())
                     StructureLib.LOGGER.info(
-                            "Multi [{}, {}, {}] {} step @ {} {}",
-                            basePositionX,
-                            basePositionY,
-                            basePositionZ,
-                            iterateType,
-                            Arrays.toString(xyz),
-                            Arrays.toString(abc));
+                        "Multi [{}, {}, {}] {} step @ {} {}",
+                        basePositionX,
+                        basePositionY,
+                        basePositionZ,
+                        iterateType,
+                        Arrays.toString(xyz),
+                        Arrays.toString(abc));
 
                 if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
                     if (!predicate.visit(element, world, xyz[0], xyz[1], xyz[2])) {
                         if (StructureLibAPI.isDebugEnabled()) {
                             StructureLib.LOGGER.info(
-                                    "Multi [{}, {}, {}] {} stop @ {} {}",
-                                    basePositionX,
-                                    basePositionY,
-                                    basePositionZ,
-                                    iterateType,
-                                    Arrays.toString(xyz),
-                                    Arrays.toString(abc));
-                        }
-                        return false;
-                    }
-                } else {
-                    if (StructureLibAPI.isDebugEnabled()) {
-                        StructureLib.LOGGER.info(
-                                "Multi [{}, {}, {}] {} !blockExists @ {} {}",
+                                "Multi [{}, {}, {}] {} stop @ {} {}",
                                 basePositionX,
                                 basePositionY,
                                 basePositionZ,
                                 iterateType,
                                 Arrays.toString(xyz),
                                 Arrays.toString(abc));
+                        }
+                        return false;
+                    }
+                } else {
+                    if (StructureLibAPI.isDebugEnabled()) {
+                        StructureLib.LOGGER.info(
+                            "Multi [{}, {}, {}] {} !blockExists @ {} {}",
+                            basePositionX,
+                            basePositionY,
+                            basePositionZ,
+                            iterateType,
+                            Arrays.toString(xyz),
+                            Arrays.toString(abc));
                     }
                     if (!predicate.blockNotLoaded(element, world, xyz[0], xyz[1], xyz[2])) return false;
                 }
@@ -2777,18 +3054,18 @@ public class StructureUtility {
     }
 
     public static void iterate(
-            World world,
-            ExtendedFacing extendedFacing,
-            int basePositionX,
-            int basePositionY,
-            int basePositionZ,
-            int basePositionA,
-            int basePositionB,
-            int basePositionC,
-            int sizeA,
-            int sizeB,
-            int sizeC,
-            IBlockPosConsumer iBlockPosConsumer) {
+        World world,
+        ExtendedFacing extendedFacing,
+        int basePositionX,
+        int basePositionY,
+        int basePositionZ,
+        int basePositionA,
+        int basePositionB,
+        int basePositionC,
+        int sizeA,
+        int sizeB,
+        int sizeC,
+        IBlockPosConsumer iBlockPosConsumer) {
         sizeA -= basePositionA;
         sizeB -= basePositionB;
         sizeC -= basePositionC;
@@ -2801,28 +3078,28 @@ public class StructureUtility {
                 for (abc[0] = -basePositionA; abc[0] < sizeA; abc[0]++) {
                     extendedFacing.getWorldOffset(abc, xyz);
                     iBlockPosConsumer.consume(
-                            world, xyz[0] + basePositionX, xyz[1] + basePositionY, xyz[2] + basePositionZ);
+                        world, xyz[0] + basePositionX, xyz[1] + basePositionY, xyz[2] + basePositionZ);
                 }
             }
         }
     }
 
     public static void iterate(
-            World world,
-            ExtendedFacing extendedFacing,
-            int basePositionX,
-            int basePositionY,
-            int basePositionZ,
-            int basePositionA,
-            int basePositionB,
-            int basePositionC,
-            boolean transpose,
-            int sizeA,
-            int sizeB,
-            int sizeC,
-            IBlockPosConsumer iBlockPosConsumer,
-            Runnable nextB,
-            Runnable nextC) {
+        World world,
+        ExtendedFacing extendedFacing,
+        int basePositionX,
+        int basePositionY,
+        int basePositionZ,
+        int basePositionA,
+        int basePositionB,
+        int basePositionC,
+        boolean transpose,
+        int sizeA,
+        int sizeB,
+        int sizeC,
+        IBlockPosConsumer iBlockPosConsumer,
+        Runnable nextB,
+        Runnable nextC) {
         sizeA -= basePositionA;
         sizeB -= basePositionB;
         sizeC -= basePositionC;
@@ -2835,7 +3112,7 @@ public class StructureUtility {
                     for (abc[0] = -basePositionA; abc[0] < sizeA; abc[0]++) {
                         extendedFacing.getWorldOffset(abc, xyz);
                         iBlockPosConsumer.consume(
-                                world, xyz[0] + basePositionX, xyz[1] + basePositionY, xyz[2] + basePositionZ);
+                            world, xyz[0] + basePositionX, xyz[1] + basePositionY, xyz[2] + basePositionZ);
                     }
                     nextB.run();
                 }
@@ -2847,7 +3124,7 @@ public class StructureUtility {
                     for (abc[0] = -basePositionA; abc[0] < sizeA; abc[0]++) {
                         extendedFacing.getWorldOffset(abc, xyz);
                         iBlockPosConsumer.consume(
-                                world, xyz[0] + basePositionX, xyz[1] + basePositionY, xyz[2] + basePositionZ);
+                            world, xyz[0] + basePositionX, xyz[1] + basePositionY, xyz[2] + basePositionZ);
                     }
                     nextB.run();
                 }
