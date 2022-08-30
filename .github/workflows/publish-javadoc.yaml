@@ -33,7 +33,7 @@ jobs:
         run: ./gradlew --no-daemon spotlessCheck javadoc
 
       - name: Deploy 🚀
-        shell: /bin/bash
+        shell: bash
         run: |
           mv build/docs $RUNNER_TEMP/docs_output
           rm build -rf
