@@ -1,8 +1,8 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import static com.gtnewhorizon.structurelib.StructureLib.DEBUG_MODE;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.*;
 
+import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -130,7 +130,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
 
         public IStructureDefinition<T> build() {
             Map<String, IStructureElement<T>[]> structures = compileStructureMap();
-            if (DEBUG_MODE) {
+            if (StructureLibAPI.isDebugEnabled()) {
                 return new StructureDefinition<>(new HashMap<>(elements), new HashMap<>(shapes), structures);
             } else {
                 return structures::get;
