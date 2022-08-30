@@ -33,7 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
- * A brief index
+ * A brief index of everything contained
  * <h1>Control blocks</h1>
  * A lot of these might seem to make more sense as a default function on {@link IStructureElement}. However, in that
  * case javac generic will often fail to infer the type for you, so we have to define them as static methods
@@ -59,7 +59,8 @@ import org.apache.commons.lang3.tuple.Pair;
  *     <li>{@link #onElementPass(Consumer, IStructureElement)}: Call an callback upon element check success </li>
  *     <li>{@link #onElementFail(Consumer, IStructureElement)}: Call an callback upon element check failure </li>
  * </ul>
- * <h1>Primitives</h1>
+ *
+ * <h1>Other Primitives</h1>
  * <h2>Error statement</h2>
  * Unconditionally return false.
  * <ul>
@@ -80,6 +81,43 @@ import org.apache.commons.lang3.tuple.Pair;
  * or as a fallback to a structure element that is check only.
  * <ul>
  *     <li> {@link #ofHint(int)}, {@link #ofHintDeferred(Supplier)} and its overloads</li>
+ * </ul>
+ *
+ * <h1>Actual Element</h1>
+ * These elements are elements that can actually do structure check, spawn hint and do auto place.
+ * Elements listed in above 2 sections are not going to be helpful without elements like these.
+ * They also serve as a reference implementation for your own custom {@link IStructureElement} implementations.
+ * <h2>Simple Block Element</h2>
+ * These accept one or more different block types in one location.
+ * <ul>
+ *     <li>{@link #ofBlock(Block, int, Block, int)}, {@link #ofBlocksFlat(Map, Block, int)}, {@link #ofBlocksMap(Map, Block, int)}
+ *     and their overloads: the most basic form</li>
+ *     <li>{@link #ofBlockHint(Block, int, Block, int)}, {@link #ofBlocksFlatHint(Map, Block, int)}, {@link #ofBlocksMapHint(Map, Block, int)}:
+ *     these are the same as above, but will not do autoplace</li>
+ *     <li>{@link #isAir()}, {@link #notAir()}: They are supplied by default under the identifier {@code '-'} and {@code '+'}
+ *     respectively, but are provided here regardless in case you want to use them as a fallback.</li>
+ * </ul>
+ * <h2>Complex Block Element</h2>
+ * In case your logic on determining which block is accepted is complex, use these.
+ * <ul>
+ *     <li>{@link #ofBlockAdder(IBlockAdder, Block, int)}, {@link #ofBlockAdderHint(IBlockAdder, Block, int)} and their
+ *     overloads: hands off actual adder logic to an {@link IBlockAdder} you supplied. Save you the boilerplate of querying
+ *     block type and block meta from {@link World}</li>
+ *     <li>{@link #ofBlocksTiered(ITierConverter, Object, BiConsumer, Function)} and its overloads: accept a series of
+ *     blocks that each may have different tier, but only allow one single tier for anywhere this element is used (e.g. coils).</li>
+ *     <li>{@link #ofTileAdder(ITileAdder, Block, int)}, {@link #ofSpecificTileAdder(BiPredicate, Class, Block, int)}:
+ *     Similar to block adder, but for tile entities.</li>
+ * </ul>
+ *
+ * <h1>Helper Methods</h1>
+ * These don't construct a {@link IStructureElement}, but is helpful to the instantiation or implementation of these.
+ * <ul>
+ *     <li>{@link #survivalPlaceBlock(Block, int, World, int, int, int, IItemSource, EntityPlayerMP, Consumer)} and its overloads:
+ *     Helper method to cut common boilerplate for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}</li>
+ *     <li>{@link #getPseudoJavaCode(World, ExtendedFacing, int, int, int, int, int, int, Function, int, int, int, boolean)}:
+ *     Generate a structure code template from existing structure.</li>
+ *     <li>{@link #iterate(World, ExtendedFacing, int, int, int, int, int, int, boolean, int, int, int, IBlockPosConsumer, Runnable, Runnable)}
+ *     and its overloads: help iterate over a coordinate space.</li>
  * </ul>
  */
 public class StructureUtility {

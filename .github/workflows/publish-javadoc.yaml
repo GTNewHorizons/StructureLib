@@ -51,6 +51,8 @@ jobs:
             echo Nothing to deploy
             exit 0
           fi
+          find . -name javadoc -type d -print | sed 's#^\./\(.*\)/javadoc$#\1#' > index.txt
+          git add index.txt
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git commit -m "Deploy javadoc from ref $TARGET_FOLDER"
@@ -60,28 +62,3 @@ jobs:
           TARGET_FOLDER: ${{ github.ref_name }}
           COMMIT_AUTHOR: ${{ github.pusher.name }}
           COMMIT_EMAIL: ${{ github.pusher.email }}
-
-  deploy:
-    concurrency: pages
-    runs-on: ubuntu-latest
-    needs: javadoc
-    if: needs.javadoc.outputs.result_hash != ''
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          ref: ${{ needs.javadoc.outputs.result_hash }}
-      - name: Setup Pages
-        uses: actions/configure-pages@v2
-      - name: Generate Index
-        shell: bash
-        run: |
-          find . -name javadoc -type d -print | sed 's#^\./\(.*\)/javadoc$#\1#' > index.txt
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-        with:
-          # Upload entire repository
-          path: '.'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v1

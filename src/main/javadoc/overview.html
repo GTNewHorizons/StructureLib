@@ -115,15 +115,14 @@ StructureLib API documentation.
 <p>
     Trigger item carries the player's choice of structure tier by its stack size.
     When one multi have multiple tiered component that can have interleaving tier, this becomes an obnoxious
-    restriction, as
-    one ItemStack cannot have two stack sizes at the same time.
+    restriction, as one ItemStack cannot have two stack sizes at the same time.
     Here we use the <i>channels</i> to bypass this restriction.
 </p>
 
 <p>
     Basically, channels are information stored on the trigger item's NBT tags.
     One trigger item can carry multiple channels.
-    Each channel can be identified with lower case strings and has the value being one positive Java int.
+    Each channel can be identified with <b>lower case</b> strings and has the value being one positive Java int.
     There will be one and only one master channel and 0 or more sub channel.
     When a non-existent sub channel is queried, master channel will be used instead to fill its place.
 </p>
@@ -144,6 +143,12 @@ StructureLib API documentation.
     on which channel to use.
     Conceptually, it will return an ItemStack with the master channel being the value of selected channel.
     In implementation, withChannel will return a new ItemStack with same item, nbt but different stack size.
+</p>
+
+<p>
+    It's worth mentioning that the returned new ItemStack will still have all the channel data on it, so a multi-channel
+    structure element can still query the channel it wants just fine. It is however impossible to recover the original
+    master channel.
 </p>
 
 <h3>why is this called channel?</h3>
