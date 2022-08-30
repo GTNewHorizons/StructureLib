@@ -42,6 +42,8 @@ jobs:
           rm -rf $TARGET_FOLDER
           mv $RUNNER_TEMP/docs_output $TARGET_FOLDER -v
           git add $TARGET_FOLDER
+          git config user.name $COMMIT_AUTHOR
+          git config user.email $COMMIT_EMAIL
           git commit -m "Deploy javadoc from ref TARGET_FOLDER"
         env:
           TARGET_FOLDER: ${{ github.ref_name }}
