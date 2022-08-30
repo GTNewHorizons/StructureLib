@@ -514,8 +514,17 @@ public class StructureUtility {
     }
 
     /**
-     * Element representing a component with different tiers. Player can use more blueprint to get hints denoting more
-     * advanced components.
+     * Element representing a component with different tiers. Your multi will accept any of them (as long as
+     * player does not mix them (*)), but would like to know which is used. Player can use more blueprint to get
+     * hints denoting more advanced components.
+     * <p>
+     * (*): Implementation wise, this structure element will only accept a block if its tier is the same as existing tier or
+     * if existing tier is unset (i.e. value of third argument)
+     * <p>
+     * Above all else, you need to decide what tier you are going to use. For simpler cases, Integer is a good choice.
+     * You can also use an existing Enum. Tier can never be null though.
+     * It can also be a String or a {@link net.minecraft.util.ResourceLocation}, or basically anything.
+     * It doesn't even have to implement {@link Comparable}.
      * <p>
      * This assumes you will reset the backing storage, and on the first occurrence getter would return notSet.
      * You can also make getter to return other value to forcefully select a certain tier, but you're probably better
@@ -564,12 +573,16 @@ public class StructureUtility {
      * </pre>
      *
      * @param tierExtractor a function to extract tier info from a block.
-     * @param allKnownTiers All known tiers as of calling. Can be empty or null. No hint will be spawned if empty or null. Cannot have null elements.
+     *                      This function can return null and will never be passed a null block or an invalid block meta.
+     * @param allKnownTiers A list of all known tiers as of calling. Can be empty or null. No hint will be spawned if empty or null. Cannot have null elements.
      *                      First element denotes the most primitive tier. Last element denotes the most advanced tier.
      *                      If not all tiers are available at definition construction time, use {@link #lazy(Supplier)} or its overloads to delay a bit.
+     * This list is only for hint particle spawning and survival build.
+     * The hint/autoplace code will choose 1st pair to spawn/place if trigger item has master channel data of 1,
+     * 2nd pair if 2, and so on.
      * @param notSet        The value returned from {@code getter} when there were no tier info found in T yet. Can be null.
-     * @param getter        a function to retrieve the current tier from T
-     * @param setter        a function to set the current tier into T
+     * @param getter        a function to retrieve the current tier from context object
+     * @param setter        a function to set the current tier into context object
      */
     public static <T, TIER> IStructureElement<T> ofBlocksTiered(
             ITierConverter<TIER> tierExtractor,
