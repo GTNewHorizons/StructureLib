@@ -17,6 +17,8 @@ jobs:
   javadoc:
     concurrency: javadoc-publish
     runs-on: ubuntu-latest
+    outputs:
+      result_hash: ${{ steps.deploy.outputs.hash }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -35,6 +37,7 @@ jobs:
         run: ./gradlew --no-daemon spotlessCheck javadoc
 
       - name: Deploy 🚀
+        id: deploy
         shell: bash
         run: |
           mv build/docs $RUNNER_TEMP/docs_output
@@ -44,15 +47,30 @@ jobs:
           rm -rf $TARGET_FOLDER
           mv $RUNNER_TEMP/docs_output $TARGET_FOLDER -v
           git add $TARGET_FOLDER
+          if git diff --cached --exit-code ; then
+            echo Nothing to deploy
+            exit 0
+          fi
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git commit -m "Deploy javadoc from ref $TARGET_FOLDER"
           git push
+          echo "::set-output hash=$(git rev-parse HEAD)"
         env:
           TARGET_FOLDER: ${{ github.ref_name }}
           COMMIT_AUTHOR: ${{ github.pusher.name }}
           COMMIT_EMAIL: ${{ github.pusher.email }}
 
+  deploy:
+    concurrency: pages
+    runs-on: ubuntu-latest
+    needs: javadoc
+    if: needs.javadoc.outputs.result_hash != ''
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.javadoc.outputs.result_hash }}
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Generate Index
