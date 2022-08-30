@@ -47,7 +47,7 @@ jobs:
           rm -rf $TARGET_FOLDER
           mv $RUNNER_TEMP/docs_output $TARGET_FOLDER -v
           git add $TARGET_FOLDER
-          if git diff --cached --exit-code ; then
+          if git diff --cached --exit-code > /dev/null ; then
             echo Nothing to deploy
             exit 0
           fi
@@ -55,7 +55,7 @@ jobs:
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git commit -m "Deploy javadoc from ref $TARGET_FOLDER"
           git push
-          echo "::set-output hash=$(git rev-parse HEAD)"
+          echo "::set-output name=hash::$(git rev-parse HEAD)"
         env:
           TARGET_FOLDER: ${{ github.ref_name }}
           COMMIT_AUTHOR: ${{ github.pusher.name }}
