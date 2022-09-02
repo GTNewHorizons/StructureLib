@@ -328,7 +328,11 @@ public class ClientProxy extends CommonProxy {
             int brightness = w.blockExists(x, 0, z) ? w.getLightBrightnessForSkyBlocks(x, y, z, 0) : 0;
             tes.setBrightness(brightness);
 
-            tes.setColorRGBA((int) (tint[0] * .9F), (int) (tint[1] * .95F), (int) (tint[2] * 1F), 192);
+            tes.setColorRGBA(
+                    (int) (tint[0] * .9F),
+                    (int) (tint[1] * .95F),
+                    (int) (tint[2] * 1F),
+                    ConfigurationHandler.INSTANCE.getHintTransparency());
 
             for (int i = 0; i < 6; i++) {
                 if (icons[i] == null) continue;
@@ -403,7 +407,8 @@ public class ClientProxy extends CommonProxy {
                 boolean sortRequired = false;
                 // The allGroups is implicitly sorted by creationTime
                 // here we exploit this ordering to reduce iteration size
-                int deadline = Minecraft.getMinecraft().thePlayer.ticksExisted - HOLOGRAM_LIFETIME;
+                int deadline = Minecraft.getMinecraft().thePlayer.ticksExisted
+                        - ConfigurationHandler.INSTANCE.getHintLifespan();
                 int i;
                 for (i = 0; i < allGroups.size(); i++) {
                     if (allGroups.get(i).getCreationTime() > deadline) {

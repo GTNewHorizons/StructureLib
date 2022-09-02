@@ -15,6 +15,8 @@ public enum ConfigurationHandler {
     private Configuration config;
     private int maxCoexistingHologram;
     private boolean removeCollidingHologram;
+    private int hintLifespan;
+    private int hintTransparency;
     private int autoPlaceBudget;
     private int autoPlaceInterval;
 
@@ -52,6 +54,15 @@ public enum ConfigurationHandler {
                 "client.hologram",
                 true,
                 "An attempt will be made to remove an existing hologram if it collides with a new hologram.");
+        hintLifespan =
+                config.getInt("hintLifespan", "client.hologram", 400, 1, 20000, "Ticks before a hologram disappears.");
+        hintTransparency = config.getInt(
+                "hintTransparency",
+                "client.hologram",
+                192,
+                1,
+                255,
+                "Alpha value of hologram particles. Higher the value, the more \"ghostly\" the hologram will appear to be.");
         autoPlaceBudget = config.getInt(
                 "autoPlaceBudget",
                 "common.hologram",
@@ -90,6 +101,14 @@ public enum ConfigurationHandler {
 
     public boolean isRemoveCollidingHologram() {
         return removeCollidingHologram;
+    }
+
+    public int getHintLifespan() {
+        return hintLifespan;
+    }
+
+    public int getHintTransparency() {
+        return hintTransparency;
     }
 
     public int getAutoPlaceBudget() {
