@@ -24,6 +24,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -69,6 +70,10 @@ public class ClientProxy extends CommonProxy {
      * counter keeping track of how many renderThrough hint particle we have. enable optimization if no renderThrough
      */
     private static int renderThrough;
+    /**
+     * A throttle map for local player. Integrated server will use the throttle map in super class instead.
+     */
+    private static final Map<Object, Long> localThrottleMap = new HashMap<>();
 
     @Override
     public void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {
@@ -150,6 +155,19 @@ public class ClientProxy extends CommonProxy {
         hint.setTint(RGBA_RED_TINT);
         hint.setRenderThrough();
         return true;
+    }
+
+    @Override
+    public void addThrottledChat(
+            Object throttleKey,
+            EntityPlayer player,
+            IChatComponent text,
+            short intervalRequired,
+            boolean forceUpdateLastSend) {
+        if (player instanceof EntityPlayerMP)
+            super.addThrottledChat(throttleKey, player, text, intervalRequired, forceUpdateLastSend);
+        else if (player != null)
+            addThrottledChat(throttleKey, player, text, intervalRequired, forceUpdateLastSend, localThrottleMap);
     }
 
     static void removeGroup(HintGroup group) {
@@ -423,10 +441,13 @@ public class ClientProxy extends CommonProxy {
         @SubscribeEvent
         public void onWorldLoad(WorldEvent.Load e) {
             if (e.world.isRemote) {
+                // flush hints. we are in a different world now.
                 allHintsForRender.clear();
                 allGroups.clear();
                 lastPlayerPos.yCoord = -1e30;
                 renderThrough = 0;
+                // clear throttles. hopefully a world switch is enough long as a cool down.
+                localThrottleMap.clear();
             }
         }
 

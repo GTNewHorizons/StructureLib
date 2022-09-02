@@ -13,6 +13,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
@@ -224,5 +225,38 @@ public class StructureLibAPI {
         // TODO extend this function a bit
         Block block = w.getBlock(x, y, z);
         return block.isAir(w, x, y, z) || block.isReplaceable(w, x, y, z);
+    }
+
+    /**
+     * Send chat to player, but throttled.
+     * @param throttleKey throttle key. Must properly implement {@link Object#hashCode()} and {@link Object#equals(Object)}
+     *                    to handle value equality.
+     * @param player        player to send chat to
+     * @param text          chat to send
+     * @param intervalRequired interval required before last recorded time to actually send the message. unit in millisecond.
+     *                         we purposefully chose to not use a bigger data type to limit how long this interval can be
+     */
+    public static void addThrottledChat(
+            Object throttleKey, EntityPlayer player, IChatComponent text, short intervalRequired) {
+        addThrottledChat(throttleKey, player, text, intervalRequired, false);
+    }
+
+    /**
+     * Send chat to player, but throttled.
+     * @param throttleKey throttle key. Must properly implement {@link Object#hashCode()} and {@link Object#equals(Object)}
+     *                    to handle value equality.
+     * @param player        player to send chat to
+     * @param text          chat to send
+     * @param intervalRequired interval required before last recorded time to actually send the message. unit in millisecond.
+     *                         we purposefully chose to not use a bigger data type to limit how long this interval can be
+     * @param forceUpdateLastSend if true, always update the last send time, even if the message isn't actually sent.
+     */
+    public static void addThrottledChat(
+            Object throttleKey,
+            EntityPlayer player,
+            IChatComponent text,
+            short intervalRequired,
+            boolean forceUpdateLastSend) {
+        proxy.addThrottledChat(throttleKey, player, text, intervalRequired, forceUpdateLastSend);
     }
 }

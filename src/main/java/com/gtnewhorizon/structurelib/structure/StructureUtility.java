@@ -2706,12 +2706,18 @@ public class StructureUtility {
             }
 
             private void warnNoExplicitSubChannel(EntityPlayer currentPlayer) {
-                currentPlayer.addChatComponentMessage(
-                        new ChatComponentTranslation("structurelib.autoplace.warning.no_explicit_channel", channel));
+                // throttle this warning a bit.
+                // I'm sure we can finish a check/autoplace round within 100 milliseconds.
+                StructureLibAPI.addThrottledChat(
+                        new ChatThrottleKey.NoExplicitChannel(channel),
+                        currentPlayer,
+                        new ChatComponentTranslation("structurelib.autoplace.warning.no_explicit_channel", channel),
+                        (short) 100);
             }
 
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                 // I hope a CREATIVE player know what he is doing...
+                // no warning for yah
                 return backing.placeBlock(t, world, x, y, z, ChannelDataAccessor.withChannel(trigger, channel));
             }
 
