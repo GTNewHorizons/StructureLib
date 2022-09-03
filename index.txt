@@ -1,3 +1,4 @@
 master
 1.1.8
 feature/doc
+1.1.9
