@@ -41,7 +41,7 @@ structurelib.autoplace.complete=§a这个多方块结构已经完成自动搭建
 structurelib.autoplace.error.not_enabled=§c这个多方块结构不支持在生存模式下自动搭建！
 structurelib.autoplace.error.no_simple_block=§c建议放置 §r%s§c ，但没有找到它
 structurelib.autoplace.error.no_item_stack=§c建议使用 §r%s§c 放置方块，但没有找到它
-structurelib.autoplace.warning.no_explicit_channel=§6这个结构依赖于不存在的子信道 §r%s§6 。请改用主信道。
+structurelib.autoplace.warning.no_explicit_channel=§6这个结构依赖于不存在的子信道 §r%s§6 。已使用主信道值替代。
 
 structurelib.blockhint.desc.0=帮助你搭建机器
 structurelib.blockhint.0.name=提示方块：1号
