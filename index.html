@@ -32,7 +32,7 @@
 
         .framebox, iframe {
             width: 100%;
-            height: calc(100% - 40px);
+            height: 100vh;
             margin: 0;
             padding: 0;
             border: none;
@@ -75,6 +75,7 @@
     (function () {
         const cacheKey = 'structurelib-doc-versions';
         const lastUseKey = 'structurelib-doc-last-use-version';
+
         function reload_versions() {
             document.getElementById('reload-indicator').classList.remove('hidden')
             document.getElementById('use-version').disabled = true
@@ -90,6 +91,7 @@
                 }, reload_versions_fallback)
 
         }
+
         function reload_versions_fallback() {
             fetch("https://api.github.com/repos/GTNewHorizons/StructureLib/git/trees/gh-pages")
                 .then((res) => {
@@ -97,14 +99,15 @@
                         let versions = rawVersions['tree'].filter((e) => e['type'] === 'tree' && e['path'] !== 'feature')
                             .map((e) => e['path'])
                         versions.push('feature/doc')
-                        localStorage.setItem(cacheKey, JSON.stringify(versions))
                         set_versions(versions)
                     })
                 })
         }
+
         function set_versions(versions) {
             let select = document.getElementById('version-select')
             select.textContent = ''
+            localStorage.setItem(cacheKey, JSON.stringify(versions))
             versions.forEach((e) => {
                 let child = document.createElement('option')
                 child.text = e
@@ -115,6 +118,7 @@
                 document.getElementById('refresh-version').disabled = false
             })
         }
+
         function set_version(version) {
             document.getElementById('current-select').value = version
             document.getElementById('frame').src = 'https://gtnewhorizons.github.io/StructureLib/' + version + '/javadoc'
@@ -129,14 +133,29 @@
             set_versions(JSON.parse(versionsJson))
         }
 
-        let lastUse = localStorage.getItem(lastUseKey)
-        console.log('lastUse', lastUse)
-        if (lastUse) {
-            set_version(lastUse)
+        let p = new URLSearchParams(location.search)
+        if (p.has('version')) {
+            let ver = p.get('version')
+            set_version(ver)
+            history.replaceState(ver, '')
+        } else {
+            let lastUse = localStorage.getItem(lastUseKey)
+            console.log('lastUse', lastUse)
+            if (lastUse) {
+                set_version(lastUse)
+                p.set('version', lastUse)
+                history.pushState(lastUse, '', '?' + p)
+            }
         }
 
+        addEventListener('popstate', set_version)
+
         document.getElementById('use-version').onclick = (e) => {
-            set_version(document.getElementById('version-select').value)
+            let version = document.getElementById('version-select').value;
+            set_version(version)
+            let p = new URLSearchParams(location.search)
+            p.set('version', version)
+            history.pushState(version, '', '?' + p)
         }
 
         document.getElementById('refresh-version').onclick = reload_versions
