@@ -324,6 +324,9 @@ public interface IStructureDefinition<T> {
             int basePositionC,
             boolean hintsOnly,
             Boolean checkBlocksIfNotNullForceCheckAllIfTrue) {
+        if (!world.isRemote && hintsOnly) {
+            return false;
+        }
 
         if (checkBlocksIfNotNullForceCheckAllIfTrue != null) {
             boolean success;
