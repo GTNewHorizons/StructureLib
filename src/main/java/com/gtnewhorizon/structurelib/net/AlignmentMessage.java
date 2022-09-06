@@ -45,10 +45,6 @@ public abstract class AlignmentMessage implements IMessage {
         ByteBufUtils.writeTag(pBuffer, tFXTag);
     }
 
-    /**
-     * {@link com.gtnewhorizon.structurelib.structure.IStructureDefinition#check(Object, String, World, ExtendedFacing, int, int, int, int, int, int, boolean)}
-     * @param provider
-     */
     private AlignmentMessage(IAlignmentProvider provider) {
         if (!(provider instanceof TileEntity)) throw new IllegalArgumentException("Provider must be a TileEntity");
         IAlignment alignment = provider.getAlignment();

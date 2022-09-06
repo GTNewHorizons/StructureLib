@@ -42,14 +42,14 @@ public class StructureLib {
     private static final String STRUCTURECOMPAT_MODID = "structurecompat";
     public static boolean DEBUG_MODE;
     public static boolean PANIC_MODE = Boolean.getBoolean("structurelib.panic");
-    public static Logger LOGGER = LogManager.getLogger("StructureLib");
+    public static final Logger LOGGER = LogManager.getLogger("StructureLib");
 
     @SidedProxy(
             serverSide = "com.gtnewhorizon.structurelib.CommonProxy",
             clientSide = "com.gtnewhorizon.structurelib.ClientProxy")
     static CommonProxy proxy;
 
-    static SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel(StructureLibAPI.MOD_ID);
+    static final SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel(StructureLibAPI.MOD_ID);
 
     static {
         net.registerMessage(

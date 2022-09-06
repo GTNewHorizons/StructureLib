@@ -1947,6 +1947,7 @@ public class StructureUtility {
      * @deprecated renamed to partitionBy
      */
     @SafeVarargs
+    @Deprecated
     public static <T> IStructureElementDeferred<T> defer(
             Function<T, Integer> keyExtractor, IStructureElement<T>... array) {
         return partitionBy(keyExtractor, array);
@@ -2015,7 +2016,7 @@ public class StructureUtility {
      * @param array        all possible structure element
      * @deprecated renamed to partitionBy
      */
-    @SuppressWarnings("unchecked")
+    @Deprecated
     public static <T> IStructureElementDeferred<T> defer(
             Function<T, Integer> keyExtractor, List<IStructureElement<T>> array) {
         return partitionBy(keyExtractor, array);
@@ -2036,7 +2037,7 @@ public class StructureUtility {
     @SuppressWarnings("unchecked")
     public static <T> IStructureElementDeferred<T> partitionBy(
             Function<T, Integer> keyExtractor, List<IStructureElement<T>> array) {
-        return defer(keyExtractor, array.toArray(new IStructureElement[0]));
+        return partitionBy(keyExtractor, array.toArray(new IStructureElement[0]));
     }
 
     /**
@@ -2568,6 +2569,7 @@ public class StructureUtility {
      * @deprecated renamed to partitionBy
      */
     @SafeVarargs
+    @Deprecated
     public static <T> IStructureElementDeferred<T> defer(
             Function<T, Integer> keyExtractorCheck,
             BiFunction<T, ItemStack, Integer> keyExtractor,
@@ -2651,7 +2653,7 @@ public class StructureUtility {
      * @param array             all possible structure element
      * @deprecated renamed to partitionBy
      */
-    @SuppressWarnings("unchecked")
+    @Deprecated
     public static <T> IStructureElementDeferred<T> defer(
             Function<T, Integer> keyExtractorCheck,
             BiFunction<T, ItemStack, Integer> keyExtractor,
@@ -2680,7 +2682,7 @@ public class StructureUtility {
             Function<T, Integer> keyExtractorCheck,
             BiFunction<T, ItemStack, Integer> keyExtractor,
             List<IStructureElement<T>> array) {
-        return defer(keyExtractorCheck, keyExtractor, array.toArray(new IStructureElement[0]));
+        return partitionBy(keyExtractorCheck, keyExtractor, array.toArray(new IStructureElement[0]));
     }
 
     // endregion

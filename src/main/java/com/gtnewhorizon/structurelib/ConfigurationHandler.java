@@ -78,7 +78,7 @@ public enum ConfigurationHandler {
                 300,
                 0,
                 20000,
-                "Unit: milisecond. Minimal interval between two auto place round.\n"
+                "Unit: millisecond. Minimal interval between two auto place round.\n"
                         + "As expected, server side settings will overrides client settings.\n"
                         + "Note this relates to the wall clock, not in game ticks.\n"
                         + "Value smaller than default is likely to be perceived as no minimal interval whatsoever.");

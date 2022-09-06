@@ -29,10 +29,10 @@ import org.lwjgl.opengl.GL11;
 public abstract class GuiScrollableList<T> {
     protected final int slotHeight;
     private final Minecraft mc = Minecraft.getMinecraft();
-    protected int originX;
-    protected int originY;
-    protected int width;
-    protected int height;
+    protected final int originX;
+    protected final int originY;
+    protected final int width;
+    protected final int height;
     protected int minY;
     protected int maxY;
     protected int minX;
@@ -41,7 +41,7 @@ public abstract class GuiScrollableList<T> {
     protected int mouseY;
     protected int selectedIndex = -1;
     protected int margin = 4;
-    protected List<ListSelectionListener<T>> listeners = new CopyOnWriteArrayList<>();
+    protected final List<ListSelectionListener<T>> listeners = new CopyOnWriteArrayList<>();
     private int scrollUpButtonID;
     private int scrollDownButtonID;
     private float initialClickY = -2.0F;
@@ -153,11 +153,11 @@ public abstract class GuiScrollableList<T> {
     public void actionPerformed(GuiButton b) {
         if (b.enabled) {
             if (b.id == scrollUpButtonID) {
-                amountScrolled -= slotHeight * 2 / 3;
+                amountScrolled -= slotHeight * 2f / 3;
                 initialClickY = -2.0F;
                 clampScrollToBounds();
             } else if (b.id == scrollDownButtonID) {
-                amountScrolled += slotHeight * 2 / 3;
+                amountScrolled += slotHeight * 2f / 3;
                 initialClickY = -2.0F;
                 clampScrollToBounds();
             }
@@ -325,9 +325,9 @@ public abstract class GuiScrollableList<T> {
     public void handleDWheel(int mouseWheelDelta) {
         if (!Mouse.isButtonDown(0)) {
             if (mouseWheelDelta > 0) {
-                amountScrolled -= slotHeight / 2;
+                amountScrolled -= slotHeight / 2f;
             } else /* if (mouseWheelDelta < 0) */ {
-                amountScrolled += slotHeight / 2;
+                amountScrolled += slotHeight / 2f;
             }
         }
     }

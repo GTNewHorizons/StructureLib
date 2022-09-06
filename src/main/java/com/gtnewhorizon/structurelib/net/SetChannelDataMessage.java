@@ -17,7 +17,7 @@ import net.minecraft.item.ItemStack;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class SetChannelDataMessage implements IMessage {
-    private List<Map.Entry<String, Integer>> data = new ArrayList<>();
+    private final List<Map.Entry<String, Integer>> data = new ArrayList<>();
 
     public SetChannelDataMessage() {}
 

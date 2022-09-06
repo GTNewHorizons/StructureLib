@@ -141,7 +141,7 @@ public interface IStructureDefinition<T> {
     }
 
     /**
-     * Build the multi in creative mode on a best effort basis. Does not guarantee the structure is correct after a
+     * Build the multi in creative mode on a best-effort basis. Does not guarantee the structure is correct after a
      * successful call.
      *
      * @param object context object. usually multiblock controller.
@@ -402,7 +402,6 @@ public interface IStructureDefinition<T> {
 
     /**
      * Create a new instance of builder.
-     * @return
      * @param <T> type of context object
      */
     static <T> StructureDefinition.Builder<T> builder() {

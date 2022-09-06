@@ -122,7 +122,7 @@ public interface IAlignmentLimits {
         }
 
         /**
-         * Prefers rotation over flip, so both flip will get translated to opposite rotation and no flip
+         * Prefers rotation to flip, so both flip will get translated to opposite rotation and no flip
          *
          * @param flip the preferred flip to be used Horizontal or vertical
          * @return this

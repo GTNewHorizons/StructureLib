@@ -56,12 +56,12 @@ public class ItemBlockHint extends ItemBlock {
                                 "structurelib.blockhint.desc.4")); // Make sure it does not contain Air material.
                 break;
             case 15:
-                aList.add(EnumChatFormatting.BLUE.toString()
+                aList.add(EnumChatFormatting.BLUE
                         + translateToLocal("structurelib.blockhint.desc.5")); // ERROR, what did u expect?
                 break;
             default: // WTF?
                 aList.add("Damn son where did you get that!?");
-                aList.add(EnumChatFormatting.BLUE.toString() + "From outer space... I guess...");
+                aList.add(EnumChatFormatting.BLUE + "From outer space... I guess...");
         }
     }
 

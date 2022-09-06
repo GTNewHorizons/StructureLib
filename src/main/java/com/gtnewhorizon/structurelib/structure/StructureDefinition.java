@@ -53,7 +53,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
          * + is anything but air
          * - is air checks
          * space bar is skip
-         * ~ is also skip (but marks controller position, optional and logically it is a space...)
+         * ~ is also skip (but marks controller position, optional. implementation wise it is a space...)
          * rest needs to be defined
          * <p>
          * next char is next block(a)
