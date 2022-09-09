@@ -268,7 +268,11 @@ public class ClientProxy extends CommonProxy {
 
     private static class HintParticleInfo {
         private final World w;
+        // these are the block coordinate for e.g. w.getBlock()
         private final int x, y, z;
+        // these are the lower bounds for rendering. the upper bound would be X + size
+        // currently size is fixed to be 0.5
+        // it is not made into a constants because this will allow for easy changing during debug
         private final double X, Y, Z;
         private final IIcon[] icons;
         private short[] tint;
@@ -319,7 +323,7 @@ public class ClientProxy extends CommonProxy {
         }
 
         public boolean isInFrustrum(Frustrum frustrum) {
-            return frustrum.isBoxInFrustum(x, y, z, X, Y, Z);
+            return frustrum.isBoxInFrustum(X, Y, Z, X + 0.5, Y + 0.5, Z + 0.5);
         }
 
         public void draw(Tessellator tes) {
