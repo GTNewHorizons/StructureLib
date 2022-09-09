@@ -326,7 +326,7 @@ public class ClientProxy extends CommonProxy {
             return frustrum.isBoxInFrustum(X, Y, Z, X + 0.5, Y + 0.5, Z + 0.5);
         }
 
-        public void draw(Tessellator tes) {
+        public void draw(Tessellator tes, double eyeX, double eyeY, double eyeZ) {
             double size = 0.5;
 
             int brightness = w.blockExists(x, 0, z) ? w.getLightBrightnessForSkyBlocks(x, y, z, 0) : 0;
@@ -347,43 +347,63 @@ public class ClientProxy extends CommonProxy {
                 double U = icons[i].getMaxU();
                 double v = icons[i].getMinV();
                 double V = icons[i].getMaxV();
-                switch (i) { // {DOWN, UP, NORTH, SOUTH, WEST, EAST}
-                    case 0:
-                        tes.addVertexWithUV(X, Y, Z + size, u, V);
-                        tes.addVertexWithUV(X, Y, Z, u, v);
-                        tes.addVertexWithUV(X + size, Y, Z, U, v);
-                        tes.addVertexWithUV(X + size, Y, Z + size, U, V);
-                        break;
-                    case 1:
-                        tes.addVertexWithUV(X, Y + size, Z, u, v);
-                        tes.addVertexWithUV(X, Y + size, Z + size, u, V);
-                        tes.addVertexWithUV(X + size, Y + size, Z + size, U, V);
-                        tes.addVertexWithUV(X + size, Y + size, Z, U, v);
-                        break;
-                    case 2:
-                        tes.addVertexWithUV(X, Y, Z, U, V);
-                        tes.addVertexWithUV(X, Y + size, Z, U, v);
-                        tes.addVertexWithUV(X + size, Y + size, Z, u, v);
-                        tes.addVertexWithUV(X + size, Y, Z, u, V);
-                        break;
-                    case 3:
-                        tes.addVertexWithUV(X + size, Y, Z + size, U, V);
-                        tes.addVertexWithUV(X + size, Y + size, Z + size, U, v);
-                        tes.addVertexWithUV(X, Y + size, Z + size, u, v);
-                        tes.addVertexWithUV(X, Y, Z + size, u, V);
-                        break;
-                    case 4:
-                        tes.addVertexWithUV(X, Y, Z + size, U, V);
-                        tes.addVertexWithUV(X, Y + size, Z + size, U, v);
-                        tes.addVertexWithUV(X, Y + size, Z, u, v);
-                        tes.addVertexWithUV(X, Y, Z, u, V);
-                        break;
-                    case 5:
-                        tes.addVertexWithUV(X + size, Y, Z, U, V);
-                        tes.addVertexWithUV(X + size, Y + size, Z, U, v);
-                        tes.addVertexWithUV(X + size, Y + size, Z + size, u, v);
-                        tes.addVertexWithUV(X + size, Y, Z + size, u, V);
-                        break;
+
+                // cube is a very special model. its facings can be rendered correctly by viewer distance without using
+                // surface normals and view vector
+                // here we do a 2 pass render.
+                // first pass we draw obstructed faces (i.e. faces that are further away from player)
+                // second pass we draw unobstructed faces
+                for (int j = 0; j < 2; j++) {
+                    switch (i) { // {DOWN, UP, NORTH, SOUTH, WEST, EAST}
+                        case 0:
+                            if ((Y >= eyeY) != (j == 1)) continue;
+                            tes.setNormal(0, -1, 0);
+                            tes.addVertexWithUV(X, Y, Z + size, u, V);
+                            tes.addVertexWithUV(X, Y, Z, u, v);
+                            tes.addVertexWithUV(X + size, Y, Z, U, v);
+                            tes.addVertexWithUV(X + size, Y, Z + size, U, V);
+                            break;
+                        case 1:
+                            if ((Y + size <= eyeY) != (j == 1)) continue;
+                            tes.setNormal(0, 1, 0);
+                            tes.addVertexWithUV(X, Y + size, Z, u, v);
+                            tes.addVertexWithUV(X, Y + size, Z + size, u, V);
+                            tes.addVertexWithUV(X + size, Y + size, Z + size, U, V);
+                            tes.addVertexWithUV(X + size, Y + size, Z, U, v);
+                            break;
+                        case 2:
+                            if ((Z >= eyeZ) != (j == 1)) continue;
+                            tes.setNormal(0, 0, -1);
+                            tes.addVertexWithUV(X, Y, Z, U, V);
+                            tes.addVertexWithUV(X, Y + size, Z, U, v);
+                            tes.addVertexWithUV(X + size, Y + size, Z, u, v);
+                            tes.addVertexWithUV(X + size, Y, Z, u, V);
+                            break;
+                        case 3:
+                            if ((Z <= eyeZ) != (j == 1)) continue;
+                            tes.setNormal(0, 0, 1);
+                            tes.addVertexWithUV(X + size, Y, Z + size, U, V);
+                            tes.addVertexWithUV(X + size, Y + size, Z + size, U, v);
+                            tes.addVertexWithUV(X, Y + size, Z + size, u, v);
+                            tes.addVertexWithUV(X, Y, Z + size, u, V);
+                            break;
+                        case 4:
+                            if ((X >= eyeX) != (j == 1)) continue;
+                            tes.setNormal(-1, 0, 0);
+                            tes.addVertexWithUV(X, Y, Z + size, U, V);
+                            tes.addVertexWithUV(X, Y + size, Z + size, U, v);
+                            tes.addVertexWithUV(X, Y + size, Z, u, v);
+                            tes.addVertexWithUV(X, Y, Z, u, V);
+                            break;
+                        case 5:
+                            if ((X + size <= eyeX) != (j == 1)) continue;
+                            tes.setNormal(1, 0, 0);
+                            tes.addVertexWithUV(X + size, Y, Z, U, V);
+                            tes.addVertexWithUV(X + size, Y + size, Z, U, v);
+                            tes.addVertexWithUV(X + size, Y + size, Z + size, u, v);
+                            tes.addVertexWithUV(X + size, Y, Z + size, u, V);
+                            break;
+                    }
                 }
             }
         }
@@ -434,12 +454,11 @@ public class ClientProxy extends CommonProxy {
                     for (HintGroup c : allGroups) allHintsForRender.addAll(c.getHints());
                     sortRequired = true;
                 }
-                if (renderThrough > 0 && (sortRequired || playerPos.squareDistanceTo(lastPlayerPos) > 1e-2)) {
-                    // only sort if there is anything that need depth test disabled
+                if (sortRequired || playerPos.squareDistanceTo(lastPlayerPos) > 1e-2) {
                     // only redo sort if player moved some distance
                     // default is 0.1 block
                     // if there was a full rebuild, go sort it as well
-                    allHintsForRender.sort(Comparator.comparingDouble(info -> info.getSquareDistanceTo(playerPos)));
+                    allHintsForRender.sort(Comparator.comparingDouble(info -> -info.getSquareDistanceTo(playerPos)));
                     resetPlayerLocation();
                 }
             }
@@ -485,6 +504,7 @@ public class ClientProxy extends CommonProxy {
             GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT); // TODO figure out original states
             // we need the back facing rendered because the thing is transparent
             GL11.glDisable(GL11.GL_CULL_FACE);
+            GL11.glDisable(GL11.GL_ALPHA_TEST);
             GL11.glEnable(GL11.GL_BLEND); // enable blend so it is transparent
             GL11.glBlendFunc(GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_SRC_ALPHA);
             // depth test begin as enabled
@@ -507,7 +527,8 @@ public class ClientProxy extends CommonProxy {
                     else GL11.glEnable(GL11.GL_DEPTH_TEST);
                     renderThrough = hint.renderThrough;
                 }
-                hint.draw(tes);
+                // TODO verify if we need to add eyeHeight
+                hint.draw(tes, d0, d1, d2);
             }
             p.endStartSection("Draw");
             tes.draw();
