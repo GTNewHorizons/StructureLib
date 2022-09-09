@@ -236,7 +236,8 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
     private void updateButtons() {
         // this will be called from setText of key and value. NEVER UPDATE THE VALUE OF THESE HERE OR GET A
         // STACKOVERFLOW!
-        boolean existing = ChannelDataAccessor.hasSubChannel(trigger, key.getText());
+        String keyText = key.getText();
+        boolean existing = !StringUtils.isEmpty(keyText) && ChannelDataAccessor.hasSubChannel(trigger, keyText);
         getButtonList().get(0).displayString = existing
                 ? I18n.format("item.structurelib.constructableTrigger.gui.set")
                 : I18n.format("item.structurelib.constructableTrigger.gui.add");
