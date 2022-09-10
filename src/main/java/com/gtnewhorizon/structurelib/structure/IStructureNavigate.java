@@ -39,6 +39,12 @@ interface IStructureNavigate<T> extends IStructureElement<T> {
         return PlaceResult.SKIP;
     }
 
+    @Override
+    default PlaceResult survivalPlaceBlock(
+            T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+        return PlaceResult.SKIP;
+    }
+
     default boolean isNavigating() {
         return true;
     }

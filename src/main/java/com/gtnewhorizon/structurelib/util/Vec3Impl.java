@@ -1,13 +1,25 @@
 package com.gtnewhorizon.structurelib.util;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 import net.minecraft.dispenser.IPosition;
 import net.minecraftforge.common.util.ForgeDirection;
 
 public class Vec3Impl implements Comparable<Vec3Impl> {
     public static final Vec3Impl NULL_VECTOR = new Vec3Impl(0, 0, 0);
+    private static final Map<Vec3Impl, Vec3Impl> pool = new HashMap<>();
     private final int val0;
     private final int val1;
     private final int val2;
+
+    /**
+     * THIS WILL CAUSE THIS VECTOR TO PERMANENTLY RESIDE IN STATIC MEMORY. DO NOT USE THIS UNLESS YOU KNOW WHAT YOU ARE
+     * DOING!!!
+     */
+    public static Vec3Impl getFromPool(int in0, int in1, int in2) {
+        return pool.computeIfAbsent(new Vec3Impl(in0, in1, in2), Function.identity());
+    }
 
     public Vec3Impl(int in0, int in1, int in2) {
         this.val0 = in0;

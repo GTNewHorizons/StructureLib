@@ -6,7 +6,7 @@ import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
-import com.gtnewhorizon.structurelib.structure.IItemSource;
+import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
@@ -219,9 +219,20 @@ public class StructureLibAPI {
      * Determines if given block can be replaced without much effort. The exact predicate clauses is not stable and
      * will be changed, but the general idea will always stay the same.
      * <p>
-     * Use this in your {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, java.util.function.Consumer)}
+     * Use this in your {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, AutoPlaceEnvironment)}
      */
+    @Deprecated
     public static boolean isBlockTriviallyReplaceable(World w, int x, int y, int z, EntityPlayerMP actor) {
+        return isBlockTriviallyReplaceable(w, x, y, z, (EntityPlayer) actor);
+    }
+
+    /**
+     * Determines if given block can be replaced without much effort. The exact predicate clauses is not stable and
+     * will be changed, but the general idea will always stay the same.
+     * <p>
+     * Use this in your {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, AutoPlaceEnvironment)}
+     */
+    public static boolean isBlockTriviallyReplaceable(World w, int x, int y, int z, EntityPlayer actor) {
         // TODO extend this function a bit
         Block block = w.getBlock(x, y, z);
         return block.isAir(w, x, y, z) || block.isReplaceable(w, x, y, z);

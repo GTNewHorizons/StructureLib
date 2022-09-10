@@ -1,6 +1,10 @@
 package com.gtnewhorizon.structurelib.alignment.enumerable;
 
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import net.minecraftforge.common.util.ForgeDirection;
 
 public enum Direction {
@@ -14,10 +18,12 @@ public enum Direction {
     private final ForgeDirection forgeDirection;
     private final Vec3Impl axisVector;
     public static final Direction[] VALUES = values();
+    private static final Map<Vec3Impl, Direction> reverseMap =
+            Arrays.stream(VALUES).collect(Collectors.toMap(d -> d.axisVector, Function.identity()));
 
     Direction(ForgeDirection forgeDirection) {
         this.forgeDirection = forgeDirection;
-        axisVector = new Vec3Impl(forgeDirection.offsetX, forgeDirection.offsetY, forgeDirection.offsetZ);
+        axisVector = Vec3Impl.getFromPool(forgeDirection.offsetX, forgeDirection.offsetY, forgeDirection.offsetZ);
     }
 
     public ForgeDirection getForgeDirection() {
@@ -30,5 +36,9 @@ public enum Direction {
 
     public static Vec3Impl getAxisVector(ForgeDirection forgeDirection) {
         return VALUES[forgeDirection.ordinal()].axisVector;
+    }
+
+    public static Direction getByAxisVector(Vec3Impl vec3) {
+        return reverseMap.get(vec3);
     }
 }
