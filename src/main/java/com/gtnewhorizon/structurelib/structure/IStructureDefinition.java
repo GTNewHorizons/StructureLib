@@ -5,8 +5,10 @@ import static com.gtnewhorizon.structurelib.structure.IStructureWalker.skipBlock
 
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import java.util.function.Function;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -54,6 +56,8 @@ public interface IStructureDefinition<T> {
      * @throws java.util.NoSuchElementException if the given structure piece is not found and the moon phase perfectly matches
      */
     IStructureElement<T>[] getStructureFor(String name);
+
+    boolean isContainedInStructure(String name, int offsetA, int offsetB, int offsetC);
 
     /**
      * Run a structure check.
@@ -258,6 +262,7 @@ public interface IStructureDefinition<T> {
      * @return number of elements built, or -1 if structure done
      * @see #build(Object, ItemStack, String, World, ExtendedFacing, int, int, int, int, int, int)
      */
+    @Deprecated
     default int survivalBuild(
             T object,
             ItemStack trigger,
@@ -274,8 +279,78 @@ public interface IStructureDefinition<T> {
             IItemSource source,
             EntityPlayerMP actor,
             boolean check) {
-        SurvivalBuildStructureWalker<T> walker =
-                new SurvivalBuildStructureWalker<>(object, trigger, source, actor, elementBudget, check);
+        EntityPlayer realActor;
+        if (actor == null) {
+            realActor = ISurvivalConstructable.__get_player();
+            if (realActor == null) throw new IllegalArgumentException();
+        } else {
+            realActor = actor;
+        }
+        return survivalBuild(
+                object,
+                trigger,
+                piece,
+                world,
+                extendedFacing,
+                basePositionX,
+                basePositionY,
+                basePositionZ,
+                basePositionA,
+                basePositionB,
+                basePositionC,
+                elementBudget,
+                ISurvivalBuildEnvironment.create(source, realActor),
+                check);
+    }
+
+    /**
+     * Cause a survival build.
+     *
+     * @param object context object. usually multiblock controller.
+     * @param trigger The trigger item that contains channel data.
+     * @param piece the structure piece's string identifier.
+     * @param world the world object this check takes place in.
+     * @param extendedFacing the current structure's orientation.
+     * @param basePositionX X location of the structure
+     * @param basePositionY Y location of the structure
+     * @param basePositionZ Z location of the structure
+     * @param basePositionA see class javadoc
+     * @param basePositionB see class javadoc
+     * @param basePositionC see class javadoc
+     * @param elementBudget build up to this many elements
+     * @param env           build environment.
+     * @param check         whether {@link IStructureElement#check(Object, World, int, int, int)} should be called if anything
+     *                      would be placed. use with caution.
+     *                      if in doubt, call {@link IStructureDefinition#check(Object, String, World, ExtendedFacing, int, int, int, int, int, int, boolean)}
+     *                      after this call and set this parameter to false
+     * @return number of elements built, or -1 if structure done
+     * @see #build(Object, ItemStack, String, World, ExtendedFacing, int, int, int, int, int, int)
+     */
+    default int survivalBuild(
+            T object,
+            ItemStack trigger,
+            String piece,
+            World world,
+            ExtendedFacing extendedFacing,
+            int basePositionX,
+            int basePositionY,
+            int basePositionZ,
+            int basePositionA,
+            int basePositionB,
+            int basePositionC,
+            int elementBudget,
+            ISurvivalBuildEnvironment env,
+            boolean check) {
+        SurvivalBuildStructureWalker<T> walker = new SurvivalBuildStructureWalker<>(
+                object,
+                trigger,
+                elementBudget,
+                env,
+                this,
+                piece,
+                extendedFacing,
+                new int[] {basePositionA, basePositionB, basePositionC},
+                check);
         StructureUtility.iterateV2(
                 getStructureFor(piece),
                 world,
@@ -341,7 +416,7 @@ public interface IStructureDefinition<T> {
                         basePositionA,
                         basePositionB,
                         basePositionC,
-                        (e, w, x, y, z) -> e.check(object, w, x, y, z),
+                        (e, w, x, y, z, a, b, c) -> e.check(object, w, x, y, z),
                         "check");
             } else {
                 success = StructureUtility.iterateV2(
@@ -354,7 +429,7 @@ public interface IStructureDefinition<T> {
                         basePositionA,
                         basePositionB,
                         basePositionC,
-                        skipBlockUnloaded((e, w, x, y, z) -> e.check(object, w, x, y, z)),
+                        skipBlockUnloaded((e, w, x, y, z, a, b, c) -> e.check(object, w, x, y, z)),
                         "check force");
             }
             if (StructureLibAPI.isDebugEnabled() && success) {
@@ -374,7 +449,7 @@ public interface IStructureDefinition<T> {
                         basePositionA,
                         basePositionB,
                         basePositionC,
-                        ignoreBlockUnloaded((e, w, x, y, z) -> {
+                        ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
                             e.spawnHint(object, world, x, y, z, trigger);
                             return true;
                         }),
@@ -390,7 +465,7 @@ public interface IStructureDefinition<T> {
                         basePositionA,
                         basePositionB,
                         basePositionC,
-                        ignoreBlockUnloaded((e, w, x, y, z) -> {
+                        ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
                             e.placeBlock(object, world, x, y, z, trigger);
                             return true;
                         }),

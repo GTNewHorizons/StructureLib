@@ -6,6 +6,7 @@ import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import java.util.function.Consumer;
 import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
@@ -24,7 +25,7 @@ public interface IStructureElement<T> {
     /**
      * Try place the block by taking resource from given IItemSource.
      * <p>
-     * You might want to use {@link StructureUtility#survivalPlaceBlock(Block, int, World, int, int, int, IItemSource, EntityPlayerMP)}
+     * You might want to use {@link StructureUtility#survivalPlaceBlock(Block, int, World, int, int, int, IItemSource, net.minecraft.entity.player.EntityPlayer)}
      * or its overloads to implement this.
      *
      * @param trigger trigger item
@@ -33,7 +34,11 @@ public interface IStructureElement<T> {
      *                any filter that chatter might have.
      * @param chatter send error messages here. Caller will choose an appropriate way to forward it to player if the
      *                other fallbacks also fails.
+     * @deprecated caller should call the non deprecated overload. implementor for reusable {@link IStructureElement}
+     * should still implement this. implementor for private implementations can freely ignore this as long as you know
+     * the caller will not call this overload.
      */
+    @Deprecated
     default PlaceResult survivalPlaceBlock(
             T t,
             World world,
@@ -50,6 +55,29 @@ public interface IStructureElement<T> {
                     "Default implementation of survivalPlaceBlock hit! Things aren't going to work well! IStructureElement class: {}",
                     getClass().getName());
         if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
+        return PlaceResult.SKIP;
+    }
+
+    /**
+     * Try place the block by taking resource from given IItemSource.
+     * <p>
+     * You might want to use {@link StructureUtility#survivalPlaceBlock(Block, int, World, int, int, int, IItemSource, net.minecraft.entity.player.EntityPlayer)}
+     * or its overloads to implement this.
+     *
+     * @param trigger trigger item
+     * @param env     autoplacing environment
+     */
+    default PlaceResult survivalPlaceBlock(
+            T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+        EntityPlayer actor = env.getActor();
+        if (actor instanceof EntityPlayerMP)
+            return survivalPlaceBlock(
+                    t, world, x, y, z, trigger, env.getSource(), (EntityPlayerMP) actor, env.getChatter());
+        if (PANIC_MODE) throw new RuntimeException("Panic Tripwire hit");
+        if (StructureLibAPI.isDebugEnabled())
+            LOGGER.info(
+                    "Fallback shim code of survivalPlaceBlock hit! Things aren't going to work well! IStructureElement class: {}",
+                    getClass().getName());
         return PlaceResult.SKIP;
     }
 
