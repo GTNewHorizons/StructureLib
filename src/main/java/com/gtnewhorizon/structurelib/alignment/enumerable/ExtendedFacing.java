@@ -355,6 +355,28 @@ public enum ExtendedFacing {
     }
 
     /**
+     * do note the ABC coordinate system is (X, -Y, Z).
+     */
+    public ForgeDirection getWorldDirection(ForgeDirection abcDirection) {
+        switch (abcDirection) {
+            case NORTH:
+                return getRelativeForwardInWorld();
+            case SOUTH:
+                return getRelativeBackInWorld();
+            case UP:
+                return getRelativeDownInWorld();
+            case DOWN:
+                return getRelativeUpInWorld();
+            case EAST:
+                return getRelativeLeftInWorld();
+            case WEST:
+                return getRelativeRightInWorld();
+            default:
+                return ForgeDirection.UNKNOWN;
+        }
+    }
+
+    /**
      * Translates world offset  to  relative front facing offset
      *
      * @param xyzOffset X,Y,Z offset in world
