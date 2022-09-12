@@ -19,6 +19,10 @@ class ExtendedFacingTest {
 
     @Test
     void ensureGetWorldDirectionIsCorrect() {
-        assertEquals(ForgeDirection.UP, ExtendedFacing.EAST_NORMAL_NONE.getWorldDirection(ForgeDirection.UP));
+        assertEquals(ForgeDirection.DOWN, ExtendedFacing.EAST_NORMAL_NONE.getWorldDirection(ForgeDirection.UP));
+        assertEquals(ForgeDirection.DOWN, ExtendedFacing.NORTH_NORMAL_NONE.getWorldDirection(ForgeDirection.UP));
+        assertEquals(ForgeDirection.NORTH, ExtendedFacing.NORTH_NORMAL_NONE.getWorldDirection(ForgeDirection.NORTH));
+        assertEquals(ForgeDirection.NORTH, ExtendedFacing.NORTH_CLOCKWISE_NONE.getWorldDirection(ForgeDirection.NORTH));
+        assertEquals(ForgeDirection.DOWN, ExtendedFacing.NORTH_CLOCKWISE_NONE.getWorldDirection(ForgeDirection.EAST));
     }
 }
