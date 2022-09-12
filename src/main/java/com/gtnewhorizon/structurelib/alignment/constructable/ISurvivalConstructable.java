@@ -64,7 +64,6 @@ public interface ISurvivalConstructable extends IConstructable {
         return -2;
     }
 
-
     /**
      * Internal hack. Do not use.
      */
