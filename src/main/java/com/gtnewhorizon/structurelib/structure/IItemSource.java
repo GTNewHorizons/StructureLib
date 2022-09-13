@@ -54,7 +54,7 @@ public interface IItemSource {
     default boolean takeOne(ItemStack stack, boolean simulate) {
         if (stack == null || stack.getItem() == null || stack.stackSize != 1) throw new IllegalArgumentException();
         ItemStack took = takeOne(ItemStackPredicate.from(stack, NBTMode.EXACT), simulate);
-        return took == null || took.stackSize <= 0;
+        return took != null && took.stackSize > 0;
     }
 
     /**
