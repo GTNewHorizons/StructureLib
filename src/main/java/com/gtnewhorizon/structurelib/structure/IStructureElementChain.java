@@ -1,8 +1,11 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import com.google.common.collect.Iterables;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
@@ -42,6 +45,23 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
             }
         }
         return false;
+    }
+
+    @Nullable
+    @Override
+    default BlocksToPlace getBlocksToPlace(
+            T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+        Predicate<ItemStack> predicate = null;
+        List<Iterable<ItemStack>> is = new ArrayList<>();
+        for (IStructureElement<T> fallback : fallbacks()) {
+            BlocksToPlace e = fallback.getBlocksToPlace(t, world, x, y, z, trigger, env);
+            if (e == null) continue;
+            if (predicate == null) predicate = e.getPredicate();
+            else predicate = predicate.or(e.getPredicate());
+            is.add(e.getStacks());
+        }
+        if (predicate == null) return null;
+        return new BlocksToPlace(predicate, Iterables.concat(is));
     }
 
     @Override

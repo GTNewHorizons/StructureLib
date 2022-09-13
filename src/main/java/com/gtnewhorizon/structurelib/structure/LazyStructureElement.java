@@ -2,6 +2,7 @@ package com.gtnewhorizon.structurelib.structure;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
@@ -36,6 +37,13 @@ class LazyStructureElement<T> implements IStructureElementDeferred<T> {
     @Override
     public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
         return get(t).spawnHint(t, world, x, y, z, trigger);
+    }
+
+    @Nullable
+    @Override
+    public BlocksToPlace getBlocksToPlace(
+            T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+        return get(t).getBlocksToPlace(t, world, x, y, z, trigger, env);
     }
 
     @Override
