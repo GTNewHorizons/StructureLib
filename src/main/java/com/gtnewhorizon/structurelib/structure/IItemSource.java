@@ -16,8 +16,15 @@ import net.minecraft.item.ItemStack;
  */
 public interface IItemSource {
     /**
-     * We are probably not going to need to get a lot of items from this method,
+     * Retrieve some amount of items from this item source matching given filter.
+     * <p>
+     * We probably don't need to get a lot of items from this method,
      * so I don't care about the overhead of storing all fetched items even if downstream code doesn't need it
+     *
+     * @param predicate filtering predicate. should return true for ItemStacks that should be added to result collection
+     * @param simulate  whether to actually commit the modification. true for dry run, false otherwise.
+     * @param count     how many items to extract.
+     * @return A nonnull map reflecting the result of extraction. Note this map is NBT and metadata aware.
      */
     @Nonnull
     Map<ItemStack, Integer> take(Predicate<ItemStack> predicate, boolean simulate, int count);
@@ -25,9 +32,13 @@ public interface IItemSource {
     /**
      * Take exactly one item that matches the predicate.
      *
+     * @param predicate filtering predicate. should return true for ItemStacks that should be added to result collection
+     * @param simulate  whether to actually commit the modification. true for dry run, false otherwise.
      * @return item stack, or null if none matches
+     * @throws IllegalArgumentException if given predicate is null.
      */
     default ItemStack takeOne(Predicate<ItemStack> predicate, boolean simulate) {
+        if (predicate == null) throw new IllegalArgumentException();
         Map<ItemStack, Integer> take = take(predicate, simulate, 1);
         return take.isEmpty() ? null : take.keySet().iterator().next();
     }
@@ -35,7 +46,11 @@ public interface IItemSource {
     /**
      * Take exactly count amount of items matching predicate.
      *
+     * @param predicate filtering predicate. should return true for ItemStacks that should be added to result collection
+     * @param simulate  whether to actually commit the modification. true for dry run, false otherwise.
+     * @param count     how many items to extract.
      * @return true if at least count amount of items can be/is taken.
+     * @throws IllegalArgumentException if given predicate is null
      */
     default boolean takeAll(Predicate<ItemStack> predicate, boolean simulate, int count) {
         // fast path for 1 item take requests
@@ -48,8 +63,15 @@ public interface IItemSource {
 
     /**
      * Take exactly one item. ItemStack given must have a stack size of 1.
+     * <p>
+     * This is meant to be an optimized version of {@link #takeOne(Predicate, boolean)}.
+     * Implementations that support item storage indexed by ItemStack can use this to speed up calculation.
      *
+     * @param stack    what item to extract. The NBT tag of this ItemStack is siginifcant and will be
+     *                 considered during matching. must have a stack size of 1.
+     * @param simulate whether to actually commit the modification. true for dry run, false otherwise.
      * @return true if found. false otherwise
+     * @throws IllegalArgumentException if given stack is invalid, or has a stack size other than 1.
      */
     default boolean takeOne(ItemStack stack, boolean simulate) {
         if (stack == null || stack.getItem() == null || stack.stackSize != 1) throw new IllegalArgumentException();
@@ -59,10 +81,18 @@ public interface IItemSource {
 
     /**
      * Take some item. Will not take item if it cannot find enough items to take.
+     * <p>
+     * This is meant to be an optimized version of {@link #takeOne(Predicate, boolean)}.
+     * Implementations that support indexing off ItemStack can use this to speed up calculation.
      *
+     * @param stack    what item and how many to extract. The NBT tag of this ItemStack is siginifcant and will be
+     *                 considered during matching
+     * @param simulate whether to actually commit the modification. true for dry run, false otherwise.
      * @return true if enough item can be/has been extracted. false otherwise
+     * @throws IllegalArgumentException if given stack is invalid
      */
     default boolean takeAll(ItemStack stack, boolean simulate) {
+        if (stack == null || stack.getItem() == null) throw new IllegalArgumentException();
         // fast path for 1 item take requests
         if (stack.stackSize == 1) return takeOne(stack, simulate);
         ItemStackPredicate predicate = ItemStackPredicate.from(stack, NBTMode.EXACT);
