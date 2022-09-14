@@ -27,6 +27,12 @@ public interface IStructureElementNoPlacement<T> extends IStructureElement<T> {
     }
 
     @Override
+    default PlaceResult survivalPlaceBlock(
+            T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+        return PlaceResult.REJECT;
+    }
+
+    @Override
     default IStructureElementNoPlacement<T> noPlacement() {
         return this;
     }

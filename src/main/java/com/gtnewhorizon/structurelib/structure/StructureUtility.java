@@ -2,6 +2,7 @@ package com.gtnewhorizon.structurelib.structure;
 
 import static java.lang.Integer.MIN_VALUE;
 
+import com.google.common.collect.ImmutableList;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
@@ -9,10 +10,12 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
 import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
 import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import cpw.mods.fml.common.registry.GameRegistry;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.*;
 import javax.annotation.Nullable;
 import net.minecraft.block.Block;
@@ -112,7 +115,7 @@ import org.apache.commons.lang3.tuple.Pair;
  * <h1>Helper Methods</h1>
  * These don't construct a {@link IStructureElement}, but is helpful to the instantiation or implementation of these.
  * <ul>
- *     <li>{@link #survivalPlaceBlock(Block, int, World, int, int, int, IItemSource, EntityPlayerMP, Consumer)} and its overloads:
+ *     <li>{@link #survivalPlaceBlock(Block, int, World, int, int, int, IItemSource, EntityPlayer, Consumer)} and its overloads:
  *     Helper method to cut common boilerplate for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}</li>
  *     <li>{@link #getPseudoJavaCode(World, ExtendedFacing, int, int, int, int, int, int, Function, int, int, int, boolean)}:
  *     Generate a structure code template from existing structure.</li>
@@ -128,7 +131,7 @@ public class StructureUtility {
     private static final Map<Vec3Impl, IStructureNavigate> STEP = new HashMap<>();
 
     @SuppressWarnings("rawtypes")
-    private static final IStructureElement AIR = new IStructureElement() {
+    private static final IStructureElement AIR = new StructureElement_Bridge() {
         @Override
         public boolean check(Object t, World world, int x, int y, int z) {
             return world.isAirBlock(x, y, z);
@@ -147,25 +150,18 @@ public class StructureUtility {
         }
 
         @Override
+        @Deprecated
         public PlaceResult survivalPlaceBlock(
-                Object o,
-                World world,
-                int x,
-                int y,
-                int z,
-                ItemStack trigger,
-                IItemSource s,
-                EntityPlayerMP actor,
-                Consumer chatter) {
+                Object o, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
             if (check(o, world, x, y, z)) return PlaceResult.SKIP;
-            if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
+            if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, env.getActor())) return PlaceResult.REJECT;
             world.setBlock(x, y, z, Blocks.air, 0, 2);
             return PlaceResult.ACCEPT;
         }
     };
 
     @SuppressWarnings("rawtypes")
-    private static final IStructureElement NOT_AIR = new IStructureElement() {
+    private static final IStructureElement NOT_AIR = new StructureElement_Bridge() {
         @Override
         public boolean check(Object t, World world, int x, int y, int z) {
             return !world.isAirBlock(x, y, z);
@@ -184,20 +180,18 @@ public class StructureUtility {
         }
 
         @Override
+        public BlocksToPlace getBlocksToPlace(
+                Object o, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+            return BlocksToPlace.create(Objects::nonNull);
+        }
+
+        @Override
         public PlaceResult survivalPlaceBlock(
-                Object o,
-                World world,
-                int x,
-                int y,
-                int z,
-                ItemStack trigger,
-                IItemSource s,
-                EntityPlayerMP actor,
-                Consumer chatter) {
+                Object o, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
             if (check(o, world, x, y, z)) return PlaceResult.SKIP;
             // user should place anything here.
             // maybe make this configurable, but for now we try to take some cobble from user
-            if (s.takeOne(new ItemStack(Blocks.cobblestone), false)) {
+            if (env.getSource().takeOne(new ItemStack(Blocks.cobblestone), false)) {
                 world.setBlock(x, y, z, Blocks.cobblestone, 0, 2);
             }
             return PlaceResult.REJECT;
@@ -205,7 +199,7 @@ public class StructureUtility {
     };
 
     @SuppressWarnings("rawtypes")
-    private static final IStructureElement ERROR = new IStructureElement() {
+    private static final IStructureElement ERROR = new StructureElement_Bridge() {
         @Override
         public boolean check(Object t, World world, int x, int y, int z) {
             return false;
@@ -224,15 +218,7 @@ public class StructureUtility {
 
         @Override
         public PlaceResult survivalPlaceBlock(
-                Object o,
-                World world,
-                int x,
-                int y,
-                int z,
-                ItemStack trigger,
-                IItemSource s,
-                EntityPlayerMP actor,
-                Consumer chatter) {
+                Object o, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
             return PlaceResult.REJECT;
         }
     };
@@ -252,6 +238,22 @@ public class StructureUtility {
      */
     public static PlaceResult survivalPlaceBlock(
             Block block, int meta, World world, int x, int y, int z, IItemSource s, EntityPlayerMP actor) {
+        return survivalPlaceBlock(block, meta, world, x, y, z, s, (EntityPlayer) actor);
+    }
+
+    /**
+     * This is a helper method for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
+     * <p>
+     * This method will try to look up an {@link ItemBlock} for given block and meta from {@code s} and place it at given
+     * location.
+     * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
+     * This method might yield error messages to the player only if there is likely a programming error or exploit.
+     *
+     * @param s     drain resources from this place
+     * @param actor source of action. cannot be null.
+     */
+    public static PlaceResult survivalPlaceBlock(
+            Block block, int meta, World world, int x, int y, int z, IItemSource s, EntityPlayer actor) {
         return survivalPlaceBlock(block, meta, world, x, y, z, s, actor, null);
     }
 
@@ -277,6 +279,32 @@ public class StructureUtility {
             int z,
             IItemSource s,
             EntityPlayerMP actor,
+            Consumer<IChatComponent> chatter) {
+        return survivalPlaceBlock(block, meta, world, x, y, z, s, (EntityPlayer) actor, chatter);
+    }
+
+    /**
+     * This is a helper method for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
+     * <p>
+     * This method will try to look up an {@link ItemBlock} for given block and meta from {@code s} and place it at given
+     * location.
+     * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
+     * This method might yield error messages to the player only if there is likely a programming error or exploit.
+     * This method might yield error messages to the chatter.
+     *
+     * @param s       drain resources from this place
+     * @param actor   source of action. cannot be null.
+     * @param chatter normal error destination. can be null to suppress them.
+     */
+    public static PlaceResult survivalPlaceBlock(
+            Block block,
+            int meta,
+            World world,
+            int x,
+            int y,
+            int z,
+            IItemSource s,
+            EntityPlayer actor,
             Consumer<IChatComponent> chatter) {
         if (block == null) throw new NullPointerException();
         if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
@@ -323,6 +351,32 @@ public class StructureUtility {
             int z,
             IItemSource s,
             EntityPlayerMP actor) {
+        return survivalPlaceBlock(stack, nbtMode, tag, assumeStackPresent, world, x, y, z, s, (EntityPlayer) actor);
+    }
+
+    /**
+     * This is a helper method for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
+     * <p>
+     * This method will try to look up an {@link ItemBlock} for given block and meta from {@code s} and place it at given
+     * location.
+     * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
+     * This method might yield error messages to the player only if there is likely a programming error or exploit.
+     *
+     * @param stack a valid stack with stack size of exactly 1. Must be of an ItemBlock!
+     * @param s     drain resources from this place
+     * @param actor source of action. cannot be null.
+     */
+    public static PlaceResult survivalPlaceBlock(
+            ItemStack stack,
+            NBTMode nbtMode,
+            NBTTagCompound tag,
+            boolean assumeStackPresent,
+            World world,
+            int x,
+            int y,
+            int z,
+            IItemSource s,
+            EntityPlayer actor) {
         return survivalPlaceBlock(stack, nbtMode, tag, assumeStackPresent, world, x, y, z, s, actor, null);
     }
 
@@ -351,6 +405,36 @@ public class StructureUtility {
             int z,
             IItemSource s,
             EntityPlayerMP actor,
+            @Nullable Consumer<IChatComponent> chatter) {
+        return survivalPlaceBlock(
+                stack, nbtMode, tag, assumeStackPresent, world, x, y, z, s, (EntityPlayer) actor, chatter);
+    }
+
+    /**
+     * This is a helper method for implementing {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
+     * <p>
+     * This method will try to look up an {@link ItemBlock} for given block and meta from {@code s} and place it at given
+     * location.
+     * This method assume block at given coord is NOT acceptable, but may or may not be trivially replaceable
+     * This method might yield error messages to the player only if there is likely a programming error or exploit.
+     * This method might yield error messages to the chatter.
+     *
+     * @param stack   a valid stack with stack size of exactly 1. Must be of an ItemBlock!
+     * @param s       drain resources from this place
+     * @param actor   source of action. cannot be null.
+     * @param chatter normal error destination. can be null to suppress them.
+     */
+    public static PlaceResult survivalPlaceBlock(
+            ItemStack stack,
+            NBTMode nbtMode,
+            NBTTagCompound tag,
+            boolean assumeStackPresent,
+            World world,
+            int x,
+            int y,
+            int z,
+            IItemSource s,
+            EntityPlayer actor,
             @Nullable Consumer<IChatComponent> chatter) {
         if (stack == null) throw new NullPointerException();
         if (stack.stackSize != 1) throw new IllegalArgumentException();
@@ -577,9 +661,9 @@ public class StructureUtility {
      * @param allKnownTiers A list of all known tiers as of calling. Can be empty or null. No hint will be spawned if empty or null. Cannot have null elements.
      *                      First element denotes the most primitive tier. Last element denotes the most advanced tier.
      *                      If not all tiers are available at definition construction time, use {@link #lazy(Supplier)} or its overloads to delay a bit.
-     * This list is only for hint particle spawning and survival build.
-     * The hint/autoplace code will choose 1st pair to spawn/place if trigger item has master channel data of 1,
-     * 2nd pair if 2, and so on.
+     *                      This list is only for hint particle spawning and survival build.
+     *                      The hint/autoplace code will choose 1st pair to spawn/place if trigger item has master channel data of 1,
+     *                      2nd pair if 2, and so on.
      * @param notSet        The value returned from {@code getter} when there were no tier info found in T yet. Can be null.
      * @param getter        a function to retrieve the current tier from context object
      * @param setter        a function to set the current tier into context object
@@ -593,7 +677,7 @@ public class StructureUtility {
         List<Pair<Block, Integer>> hints = allKnownTiers == null ? Collections.emptyList() : allKnownTiers;
         if (hints.stream().anyMatch(Objects::isNull)) throw new IllegalArgumentException();
         IStructureElementCheckOnly<T> check = ofBlocksTiered(tierExtractor, notSet, setter, getter);
-        return new IStructureElement<T>() {
+        return new StructureElement_Bridge<T>() {
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
                 return check.check(t, world, x, y, z);
@@ -624,17 +708,17 @@ public class StructureUtility {
                 return true;
             }
 
+            @Nullable
+            @Override
+            public BlocksToPlace getBlocksToPlace(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                Pair<Block, Integer> hint = getHint(trigger);
+                return BlocksToPlace.create(hint.getKey(), hint.getValue());
+            }
+
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
                 Pair<Block, Integer> hint = getHint(trigger);
                 if (hint == null) return PlaceResult.REJECT; // TODO or SKIP?
                 Block block = world.getBlock(x, y, z);
@@ -643,7 +727,15 @@ public class StructureUtility {
                 if (Objects.equals(tier, tierExtractor.convert(hint.getKey(), hint.getValue())))
                     return PlaceResult.SKIP;
                 return StructureUtility.survivalPlaceBlock(
-                        hint.getKey(), hint.getValue(), world, x, y, z, s, actor, chatter);
+                        hint.getKey(),
+                        hint.getValue(),
+                        world,
+                        x,
+                        y,
+                        z,
+                        env.getSource(),
+                        env.getActor(),
+                        env.getChatter());
             }
         };
     }
@@ -676,7 +768,7 @@ public class StructureUtility {
         if (meta < 0) throw new IllegalArgumentException();
         if (meta > 15) throw new IllegalArgumentException();
         if (StringUtils.isBlank(modid)) throw new IllegalArgumentException();
-        return new IStructureElement<T>() {
+        return new StructureElement_Bridge<T>() {
             private Block block;
 
             private Block getBlock() {
@@ -703,20 +795,21 @@ public class StructureUtility {
                 return true;
             }
 
+            @Nullable
+            @Override
+            public BlocksToPlace getBlocksToPlace(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                if (getBlock() == null) return error().getBlocksToPlace(t, world, x, y, z, trigger, env);
+                return BlocksToPlace.create(getBlock(), meta);
+            }
+
             @Override
             public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
                 if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 if (getBlock() == null) return PlaceResult.REJECT;
-                return StructureUtility.survivalPlaceBlock(getBlock(), meta, world, x, y, z, s, actor, chatter);
+                return StructureUtility.survivalPlaceBlock(
+                        getBlock(), meta, world, x, y, z, env.getSource(), env.getActor(), env.getChatter());
             }
         };
     }
@@ -772,7 +865,16 @@ public class StructureUtility {
                 } else return fallback.placeBlock(t, world, x, y, z, trigger);
             }
 
+            @Nullable
             @Override
+            public BlocksToPlace getBlocksToPlace(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                if (init()) return BlocksToPlace.create(block, meta);
+                return fallback.getBlocksToPlace(t, world, x, y, z, trigger, env);
+            }
+
+            @Override
+            @Deprecated
             public PlaceResult survivalPlaceBlock(
                     T t,
                     World world,
@@ -786,6 +888,16 @@ public class StructureUtility {
                 if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 if (init()) return StructureUtility.survivalPlaceBlock(block, meta, world, x, y, z, s, actor, chatter);
                 return fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                if (check(t, world, x, y, z)) return PlaceResult.SKIP;
+                if (init())
+                    return StructureUtility.survivalPlaceBlock(
+                            block, meta, world, x, y, z, env.getSource(), env.getActor(), env.getChatter());
+                return fallback.survivalPlaceBlock(t, world, x, y, z, trigger, env);
             }
         };
     }
@@ -929,6 +1041,8 @@ public class StructureUtility {
         }
         if (defaultBlock instanceof ICustomBlockSetting) {
             return new IStructureElement<T>() {
+                private BlocksToPlace blocksToPlace;
+
                 @Override
                 public boolean check(T t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
@@ -947,24 +1061,31 @@ public class StructureUtility {
                     return true;
                 }
 
+                @Nullable
                 @Override
-                public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
-                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                public BlocksToPlace getBlocksToPlace(
+                        T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                    if (blocksToPlace == null) {
+                        ImmutableList.Builder<ItemStack> blocks = ImmutableList.builder();
+                        Predicate<ItemStack> predicate = s -> true;
+                        for (Entry<Block, Integer> e : blocsMap.entrySet()) {
+                            Item i = Item.getItemFromBlock(e.getKey());
+                            int meta = e.getValue();
+                            if (i instanceof ISpecialItemBlock)
+                                meta = ((ISpecialItemBlock) i).getItemMetaFromBlockMeta(e.getKey(), meta);
+                            ItemStack stack = new ItemStack(i, 1, meta);
+                            blocks.add(stack);
+                            predicate = predicate.and(ItemStackPredicate.from(stack));
+                        }
+                        blocksToPlace = new BlocksToPlace(predicate, blocks.build());
+                    }
+                    return blocksToPlace;
                 }
             };
         } else {
             return new IStructureElement<T>() {
+                private BlocksToPlace blocksToPlace;
+
                 @Override
                 public boolean check(T t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
@@ -984,19 +1105,23 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
-                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                public BlocksToPlace getBlocksToPlace(
+                        T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                    if (blocksToPlace == null) {
+                        ImmutableList.Builder<ItemStack> blocks = ImmutableList.builder();
+                        Predicate<ItemStack> predicate = s -> true;
+                        for (Entry<Block, Integer> e : blocsMap.entrySet()) {
+                            Item i = Item.getItemFromBlock(e.getKey());
+                            int meta = e.getValue();
+                            if (i instanceof ISpecialItemBlock)
+                                meta = ((ISpecialItemBlock) i).getItemMetaFromBlockMeta(e.getKey(), meta);
+                            ItemStack stack = new ItemStack(i, 1, meta);
+                            blocks.add(stack);
+                            predicate = predicate.and(ItemStackPredicate.from(stack));
+                        }
+                        blocksToPlace = new BlocksToPlace(predicate, blocks.build());
+                    }
+                    return blocksToPlace;
                 }
             };
         }
@@ -1022,6 +1147,8 @@ public class StructureUtility {
         }
         if (defaultBlock instanceof ICustomBlockSetting) {
             return new IStructureElement<T>() {
+                private BlocksToPlace blocksToPlace;
+
                 @Override
                 public boolean check(T t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
@@ -1042,23 +1169,30 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
-                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                public BlocksToPlace getBlocksToPlace(
+                        T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                    if (blocksToPlace == null) {
+                        ImmutableList.Builder<ItemStack> blocks = ImmutableList.builder();
+                        Predicate<ItemStack> predicate = s -> true;
+                        for (Entry<Block, Collection<Integer>> e : blocsMap.entrySet()) {
+                            Item i = Item.getItemFromBlock(e.getKey());
+                            for (int meta : e.getValue()) {
+                                if (i instanceof ISpecialItemBlock)
+                                    meta = ((ISpecialItemBlock) i).getItemMetaFromBlockMeta(e.getKey(), meta);
+                                ItemStack stack = new ItemStack(i, 1, meta);
+                                blocks.add(stack);
+                                predicate = predicate.and(ItemStackPredicate.from(stack));
+                            }
+                        }
+                        blocksToPlace = new BlocksToPlace(predicate, blocks.build());
+                    }
+                    return blocksToPlace;
                 }
             };
         } else {
             return new IStructureElement<T>() {
+                private BlocksToPlace blocksToPlace;
+
                 @Override
                 public boolean check(T t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
@@ -1079,19 +1213,24 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
-                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                public BlocksToPlace getBlocksToPlace(
+                        T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                    if (blocksToPlace == null) {
+                        ImmutableList.Builder<ItemStack> blocks = ImmutableList.builder();
+                        Predicate<ItemStack> predicate = s -> true;
+                        for (Entry<Block, Collection<Integer>> e : blocsMap.entrySet()) {
+                            Item i = Item.getItemFromBlock(e.getKey());
+                            for (int meta : e.getValue()) {
+                                if (i instanceof ISpecialItemBlock)
+                                    meta = ((ISpecialItemBlock) i).getItemMetaFromBlockMeta(e.getKey(), meta);
+                                ItemStack stack = new ItemStack(i, 1, meta);
+                                blocks.add(stack);
+                                predicate = predicate.and(ItemStackPredicate.from(stack));
+                            }
+                        }
+                        blocksToPlace = new BlocksToPlace(predicate, blocks.build());
+                    }
+                    return blocksToPlace;
                 }
             };
         }
@@ -1130,19 +1269,9 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
-                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                public BlocksToPlace getBlocksToPlace(
+                        T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                    return BlocksToPlace.create(block, meta);
                 }
             };
         } else {
@@ -1166,19 +1295,9 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
-                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                public BlocksToPlace getBlocksToPlace(
+                        T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                    return BlocksToPlace.create(block, meta);
                 }
             };
         }
@@ -1211,19 +1330,10 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
-                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                public BlocksToPlace getBlocksToPlace(
+                        T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                    // there is getSubItems on ItemBlock, but it's client only
+                    return BlocksToPlace.create(defaultBlock, defaultMeta);
                 }
             };
         } else {
@@ -1246,19 +1356,10 @@ public class StructureUtility {
                 }
 
                 @Override
-                public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
-                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
-                    return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                public BlocksToPlace getBlocksToPlace(
+                        T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                    // there is getSubItems on ItemBlock, but it's client only
+                    return BlocksToPlace.create(defaultBlock, defaultMeta);
                 }
             };
         }
@@ -1300,7 +1401,7 @@ public class StructureUtility {
             throw new IllegalArgumentException();
         }
         if (defaultBlock instanceof ICustomBlockSetting) {
-            return new IStructureElement<T>() {
+            return new StructureElement_Bridge<T>() {
                 @Override
                 public boolean check(T t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
@@ -1320,24 +1421,25 @@ public class StructureUtility {
                 }
 
                 @Override
+                @Deprecated
                 public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
+                        T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
                     if (world.getBlock(x, y, z) == defaultBlock && world.getBlockMetadata(x, y, z) == defaultMeta)
                         return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                            defaultBlock,
+                            defaultMeta,
+                            world,
+                            x,
+                            y,
+                            z,
+                            env.getSource(),
+                            env.getActor(),
+                            env.getChatter());
                 }
             };
         } else {
-            return new IStructureElement<T>() {
+            return new StructureElement_Bridge<T>() {
                 @Override
                 public boolean check(T t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
@@ -1357,20 +1459,21 @@ public class StructureUtility {
                 }
 
                 @Override
+                @Deprecated
                 public PlaceResult survivalPlaceBlock(
-                        T t,
-                        World world,
-                        int x,
-                        int y,
-                        int z,
-                        ItemStack trigger,
-                        IItemSource s,
-                        EntityPlayerMP actor,
-                        Consumer<IChatComponent> chatter) {
+                        T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
                     if (world.getBlock(x, y, z) == defaultBlock && world.getBlockMetadata(x, y, z) == defaultMeta)
                         return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
-                            defaultBlock, defaultMeta, world, x, y, z, s, actor, chatter);
+                            defaultBlock,
+                            defaultMeta,
+                            world,
+                            x,
+                            y,
+                            z,
+                            env.getSource(),
+                            env.getActor(),
+                            env.getChatter());
                 }
             };
         }
@@ -1464,7 +1567,15 @@ public class StructureUtility {
                 return element.spawnHint(t, world, x, y, z, trigger);
             }
 
+            @Nullable
             @Override
+            public BlocksToPlace getBlocksToPlace(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return element.getBlocksToPlace(t, world, x, y, z, trigger, env);
+            }
+
+            @Override
+            @Deprecated
             public PlaceResult survivalPlaceBlock(
                     T t,
                     World world,
@@ -1476,6 +1587,12 @@ public class StructureUtility {
                     EntityPlayerMP actor,
                     Consumer<IChatComponent> chatter) {
                 return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return element.survivalPlaceBlock(t, world, x, y, z, trigger, env);
             }
         };
     }
@@ -1508,7 +1625,15 @@ public class StructureUtility {
                 return element.spawnHint(t, world, x, y, z, trigger);
             }
 
+            @Nullable
             @Override
+            public BlocksToPlace getBlocksToPlace(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return element.getBlocksToPlace(t, world, x, y, z, trigger, env);
+            }
+
+            @Override
+            @Deprecated
             public PlaceResult survivalPlaceBlock(
                     T t,
                     World world,
@@ -1520,6 +1645,12 @@ public class StructureUtility {
                     EntityPlayerMP actor,
                     Consumer<IChatComponent> chatter) {
                 return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return element.survivalPlaceBlock(t, world, x, y, z, trigger, env);
             }
         };
     }
@@ -1561,7 +1692,16 @@ public class StructureUtility {
                 return predicate.test(t) && downstream.placeBlock(t, world, x, y, z, trigger);
             }
 
+            @Nullable
             @Override
+            public BlocksToPlace getBlocksToPlace(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                if (predicate.test(t)) return downstream.getBlocksToPlace(t, world, x, y, z, trigger, env);
+                return BlocksToPlace.createEmpty();
+            }
+
+            @Override
+            @Deprecated
             public PlaceResult survivalPlaceBlock(
                     T t,
                     World world,
@@ -1574,6 +1714,13 @@ public class StructureUtility {
                     Consumer<IChatComponent> chatter) {
                 if (predicate.test(t))
                     return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+                return placeResultWhenDisabled;
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                if (predicate.test(t)) return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, env);
                 return placeResultWhenDisabled;
             }
         };
@@ -1649,7 +1796,15 @@ public class StructureUtility {
                 return elem.placeBlock(t.getCurrentContext(), world, x, y, z, trigger);
             }
 
+            @Nullable
             @Override
+            public BlocksToPlace getBlocksToPlace(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return elem.getBlocksToPlace(t.getCurrentContext(), world, x, y, z, trigger, env);
+            }
+
+            @Override
+            @Deprecated
             public PlaceResult survivalPlaceBlock(
                     T t,
                     World world,
@@ -1661,6 +1816,12 @@ public class StructureUtility {
                     EntityPlayerMP actor,
                     Consumer<IChatComponent> chatter) {
                 return elem.survivalPlaceBlock(t.getCurrentContext(), world, x, y, z, trigger, s, actor, chatter);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return elem.survivalPlaceBlock(t.getCurrentContext(), world, x, y, z, trigger, env);
             }
         };
     }
@@ -1731,7 +1892,15 @@ public class StructureUtility {
                 return to.get().spawnHint(t, world, x, y, z, trigger);
             }
 
+            @Nullable
             @Override
+            public BlocksToPlace getBlocksToPlace(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return to.get().getBlocksToPlace(t, world, x, y, z, trigger, env);
+            }
+
+            @Override
+            @Deprecated
             public PlaceResult survivalPlaceBlock(
                     T t,
                     World world,
@@ -1743,6 +1912,12 @@ public class StructureUtility {
                     EntityPlayerMP actor,
                     Consumer<IChatComponent> chatter) {
                 return to.get().survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return to.get().survivalPlaceBlock(t, world, x, y, z, trigger, env);
             }
         };
     }
@@ -1778,6 +1953,13 @@ public class StructureUtility {
                 return to.apply(t).spawnHint(t, world, x, y, z, trigger);
             }
 
+            @Nullable
+            @Override
+            public BlocksToPlace getBlocksToPlace(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return to.apply(t).getBlocksToPlace(t, world, x, y, z, trigger, env);
+            }
+
             @Override
             public PlaceResult survivalPlaceBlock(
                     T t,
@@ -1790,6 +1972,12 @@ public class StructureUtility {
                     EntityPlayerMP actor,
                     Consumer<IChatComponent> chatter) {
                 return to.apply(t).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return to.apply(t).survivalPlaceBlock(t, world, x, y, z, trigger, env);
             }
         };
     }
@@ -1828,36 +2016,7 @@ public class StructureUtility {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementDeferred<T>() {
-            @Override
-            public boolean check(T t, World world, int x, int y, int z) {
-                return map.get(keyExtractor.apply(t)).check(t, world, x, y, z);
-            }
-
-            @Override
-            public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return map.get(keyExtractor.apply(t)).placeBlock(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return map.get(keyExtractor.apply(t)).spawnHint(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
-                return map.get(keyExtractor.apply(t)).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
-            }
-        };
+        return defer(keyExtractor.andThen(map::get));
     }
 
     /**
@@ -1900,37 +2059,7 @@ public class StructureUtility {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementDeferred<T>() {
-            @Override
-            public boolean check(T t, World world, int x, int y, int z) {
-                return map.getOrDefault(keyExtractor.apply(t), defaultElem).check(t, world, x, y, z);
-            }
-
-            @Override
-            public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return map.getOrDefault(keyExtractor.apply(t), defaultElem).placeBlock(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return map.getOrDefault(keyExtractor.apply(t), defaultElem).spawnHint(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
-                return map.getOrDefault(keyExtractor.apply(t), defaultElem)
-                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
-            }
-        };
+        return defer(keyExtractor.andThen(key -> map.getOrDefault(key, defaultElem)));
     }
 
     /**
@@ -1971,36 +2100,7 @@ public class StructureUtility {
         if (keyExtractor == null || array == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementDeferred<T>() {
-            @Override
-            public boolean check(T t, World world, int x, int y, int z) {
-                return array[keyExtractor.apply(t)].check(t, world, x, y, z);
-            }
-
-            @Override
-            public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return array[keyExtractor.apply(t)].placeBlock(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return array[keyExtractor.apply(t)].spawnHint(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
-                return array[keyExtractor.apply(t)].survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
-            }
-        };
+        return defer(keyExtractor.andThen(i -> array[i]));
     }
 
     /**
@@ -2073,6 +2173,13 @@ public class StructureUtility {
                 return to.apply(t, trigger).spawnHint(t, world, x, y, z, trigger);
             }
 
+            @Nullable
+            @Override
+            public BlocksToPlace getBlocksToPlace(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return to.apply(t, trigger).getBlocksToPlace(t, world, x, y, z, trigger, env);
+            }
+
             @Override
             public PlaceResult survivalPlaceBlock(
                     T t,
@@ -2085,6 +2192,12 @@ public class StructureUtility {
                     EntityPlayerMP actor,
                     Consumer<IChatComponent> chatter) {
                 return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, env);
             }
         };
     }
@@ -2131,37 +2244,7 @@ public class StructureUtility {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementDeferred<T>() {
-            @Override
-            public boolean check(T t, World world, int x, int y, int z) {
-                return map.get(keyExtractor.apply(t, null)).check(t, world, x, y, z);
-            }
-
-            @Override
-            public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return map.get(keyExtractor.apply(t, trigger)).placeBlock(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return map.get(keyExtractor.apply(t, trigger)).spawnHint(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
-                return map.get(keyExtractor.apply(t, trigger))
-                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
-            }
-        };
+        return defer(keyExtractor.andThen(map::get));
     }
 
     /**
@@ -2212,40 +2295,7 @@ public class StructureUtility {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementDeferred<T>() {
-            @Override
-            public boolean check(T t, World world, int x, int y, int z) {
-                return map.getOrDefault(keyExtractor.apply(t, null), defaultElem)
-                        .check(t, world, x, y, z);
-            }
-
-            @Override
-            public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .placeBlock(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .spawnHint(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
-                return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
-            }
-        };
+        return defer(keyExtractor.andThen(key -> map.getOrDefault(key, defaultElem)));
     }
 
     /**
@@ -2268,37 +2318,7 @@ public class StructureUtility {
         if (keyExtractor == null || array == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementDeferred<T>() {
-            @Override
-            public boolean check(T t, World world, int x, int y, int z) {
-                return array[keyExtractor.apply(t, null)].check(t, world, x, y, z);
-            }
-
-            @Override
-            public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return array[keyExtractor.apply(t, trigger)].placeBlock(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return array[keyExtractor.apply(t, trigger)].spawnHint(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
-                return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(
-                        t, world, x, y, z, trigger, s, actor, chatter);
-            }
-        };
+        return defer(keyExtractor.andThen(i -> array[i]));
     }
 
     /**
@@ -2315,10 +2335,9 @@ public class StructureUtility {
      * @param keyExtractor extract a key from the context object and trigger item
      * @param array        all possible structure element
      */
-    @SuppressWarnings("unchecked")
     public static <T> IStructureElementDeferred<T> defer(
             BiFunction<T, ItemStack, Integer> keyExtractor, List<IStructureElement<T>> array) {
-        return defer(keyExtractor, array.toArray(new IStructureElement[0]));
+        return defer(keyExtractor.andThen(array::get));
     }
 
     /**
@@ -2369,6 +2388,12 @@ public class StructureUtility {
                     EntityPlayerMP actor,
                     Consumer<IChatComponent> chatter) {
                 return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return to.apply(t, trigger).survivalPlaceBlock(t, world, x, y, z, trigger, env);
             }
         };
     }
@@ -2427,37 +2452,7 @@ public class StructureUtility {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementDeferred<T>() {
-            @Override
-            public boolean check(T t, World world, int x, int y, int z) {
-                return map.get(keyExtractorCheck.apply(t)).check(t, world, x, y, z);
-            }
-
-            @Override
-            public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return map.get(keyExtractor.apply(t, trigger)).placeBlock(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return map.get(keyExtractor.apply(t, trigger)).spawnHint(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
-                return map.get(keyExtractor.apply(t, trigger))
-                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
-            }
-        };
+        return defer(keyExtractorCheck.andThen(map::get), keyExtractor.<IStructureElement<T>>andThen(map::get));
     }
 
     /**
@@ -2514,39 +2509,9 @@ public class StructureUtility {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementDeferred<T>() {
-            @Override
-            public boolean check(T t, World world, int x, int y, int z) {
-                return map.getOrDefault(keyExtractorCheck.apply(t), defaultElem).check(t, world, x, y, z);
-            }
-
-            @Override
-            public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .placeBlock(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .spawnHint(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
-                return map.getOrDefault(keyExtractor.apply(t, trigger), defaultElem)
-                        .survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
-            }
-        };
+        return defer(
+                keyExtractorCheck.andThen(k -> map.getOrDefault(k, defaultElem)),
+                keyExtractor.andThen(k -> map.getOrDefault(k, defaultElem)));
     }
 
     /**
@@ -2603,37 +2568,7 @@ public class StructureUtility {
         if (keyExtractor == null || array == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementDeferred<T>() {
-            @Override
-            public boolean check(T t, World world, int x, int y, int z) {
-                return array[keyExtractorCheck.apply(t)].check(t, world, x, y, z);
-            }
-
-            @Override
-            public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return array[keyExtractor.apply(t, trigger)].placeBlock(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return array[keyExtractor.apply(t, trigger)].spawnHint(t, world, x, y, z, trigger);
-            }
-
-            @Override
-            public PlaceResult survivalPlaceBlock(
-                    T t,
-                    World world,
-                    int x,
-                    int y,
-                    int z,
-                    ItemStack trigger,
-                    IItemSource s,
-                    EntityPlayerMP actor,
-                    Consumer<IChatComponent> chatter) {
-                return array[keyExtractor.apply(t, trigger)].survivalPlaceBlock(
-                        t, world, x, y, z, trigger, s, actor, chatter);
-            }
-        };
+        return defer(keyExtractorCheck.andThen(i -> array[i]), keyExtractor.andThen(i -> array[i]));
     }
 
     /**
@@ -2723,6 +2658,14 @@ public class StructureUtility {
                 return backing.placeBlock(t, world, x, y, z, ChannelDataAccessor.withChannel(trigger, channel));
             }
 
+            @Nullable
+            @Override
+            public BlocksToPlace getBlocksToPlace(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                return backing.getBlocksToPlace(t, world, x, y, z, trigger, env);
+            }
+
+            @Deprecated
             public PlaceResult survivalPlaceBlock(
                     T t,
                     World world,
@@ -2739,6 +2682,17 @@ public class StructureUtility {
                     // instead of some false positive error messages like item not find
                     warnNoExplicitSubChannel(actor);
                 return backing.survivalPlaceBlock(t, world, x, y, z, newTrigger, s, actor, chatter);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(
+                    T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+                ItemStack newTrigger = ChannelDataAccessor.withChannel(trigger, channel);
+                if (newTrigger == trigger)
+                    // we will bypass the chatter filter here, as this is a warning that player definitively want to see
+                    // instead of some false positive error messages like item not find
+                    warnNoExplicitSubChannel(env.getActor());
+                return backing.survivalPlaceBlock(t, world, x, y, z, trigger, env);
             }
         };
     }
@@ -3076,7 +3030,7 @@ public class StructureUtility {
                             Arrays.toString(abc));
 
                 if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
-                    if (!predicate.visit(element, world, xyz[0], xyz[1], xyz[2])) {
+                    if (!predicate.visit(element, world, xyz[0], xyz[1], xyz[2], abc[0], abc[1], abc[2])) {
                         if (StructureLibAPI.isDebugEnabled()) {
                             StructureLib.LOGGER.info(
                                     "Multi [{}, {}, {}] {} stop @ {} {}",
@@ -3100,7 +3054,8 @@ public class StructureUtility {
                                 Arrays.toString(xyz),
                                 Arrays.toString(abc));
                     }
-                    if (!predicate.blockNotLoaded(element, world, xyz[0], xyz[1], xyz[2])) return false;
+                    if (!predicate.blockNotLoaded(element, world, xyz[0], xyz[1], xyz[2], abc[0], abc[1], abc[2]))
+                        return false;
                 }
                 abc[0] += 1;
             }
