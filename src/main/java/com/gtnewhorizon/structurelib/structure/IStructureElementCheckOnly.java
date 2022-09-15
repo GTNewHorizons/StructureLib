@@ -30,4 +30,10 @@ public interface IStructureElementCheckOnly<T> extends IStructureElement<T> {
             Consumer<IChatComponent> chatter) {
         return PlaceResult.SKIP;
     }
+
+    @Override
+    default PlaceResult survivalPlaceBlock(
+            T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+        return PlaceResult.SKIP;
+    }
 }

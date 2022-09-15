@@ -2,7 +2,6 @@ package com.gtnewhorizon.structurelib.structure;
 
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.*;
 
-import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -11,6 +10,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
     private final Map<Character, IStructureElement<T>> elements;
     private final Map<String, String> shapes;
     private final Map<String, IStructureElement<T>[]> structures;
+    private final Map<String, Set<Vec3Impl>> occupiedSpaces;
 
     public static <B> Builder<B> builder() {
         return new Builder<>();
@@ -19,10 +19,12 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
     private StructureDefinition(
             Map<Character, IStructureElement<T>> elements,
             Map<String, String> shapes,
-            Map<String, IStructureElement<T>[]> structures) {
+            Map<String, IStructureElement<T>[]> structures,
+            Map<String, Set<Vec3Impl>> occupiedSpaces) {
         this.elements = elements;
         this.shapes = shapes;
         this.structures = structures;
+        this.occupiedSpaces = occupiedSpaces;
     }
 
     public static class Builder<T> {
@@ -33,11 +35,13 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         private final Map<Vec3Impl, Character> navigates;
         private final Map<Character, IStructureElement<T>> elements;
         private final Map<String, String> shapes;
+        private final Map<String, Set<Vec3Impl>> occupiedSpaces;
 
         private Builder() {
             navigates = new HashMap<>();
             elements = new HashMap<>();
             shapes = new HashMap<>();
+            occupiedSpaces = new HashMap<>();
         }
 
         public Map<Character, IStructureElement<T>> getElements() {
@@ -49,18 +53,22 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         }
 
         /**
-         * Adds shape
-         * + is anything but air
-         * - is air checks
-         * space bar is skip
-         * ~ is also skip (but marks controller position, optional. implementation wise it is a space...)
-         * rest needs to be defined
+         * Adds shape. Shape is a two-dimensional string array. Each <b>character</b> inside any of these strings will
+         * be later mapped to a particular type of {@link IStructureElement} as indicated by {@link #addElement(Character, IStructureElement)}.
          * <p>
          * next char is next block(a)
          * next string is next line(b)
          * next string[] is next slice(c)
          * <p>
-         * char A000-FFFF range is reserved for generated skips
+         * There are a few special reserved characters that are pre-mapped to some common structure elements
+         * <ul>
+         * <li>+ is anything but air</li>
+         * <li>- is air checks</li>
+         * <li>space bar is skip</li>
+         * <li>~ is also skip (but marks controller position, not optional)</li>
+         * <li>char {@code A000-FFFF} range is reserved for generated skips</li>
+         * </ul>
+         * <p>
          *
          * @param name           unlocalized/code name
          * @param structurePiece generated or written struct - DO NOT STORE IT ANYWHERE, or at least set them to null afterwards
@@ -80,22 +88,37 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
                 }
                 builder.setLength(builder.length() - 1);
             }
+            Set<Vec3Impl> occupiedSpace = new HashSet<>();
+            // these track the global current location
+            int aa = 0, bb = 0, cc = 0;
+            // these track the vec3 towards next meaningful element
             int a = 0, b = 0, c = 0;
+            // I do know these are pretty bad variable naming, but I have no better idea
             for (int i = 0; i < builder.length(); i++) {
                 char ch = builder.charAt(i);
-                if (ch == ' ' || ch == '~') {
+                if (ch == ' ') {
                     builder.setCharAt(i, A);
                     ch = A;
+                } else if (ch == '~') {
+                    builder.setCharAt(i, A);
+                    ch = A;
+                    occupiedSpace.add(Vec3Impl.getFromPool(aa, bb, cc));
                 }
                 if (ch == A) {
+                    aa++;
                     a++;
                 } else if (ch == B) {
+                    aa = 0;
                     a = 0;
+                    bb++;
                     b++;
                 } else if (ch == C) {
+                    aa = 0;
+                    bb = 0;
                     a = 0;
                     b = 0;
                     c++;
+                    cc++;
                 } else if (a != 0 || b != 0 || c != 0) {
                     Vec3Impl vec3 = new Vec3Impl(a, b, c);
                     Character navigate = navigates.get(vec3);
@@ -105,11 +128,18 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
                         addElement(navigate, step(vec3));
                     }
                     builder.setCharAt(i - 1, navigate);
+                    occupiedSpace.add(Vec3Impl.getFromPool(aa, bb, cc));
+                    aa++;
                     a = 0;
                     b = 0;
                     c = 0;
+                } else {
+                    occupiedSpace.add(Vec3Impl.getFromPool(aa, bb, cc));
+                    aa++;
                 }
             }
+
+            occupiedSpaces.put(name, occupiedSpace);
 
             String built = builder.toString().replaceAll("[\\uA000\\uB000\\uC000]", "");
 
@@ -123,18 +153,24 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
             return this;
         }
 
+        /**
+         * @deprecated use the unboxed version
+         */
+        @Deprecated
         public Builder<T> addElement(Character name, IStructureElement<T> structurePiece) {
+            elements.putIfAbsent(name, structurePiece);
+            return this;
+        }
+
+        public Builder<T> addElement(char name, IStructureElement<T> structurePiece) {
             elements.putIfAbsent(name, structurePiece);
             return this;
         }
 
         public IStructureDefinition<T> build() {
             Map<String, IStructureElement<T>[]> structures = compileStructureMap();
-            if (StructureLibAPI.isDebugEnabled()) {
-                return new StructureDefinition<>(new HashMap<>(elements), new HashMap<>(shapes), structures);
-            } else {
-                return structures::get;
-            }
+            return new StructureDefinition<>(
+                    new HashMap<>(elements), new HashMap<>(shapes), structures, occupiedSpaces);
         }
 
         @SuppressWarnings("unchecked")
@@ -193,5 +229,12 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         IStructureElement<T>[] elements = structures.get(name);
         if (elements == null) throw new NoSuchElementException(name);
         return elements;
+    }
+
+    @Override
+    public boolean isContainedInStructure(String name, int offsetA, int offsetB, int offsetC) {
+        Set<Vec3Impl> occupiedSpace = occupiedSpaces.get(name);
+        if (occupiedSpace == null) throw new NoSuchElementException(name);
+        return occupiedSpace.contains(new Vec3Impl(offsetA, offsetB, offsetC));
     }
 }
