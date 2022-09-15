@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
 
@@ -96,7 +97,9 @@ public class AutoPlaceEnvironment {
     }
 
     public APILevel getAPILevel() {
-        return definition == null ? APILevel.Legacy : APILevel.V2;
+        return definition == null
+                ? actor instanceof EntityPlayerMP ? APILevel.Legacy : APILevel.LegacyRelaxed
+                : APILevel.V2;
     }
 
     /**
@@ -126,6 +129,7 @@ public class AutoPlaceEnvironment {
 
     /**
      * Test if given location is contained within the current piece.
+     *
      * @param offsetA offset in A direction <b>relative to current element</b>
      * @param offsetB offset in B direction <b>relative to current element</b>
      * @param offsetC offset in C direction <b>relative to current element</b>
@@ -210,8 +214,25 @@ public class AutoPlaceEnvironment {
         }
     }
 
+    /**
+     * Defines the various API level an {@link AutoPlaceEnvironment} has implemented.
+     * <p>
+     * Enum constants are defined in chronological order.
+     */
     public enum APILevel {
+        /**
+         * Implements {@link #getChatter()}, {@link #getActor()} and {@link #getSource()}.
+         * {@link #getActor()} is guaranteed to be an {@link net.minecraft.entity.player.EntityPlayerMP}
+         */
         Legacy,
+        /**
+         * Implements {@link #getChatter()}, {@link #getActor()} and {@link #getSource()}.
+         * {@link #getActor()} is <b>NOT</b> guaranteed to be an {@link net.minecraft.entity.player.EntityPlayerMP}
+         */
+        LegacyRelaxed,
+        /**
+         * Implements everything so far we have defined.
+         */
         V2,
     }
 }
