@@ -6,6 +6,7 @@ javadoc {
     include "com/gtnewhorizon/structurelib/structure/**"
     include "com/gtnewhorizon/structurelib/util/**"
     include "com/gtnewhorizon/structurelib/StructureLibAPI.java"
+    include "com/gtnewhorizon/structurelib/StructureEvent.java"
 
     options {
         overview "src/main/javadoc/overview.html"

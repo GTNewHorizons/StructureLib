@@ -97,6 +97,18 @@ StructureLib API documentation.
     breaking client code.
 </p>
 
+<h2>{@link com.gtnewhorizon.structurelib.StructureEvent}</h2>
+<p>
+    This class is the base class of all events that will be posted while a IStructureDefinition are visited.
+    These events are disabled by default, and can be enabled by calling {@link com.gtnewhorizon.structurelib.StructureLibAPI#enableInstrument(Object)}.
+    To receive these events, register an event handler to {@link net.minecraftforge.common.MinecraftForge#EVENT_BUS}.
+    Handlers should filter the events received by {@link com.gtnewhorizon.structurelib.StructureEvent#getInstrumentIdentifier()}.
+</p>
+<p>
+    <b>These events are intended for third party tools to inspect structure details.</b> Normal users should not use
+    these at all.
+</p>
+
 <h1>Important Concepts</h1>
 <h2>Context Object</h2>
 <p>
@@ -231,5 +243,13 @@ public class MyHatchElement&lt;T> implements IStructureElement&lt;T> {
 
 The code for placeBlock() and spawnHint() will be left as an exercise for the reader.
 
+<h2>Instrumenting StructureLib</h2>
+<p>
+    StructureLib support third party tools to poke into structure's internals via events. This is done by listening to {@link com.gtnewhorizon.structurelib.StructureEvent}
+    and its subclasses on the {@link net.minecraftforge.common.MinecraftForge#EVENT_BUS forge main event bus}.
+</p>
+<p>
+    Please refer to {@link com.gtnewhorizon.structurelib.StructureEvent} to see what events are available.
+</p>
 </BODY>
 </HTML>

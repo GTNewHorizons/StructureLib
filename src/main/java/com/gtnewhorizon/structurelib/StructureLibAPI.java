@@ -7,6 +7,7 @@ import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
+import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
@@ -38,6 +39,54 @@ public class StructureLibAPI {
     public static final int HINT_BLOCK_META_AIR = 13;
     public static final int HINT_BLOCK_META_NOT_AIR = 14;
     public static final int HINT_BLOCK_META_ERROR = 15;
+    static final ThreadLocal<Object> instrument = new ThreadLocal<>();
+
+    /**
+     * Start instrumenting <b>for the current thread only</b>. When instrumentation is enabled,
+     * {@link IStructureDefinition}'s builtin iteration methods will send {@link StructureEvent} and its subclasses when
+     * appropriate. Otherwise, these events will not be sent at all, regardless of whether a listener for these events
+     * are registered.
+     * <p>
+     * Identifiers are required to be value-comparable, i.e. overrides {@link Object#equals(Object)}.
+     * Suggested identifier includes
+     * <ul>
+     *     <li>Mod Instance or {@link cpw.mods.fml.common.ModContainer}</li>
+     *     <li>{@link com.gtnewhorizon.structurelib.alignment.constructable.IConstructable} and its friends, if you are triggering structure check via this interface.</li>
+     *     <li>{@link net.minecraft.util.ResourceLocation}</li>
+     * </ul>
+     * <p>
+     * It's an API abuse for normal {@link IStructureDefinition} users to depend on this feature. They have full control
+     * and full knowledge of the {@link IStructureDefinition} they are using. Using events to instrument the structure
+     * check/autoplace is completely unnecessary and does nothing but add overhead.
+     * <p>
+     * Instruments are required to call {@link #disableInstrument()} whenever it is done with its business, as there can
+     * be only one instrument for any given thread.
+     *
+     * @param identifier an identifier sent along the actual event.
+     * @throws IllegalStateException if instrument has already been enabled.
+     */
+    public static void enableInstrument(Object identifier) {
+        if (isInstrumentEnabled()) throw new IllegalStateException();
+        instrument.set(instrument);
+    }
+
+    /**
+     * Stop instrumenting.
+     *
+     * @throws IllegalStateException if instrumenting hasn't been enabled.
+     */
+    public static void disableInstrument() {
+        if (!isInstrumentEnabled()) throw new IllegalStateException();
+        instrument.set(null);
+    }
+
+    /**
+     * Check if instrumenting is enabled.
+     * @return true if enabled, false otherwise
+     */
+    public static boolean isInstrumentEnabled() {
+        return instrument.get() != null;
+    }
 
     /**
      * Start a batch of hinting. All hints particles generated during one batch will be considered to belong to one hologram.
@@ -59,12 +108,13 @@ public class StructureLibAPI {
 
     /**
      * Generate a new hint particle on client side at given location using given textures with a tint.
-     * @param w World to spawn. Usually the client world.
-     * @param x x coord
-     * @param y y coord
-     * @param z z coord
+     *
+     * @param w     World to spawn. Usually the client world.
+     * @param x     x coord
+     * @param y     y coord
+     * @param z     z coord
      * @param icons 6 texture. in forge direction order.
-     * @param RGBa a 4 short array. tint in rgba form. currently alpha channel is ignored, but we might change this later on.
+     * @param RGBa  a 4 short array. tint in rgba form. currently alpha channel is ignored, but we might change this later on.
      */
     public static void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {
         proxy.hintParticleTinted(w, x, y, z, icons, RGBa);
@@ -72,13 +122,14 @@ public class StructureLibAPI {
 
     /**
      * Generate a new hint particle on client side at given location using textures from given block with a tint.
-     * @param w World to spawn. Usually the client world.
-     * @param x x coord
-     * @param y y coord
-     * @param z z coord
+     *
+     * @param w     World to spawn. Usually the client world.
+     * @param x     x coord
+     * @param y     y coord
+     * @param z     z coord
      * @param block block to take texture from
-     * @param meta the meta of block to take texture from
-     * @param RGBa a 4 short array. tint in rgba form. currently alpha channel is ignored, but we might change this later on.
+     * @param meta  the meta of block to take texture from
+     * @param RGBa  a 4 short array. tint in rgba form. currently alpha channel is ignored, but we might change this later on.
      */
     public static void hintParticleTinted(World w, int x, int y, int z, Block block, int meta, short[] RGBa) {
         proxy.hintParticleTinted(w, x, y, z, block, meta, RGBa);
@@ -86,10 +137,11 @@ public class StructureLibAPI {
 
     /**
      * Generate a new hint particle on client side at given location using given textures.
-     * @param w World to spawn. Usually the client world.
-     * @param x x coord
-     * @param y y coord
-     * @param z z coord
+     *
+     * @param w     World to spawn. Usually the client world.
+     * @param x     x coord
+     * @param y     y coord
+     * @param z     z coord
      * @param icons 6 texture. in forge direction order.
      */
     public static void hintParticle(World w, int x, int y, int z, IIcon[] icons) {
@@ -98,12 +150,13 @@ public class StructureLibAPI {
 
     /**
      * Generate a new hint particle on client side at given location using textures from given block.
-     * @param w World to spawn. Usually the client world.
-     * @param x x coord
-     * @param y y coord
-     * @param z z coord
+     *
+     * @param w     World to spawn. Usually the client world.
+     * @param x     x coord
+     * @param y     y coord
+     * @param z     z coord
      * @param block block to take texture from
-     * @param meta the meta of block to take texture from
+     * @param meta  the meta of block to take texture from
      */
     public static void hintParticle(World w, int x, int y, int z, Block block, int meta) {
         proxy.hintParticle(w, x, y, z, block, meta);
@@ -111,7 +164,7 @@ public class StructureLibAPI {
 
     /**
      * Update the tint of given hint particle. Do nothing if particle not found.
-     *
+     * <p>
      * Can be called on either client side or server side.
      * Server side will schedule a network message to update it for this player only.
      * Will do nothing if no hint particle is found at given location.
@@ -240,10 +293,11 @@ public class StructureLibAPI {
 
     /**
      * Send chat to player, but throttled.
-     * @param throttleKey throttle key. Must properly implement {@link Object#hashCode()} and {@link Object#equals(Object)}
-     *                    to handle value equality.
-     * @param player        player to send chat to
-     * @param text          chat to send
+     *
+     * @param throttleKey      throttle key. Must properly implement {@link Object#hashCode()} and {@link Object#equals(Object)}
+     *                         to handle value equality.
+     * @param player           player to send chat to
+     * @param text             chat to send
      * @param intervalRequired interval required before last recorded time to actually send the message. unit in millisecond.
      *                         we purposefully chose to not use a bigger data type to limit how long this interval can be
      */
@@ -254,12 +308,13 @@ public class StructureLibAPI {
 
     /**
      * Send chat to player, but throttled.
-     * @param throttleKey throttle key. Must properly implement {@link Object#hashCode()} and {@link Object#equals(Object)}
-     *                    to handle value equality.
-     * @param player        player to send chat to
-     * @param text          chat to send
-     * @param intervalRequired interval required before last recorded time to actually send the message. unit in millisecond.
-     *                         we purposefully chose to not use a bigger data type to limit how long this interval can be
+     *
+     * @param throttleKey         throttle key. Must properly implement {@link Object#hashCode()} and {@link Object#equals(Object)}
+     *                            to handle value equality.
+     * @param player              player to send chat to
+     * @param text                chat to send
+     * @param intervalRequired    interval required before last recorded time to actually send the message. unit in millisecond.
+     *                            we purposefully chose to not use a bigger data type to limit how long this interval can be
      * @param forceUpdateLastSend if true, always update the last send time, even if the message isn't actually sent.
      */
     public static void addThrottledChat(
