@@ -22,7 +22,8 @@ import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
 /**
- * Use StructureUtility to instantiate
+ * Use StructureUtility to instantiate. These are the building blocks for your {@link IStructureDefinition}. It represents
+ * what a particular element can be and how this particular element should be autoplaced.
  */
 public interface IStructureElement<T> {
     boolean check(T t, World world, int x, int y, int z);

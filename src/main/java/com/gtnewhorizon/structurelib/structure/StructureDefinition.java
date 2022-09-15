@@ -53,18 +53,22 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         }
 
         /**
-         * Adds shape
-         * + is anything but air
-         * - is air checks
-         * space bar is skip
-         * ~ is also skip (but marks controller position, optional. implementation wise it is a space...)
-         * rest needs to be defined
+         * Adds shape. Shape is a two-dimensional string array. Each <b>character</b> inside any of these strings will
+         * be later mapped to a particular type of {@link IStructureElement} as indicated by {@link #addElement(Character, IStructureElement)}.
          * <p>
          * next char is next block(a)
          * next string is next line(b)
          * next string[] is next slice(c)
          * <p>
-         * char A000-FFFF range is reserved for generated skips
+         * There are a few special reserved characters that are pre-mapped to some common structure elements
+         * <ul>
+         * <li>+ is anything but air</li>
+         * <li>- is air checks</li>
+         * <li>space bar is skip</li>
+         * <li>~ is also skip (but marks controller position, not optional)</li>
+         * <li>char {@code A000-FFFF} range is reserved for generated skips</li>
+         * </ul>
+         * <p>
          *
          * @param name           unlocalized/code name
          * @param structurePiece generated or written struct - DO NOT STORE IT ANYWHERE, or at least set them to null afterwards
@@ -149,7 +153,16 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
             return this;
         }
 
+        /**
+         * @deprecated use the unboxed version
+         */
+        @Deprecated
         public Builder<T> addElement(Character name, IStructureElement<T> structurePiece) {
+            elements.putIfAbsent(name, structurePiece);
+            return this;
+        }
+
+        public Builder<T> addElement(char name, IStructureElement<T> structurePiece) {
             elements.putIfAbsent(name, structurePiece);
             return this;
         }
