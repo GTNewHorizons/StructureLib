@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib.structure;
 import static java.lang.Integer.MIN_VALUE;
 
 import com.google.common.collect.ImmutableList;
+import com.gtnewhorizon.structurelib.StructureEvent.StructureElementVisitedEvent;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
@@ -3030,6 +3031,17 @@ public class StructureUtility {
                             Arrays.toString(abc));
 
                 if (world.blockExists(xyz[0], xyz[1], xyz[2])) {
+                    if (StructureLibAPI.isInstrumentEnabled()) {
+                        StructureElementVisitedEvent.fireEvent(
+                                world,
+                                xyz[0],
+                                xyz[1],
+                                xyz[2],
+                                abc[0] - basePositionA,
+                                abc[1] - basePositionB,
+                                abc[2] - basePositionC,
+                                element);
+                    }
                     if (!predicate.visit(element, world, xyz[0], xyz[1], xyz[2], abc[0], abc[1], abc[2])) {
                         if (StructureLibAPI.isDebugEnabled()) {
                             StructureLib.LOGGER.info(

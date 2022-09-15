@@ -17,6 +17,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
@@ -91,10 +92,28 @@ public interface IStructureElement<T> {
     }
 
     /**
-     * Try place the block by taking resource from given IItemSource.
+     * Try place the block by taking resource from given {@link IItemSource}.
      * <p>
      * You might want to use {@link StructureUtility#survivalPlaceBlock(Block, int, World, int, int, int, IItemSource, net.minecraft.entity.player.EntityPlayer)}
      * or its overloads to implement this.
+     * <p>
+     * The default implementation provided will
+     * <ol>
+     *     <li>Get {@link BlocksToPlace} via {@link #getBlocksToPlace(Object, World, int, int, int, ItemStack, AutoPlaceEnvironment)}. If not null
+     *     <ol>
+     *     <li>call {@link #check(Object, World, int, int, int)}. If this returns {@code true}, {@link PlaceResult#SKIP} will be returned without further action.</li>
+     *     <li>Use the {@link BlocksToPlace} retrieved earlier and passed in {@link IItemSource} to determine an item to place</li>
+     *     <li>Hand over control to {@link StructureUtility#survivalPlaceBlock(ItemStack, NBTMode, NBTTagCompound, boolean, World, int, int, int, IItemSource, EntityPlayer, Consumer)}</li>
+     *     </ol>
+     *     </li>
+     *     <li>Call legacy {@link #survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)} if {@code env.getActor()} contains an {@link EntityPlayerMP}</li>
+     *     <li>Emit warning under debug mode (or throw exception under panic mode), then return {@link PlaceResult#SKIP}</li>
+     * </ol>
+     * It should be noticed that the default implementation is likely to cause unexpected issues if the
+     * {@link #check(Object, World, int, int, int)} is not side effect free, or is not idempotent.
+     * E.g. the {@link #check(Object, World, int, int, int)} will add current coord to a {@link java.util.List}. As
+     * this method might be invoked at a location that is already accepted, this will cause the machine to have multiple
+     * of this coord in its list.
      *
      * @param trigger trigger item
      * @param env     autoplacing environment
@@ -259,6 +278,7 @@ public interface IStructureElement<T> {
          * Get the blocks to place filter. This is usually slower as it requires walking through inventories one by one.
          * <p>
          * Suitable for use with {@link IItemSource#takeOne(Predicate, boolean)}
+         *
          * @return a predicate. never null.
          */
         @Nonnull
