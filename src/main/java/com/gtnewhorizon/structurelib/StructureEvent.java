@@ -11,6 +11,9 @@ import net.minecraftforge.common.MinecraftForge;
  * <p>
  * All of these events will be fired on the {@link net.minecraftforge.common.MinecraftForge#EVENT_BUS}, if they are
  * enabled by {@link StructureLibAPI#enableInstrument(Object)}.
+ * <p>
+ * All public stuff in this class and its enclosed classes are considered part of the public API.
+ * Backwards compatibility is maintained to the maximum extend possible.
  */
 public abstract class StructureEvent extends Event {
     private final World world;
@@ -78,7 +81,7 @@ public abstract class StructureEvent extends Event {
          * as is.
          */
         public static void fireEvent(
-                World world, int x, int y, int z, int a, int b, int c, IStructureElement<?> element) {
+            World world, int x, int y, int z, int a, int b, int c, IStructureElement<?> element) {
             if (StructureLibAPI.isInstrumentEnabled()) {
                 try {
                     MinecraftForge.EVENT_BUS.post(new StructureElementVisitedEvent(world, x, y, z, a, b, c, element));
@@ -89,7 +92,7 @@ public abstract class StructureEvent extends Event {
         }
 
         StructureElementVisitedEvent(
-                World world, int x, int y, int z, int a, int b, int c, IStructureElement<?> element) {
+            World world, int x, int y, int z, int a, int b, int c, IStructureElement<?> element) {
             super(world, x, y, z);
             this.a = a;
             this.b = b;
@@ -134,14 +137,14 @@ public abstract class StructureEvent extends Event {
         @Override
         public String toString() {
             return "StructureElementVisitedEvent{" + "a="
-                    + a + ", b="
-                    + b + ", c="
-                    + c + ", element="
-                    + element + ", world="
-                    + getWorld() + ", x="
-                    + getX() + ", y="
-                    + getY() + ", z="
-                    + getZ() + '}';
+                + a + ", b="
+                + b + ", c="
+                + c + ", element="
+                + element + ", world="
+                + getWorld() + ", x="
+                + getX() + ", y="
+                + getY() + ", z="
+                + getZ() + '}';
         }
     }
 }
