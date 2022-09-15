@@ -6,7 +6,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
 
@@ -24,7 +23,7 @@ public class AutoPlaceEnvironment {
     private final int[] baseOffsetABC;
 
     public static AutoPlaceEnvironment fromLegacy(
-            IItemSource source, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+            IItemSource source, EntityPlayer actor, Consumer<IChatComponent> chatter) {
         if (source instanceof WrappedIItemSource) {
             AutoPlaceEnvironment original = ((WrappedIItemSource) source).container;
             // feels like this is extremely likely to cause issues, but this does allow us to recover lost info.
@@ -161,7 +160,7 @@ public class AutoPlaceEnvironment {
      * @param actor new actor
      * @return new instance
      */
-    public AutoPlaceEnvironment withActor(EntityPlayerMP actor) {
+    public AutoPlaceEnvironment withActor(EntityPlayer actor) {
         return new AutoPlaceEnvironment(source, actor, chatter, definition, piece, facing, offsetABC, baseOffsetABC);
     }
 
