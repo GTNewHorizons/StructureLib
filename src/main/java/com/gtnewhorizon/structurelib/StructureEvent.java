@@ -16,47 +16,12 @@ import net.minecraftforge.common.MinecraftForge;
  * Backwards compatibility is maintained to the maximum extend possible.
  */
 public abstract class StructureEvent extends Event {
-    private final World world;
-    private final int x, y, z;
     /*
      * In case the event is passed to another thread for processing.
      */
     private final Object identifier = StructureLibAPI.instrument.get();
 
-    StructureEvent(World world, int x, int y, int z) {
-        this.world = world;
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-
-    /**
-     * Location of this event.
-     */
-    public World getWorld() {
-        return world;
-    }
-
-    /**
-     * Location of this event. Absolute world coordinate.
-     */
-    public int getX() {
-        return x;
-    }
-
-    /**
-     * Location of this event. Absolute world coordinate.
-     */
-    public int getY() {
-        return y;
-    }
-
-    /**
-     * Location of this event. Absolute world coordinate.
-     */
-    public int getZ() {
-        return z;
-    }
+    StructureEvent() {}
 
     /**
      * The instrument identifier. Subscribers should filter by these identifiers to prevent listening to a structure
@@ -70,6 +35,8 @@ public abstract class StructureEvent extends Event {
      * Fired <b>just before</b> any structure element is visited.
      */
     public static final class StructureElementVisitedEvent extends StructureEvent {
+        private final World world;
+        private final int x, y, z;
         private final int a, b, c;
         private final IStructureElement<?> element;
 
@@ -93,7 +60,10 @@ public abstract class StructureEvent extends Event {
 
         StructureElementVisitedEvent(
                 World world, int x, int y, int z, int a, int b, int c, IStructureElement<?> element) {
-            super(world, x, y, z);
+            this.world = world;
+            this.x = x;
+            this.y = y;
+            this.z = z;
             this.a = a;
             this.b = b;
             this.c = c;
@@ -145,6 +115,34 @@ public abstract class StructureEvent extends Event {
                     + getX() + ", y="
                     + getY() + ", z="
                     + getZ() + '}';
+        }
+
+        /**
+         * Location of this event.
+         */
+        public World getWorld() {
+            return world;
+        }
+
+        /**
+         * Location of this event. Absolute world coordinate.
+         */
+        public int getX() {
+            return x;
+        }
+
+        /**
+         * Location of this event. Absolute world coordinate.
+         */
+        public int getY() {
+            return y;
+        }
+
+        /**
+         * Location of this event. Absolute world coordinate.
+         */
+        public int getZ() {
+            return z;
         }
     }
 }
