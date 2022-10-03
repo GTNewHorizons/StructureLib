@@ -1,5 +1,6 @@
 package com.gtnewhorizon.structurelib;
 
+import com.gtnewhorizon.structurelib.commands.CommandStructureLib;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import com.gtnewhorizon.structurelib.block.BlockHint;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
@@ -10,12 +11,14 @@ import com.gtnewhorizon.structurelib.util.XSTR;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
+import net.minecraft.command.CommandHandler;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -41,6 +44,8 @@ public class StructureLib {
 	}
 
 	public static final XSTR RANDOM = new XSTR();
+
+	public static final CommandStructureLib commandStructureLib = new CommandStructureLib();
 
 	static Block blockHint;
 	static Item itemBlockHint;
@@ -74,5 +79,11 @@ public class StructureLib {
 
 	public static boolean isCurrentPlayer(EntityPlayer player) {
 		return proxy.isCurrentPlayer(player);
+	}
+
+	@Mod.EventHandler
+	public void serverStarting(FMLServerStartingEvent event) {
+		CommandHandler commandHandler = (CommandHandler) event.getServer().getCommandManager();
+		commandHandler.registerCommand(commandStructureLib);
 	}
 }
