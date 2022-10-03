@@ -139,6 +139,18 @@ public class ClientProxy extends CommonProxy {
     }
 
     @Override
+    public void clearHints(World w) {
+        if (!w.isRemote) {
+            if(currentHints!=null) {
+                currentHints.forEach(EntityFXBlockHint::setDead);
+                allHints.clear();
+                hintOwners.clear();
+                currentHints.clear();
+            }
+        }
+    }
+
+    @Override
     public void preInit(FMLPreInitializationEvent e) {
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
     }

@@ -22,5 +22,7 @@ public class CommonProxy {
 	public void startHinting(World w) {}
 	public void endHinting(World w) {}
 
+	public void clearHints(World w) {}
+
 	public void preInit(FMLPreInitializationEvent e) {}
 }
