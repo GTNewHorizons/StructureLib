@@ -35,7 +35,7 @@ public class StructureLib {
 	public static Logger LOGGER = LogManager.getLogger("StructureLib");
 
 	@SidedProxy(serverSide = "com.gtnewhorizon.structurelib.proxy.CommonProxy", clientSide = "com.gtnewhorizon.structurelib.proxy.ClientProxy")
-	static CommonProxy proxy;
+	public static CommonProxy proxy;
 	static SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel(StructureLibAPI.MOD_ID);
 
 	static {
