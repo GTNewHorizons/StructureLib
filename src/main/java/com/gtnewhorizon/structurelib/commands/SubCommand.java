@@ -92,4 +92,18 @@ public abstract class SubCommand extends CommandBase implements ICommand {
     public int compareTo(Object command) {
         return this.getCommandName().compareTo(((ICommand) command).getCommandName());
     }
+
+    public void processChildCommand(ICommandSender sender, String[] args) {
+        if (children.containsKey(args[0])) {
+            ICommand command = children.get(args[0]);
+
+            if (command.canCommandSenderUseCommand(sender)) {
+                String[] newArgs = new String[args.length - 1];
+                System.arraycopy(args, 1, newArgs, 0, newArgs.length);
+                command.processCommand(sender, newArgs);
+            }
+        }
+    }
+
+    public void printHelp(ICommandSender sender, String command) {}
 }
