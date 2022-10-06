@@ -13,12 +13,17 @@ public class CommandStructureLib extends SubCommand {
 
         this.addChildCommand(new CommandPos1());
         this.addChildCommand(new CommandPos2());
+        this.addChildCommand(new CommandSetFacing());
     }
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length < 1) {
             printHelp(sender, null);
+        } else if ("refresh".equalsIgnoreCase(args[0])) {
+            CommandData.box().drawBoundingBox(sender.getEntityWorld());
+        } else if ("clear".equalsIgnoreCase(args[0])) {
+            CommandData.reset();
         } else {
             if (children.containsKey(args[0])) {
                 processChildCommand(sender, args);
