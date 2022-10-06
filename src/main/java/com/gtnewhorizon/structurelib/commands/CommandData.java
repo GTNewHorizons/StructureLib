@@ -74,5 +74,12 @@ public final class CommandData {
 
         world = null;
         facing = null;
+        box = null;
+    }
+
+    public static boolean isReady() {
+        return  box != null &&
+                world != null &&
+                facing != null;
     }
 }
