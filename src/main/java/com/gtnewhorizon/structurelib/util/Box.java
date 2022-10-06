@@ -66,94 +66,91 @@ public class Box {
     }
 
     public void drawFace(ForgeDirection face, World world) {
-        Vec3Impl cornerA;
+        Vec3Impl startingPosition;
 
-        int range1, range2;
+        int XYRange, XZRange;
         RangeVariable range1Type, range2Type;
-
-//        face = ForgeDirection.UP;
 
         switch (face) {
             case UP:
-                cornerA = new Vec3Impl(this.xMin, this.yMax, this.zMax);
+                startingPosition = new Vec3Impl(this.xMin, this.yMax, this.zMin);
 
-                range1 = this.xMax - this.xMin;
+                XYRange = this.xMax - this.xMin;
                 range1Type = RangeVariable.X;
 
-                range2 = this.zMax - this.zMin;
+                XZRange = this.zMax - this.zMin;
                 range2Type = RangeVariable.Z;
                 break;
             case DOWN:
-                cornerA = new Vec3Impl(this.xMin, this.yMin, this.zMin);
+                startingPosition = new Vec3Impl(this.xMin, this.yMin, this.zMin);
 
-                range1 = this.xMax - this.xMin;
+                XYRange = this.xMax - this.xMin;
                 range1Type = RangeVariable.X;
 
-                range2 = this.zMax - this.zMin;
+                XZRange = this.zMax - this.zMin;
                 range2Type = RangeVariable.Z;
                 break;
             case EAST:
-                cornerA = new Vec3Impl(this.xMax, this.yMin, this.zMin);
+                startingPosition = new Vec3Impl(this.xMax, this.yMin, this.zMin);
 
-                range1 = this.yMax - this.yMin;
+                XYRange = this.yMax - this.yMin;
                 range1Type = RangeVariable.Y;
 
-                range2 = this.zMax - this.zMin;
+                XZRange = this.zMax - this.zMin;
                 range2Type = RangeVariable.Z;
                 break;
             case WEST:
-                cornerA = new Vec3Impl(this.xMin, this.yMin, this.zMin);
+                startingPosition = new Vec3Impl(this.xMin, this.yMin, this.zMin);
 
-                range1 = this.yMax - this.yMin;
+                XYRange = this.yMax - this.yMin;
                 range1Type = RangeVariable.Y;
 
-                range2 = this.zMax - this.zMin;
+                XZRange = this.zMax - this.zMin;
                 range2Type = RangeVariable.Z;
                 break;
             case NORTH:
-                cornerA = new Vec3Impl(this.xMin, this.yMin, this.zMin);
+                startingPosition = new Vec3Impl(this.xMin, this.yMin, this.zMin);
 
-                range1 = this.yMax - this.yMin;
+                XYRange = this.yMax - this.yMin;
                 range1Type = RangeVariable.Y;
 
-                range2 = this.xMax - this.xMin;
+                XZRange = this.xMax - this.xMin;
                 range2Type = RangeVariable.X;
                 break;
             case SOUTH:
-                cornerA = new Vec3Impl(this.xMin, this.yMin, this.zMax);
+                startingPosition = new Vec3Impl(this.xMin, this.yMin, this.zMax);
 
-                range1 = this.yMax - this.yMin;
+                XYRange = this.yMax - this.yMin;
                 range1Type = RangeVariable.Y;
 
-                range2 = this.xMax - this.xMin;
+                XZRange = this.xMax - this.xMin;
                 range2Type = RangeVariable.X;
                 break;
             default:
                 return;
         }
 
-        StructureLibAPI.hintParticleTinted(world, cornerA.get0(), cornerA.get1(), cornerA.get2(), StructureLibAPI.getBlockHint(), 13, new short[] {255, 0, 0});
+        for (int XYOffset = 0; XYOffset <= XYRange; XYOffset++) {
+            Vec3Impl temp = new Vec3Impl(startingPosition.get0(), startingPosition.get1(), startingPosition.get2());
 
-        for (int var1 = 0; var1 <= range1; var1++) {
-            Vec3Impl temp = new Vec3Impl(cornerA.get0(), cornerA.get1(), cornerA.get2());
-            for (int var2 = 0; var2 <= range2; var2++) {
-                StructureLibAPI.hintParticle(world, cornerA.get0(), cornerA.get1(), cornerA.get2(), StructureLibAPI.getBlockHint(), 13);
+            for (int XZOffset = 0; XZOffset <= XZRange; XZOffset++) {
+                StructureLibAPI.hintParticle(world, startingPosition.get0(), startingPosition.get1(), startingPosition.get2(), StructureLibAPI.getBlockHint(), 13);
 
                 switch (range2Type) {
                     case X:
-                        cornerA = cornerA.add(1, 0, 0);
+                        startingPosition = startingPosition.add(1, 0, 0);
                         break;
                     case Z:
-                        cornerA = cornerA.add(0, 0, 1);
+                        startingPosition = startingPosition.add(0, 0, 1);
                         break;
                 }
             }
             switch (range1Type) {
                 case X:
-                    cornerA = temp.add(1, 0, 0);
+                    startingPosition = temp.add(1, 0, 0);
                     break;
                 case Y:
-                    cornerA = temp.add(0, 1, 0);
+                    startingPosition = temp.add(0, 1, 0);
                     break;
             }
         }
