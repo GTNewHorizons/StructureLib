@@ -6,6 +6,8 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.util.ChatComponentText;
 
+import java.util.List;
+
 public class CommandPos1 extends SubCommand {
     public CommandPos1() {
         super("pos1");
@@ -36,5 +38,10 @@ public class CommandPos1 extends SubCommand {
     @Override
     public void printHelp(ICommandSender sender, String subCommand) {
         sender.addChatMessage(new ChatComponentText("CommandPos1 help"));
+    }
+
+    @Override
+    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args) {
+        return null;
     }
 }

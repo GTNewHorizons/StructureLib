@@ -5,10 +5,12 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.Vec3;
-import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.List;
 
 public class CommandSetFacing extends SubCommand {
     private static final Vec3 SOUTH = Vec3.createVectorHelper(0, 0, 1);
+
     private static final Vec3 EAST = Vec3.createVectorHelper(1, 0, 0);
 
     private static final Vec3 UP = Vec3.createVectorHelper(0, 1, 0);
@@ -80,5 +82,10 @@ public class CommandSetFacing extends SubCommand {
         }
 
         return maxOrdinal;
+    }
+
+    @Override
+    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args) {
+        return null;
     }
 }

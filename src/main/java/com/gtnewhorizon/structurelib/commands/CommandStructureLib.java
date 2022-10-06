@@ -7,6 +7,8 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.util.ChatComponentText;
 
+import java.util.List;
+
 public class CommandStructureLib extends SubCommand {
     public CommandStructureLib() {
         super("structurelib");
@@ -51,6 +53,22 @@ public class CommandStructureLib extends SubCommand {
                 throw new WrongUsageException("Invalid Argument(s)");
             }
         }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args) {
+        List<String> options = super.addTabCompletionOptions(sender, args);
+
+        if (options != null) {
+            options.add("build");
+            options.add("refresh");
+            options.add("clear");
+
+            return (List<String>) getListOfStringsMatchingLastWord(args, options.toArray(new String[0]));
+        }
+
+        return null;
     }
 
     @Override
