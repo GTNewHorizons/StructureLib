@@ -7,7 +7,7 @@ import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import net.minecraft.world.World;
 
 public final class CommandData {
-    private static Vec3Impl[] corners = new Vec3Impl[2];
+    private static final Vec3Impl[] corners = new Vec3Impl[2];
 
     private static Box box = null;
 
