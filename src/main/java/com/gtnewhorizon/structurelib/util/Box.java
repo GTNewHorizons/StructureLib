@@ -6,9 +6,9 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 public class Box {
-    public int xMin, xMax;
-    public int yMin, yMax;
-    public int zMin, zMax;
+    public final int xMin, xMax;
+    public final int yMin, yMax;
+    public final int zMin, zMax;
 
     public Box(Vec3Impl a, Vec3Impl b) {
         if (a.get0() < b.get0()) {
