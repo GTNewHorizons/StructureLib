@@ -15,10 +15,6 @@ public class CommandSetFacing extends SubCommand {
 
     private static final Vec3 UP = Vec3.createVectorHelper(0, 1, 0);
 
-    private enum Axis {
-        X, Y, Z;
-    };
-
     public CommandSetFacing() {
         super("facing");
     }
