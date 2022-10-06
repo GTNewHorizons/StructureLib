@@ -36,6 +36,18 @@ public class Box {
         }
     }
 
+    public int xSize() {
+        return this.xMax - this.xMin + 1;
+    }
+
+    public int ySize() {
+        return this.yMax - this.yMin + 1;
+    }
+
+    public int zSize() {
+        return this.zMax - this.zMin + 1;
+    }
+
     public void drawBoundingBox(World world) {
         StructureLib.proxy.clearHints(world);
 
@@ -62,7 +74,7 @@ public class Box {
     }
 
     enum RangeVariable {
-        X, Y, Z;
+        X, Y, Z
     }
 
     public void drawFace(ForgeDirection face, World world) {
