@@ -15,11 +15,25 @@ public class CommandPos1 extends SubCommand {
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
-        if (args.length == 0) {
+        if (args.length == 0 || args.length == 3) {
+            int xOffset = 0;
+            int yOffset = 0;
+            int zOffset = 0;
+
+            if (args.length == 3) {
+                try {
+                    xOffset = Integer.parseInt(args[0]);
+                    yOffset = Integer.parseInt(args[1]);
+                    zOffset = Integer.parseInt(args[2]);
+                } catch (NumberFormatException e) {
+                    throw new WrongUsageException("Optional arguments should be a positional offset represented by three integers.");
+                }
+            }
+
             CommandData.corners(0,
-                                new Vec3Impl(sender.getPlayerCoordinates().posX,
-                                             sender.getPlayerCoordinates().posY,
-                                             sender.getPlayerCoordinates().posZ),
+                                new Vec3Impl(sender.getPlayerCoordinates().posX + xOffset,
+                                             sender.getPlayerCoordinates().posY + yOffset,
+                                             sender.getPlayerCoordinates().posZ + zOffset),
                                 sender.getEntityWorld());
 
             StructureLibAPI.hintParticle(sender.getEntityWorld(),
