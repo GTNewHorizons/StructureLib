@@ -1,5 +1,6 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
@@ -1281,6 +1282,27 @@ public class StructureUtility {
 		};
 	}
 
+	public static String getPseudoJavaCode(World world,
+										   ExtendedFacing facing,
+										   Box box,
+										   boolean transpose) {
+		Vec3Impl basePosition = box.getBasePosition(facing);
+
+		return getPseudoJavaCode(world,
+							     facing,
+							     basePosition.get0(),
+							     basePosition.get1(),
+							     basePosition.get2(),
+							     0,
+							     0,
+							     0,
+							     te -> te.getClass().getCanonicalName(),
+							     box.xSize(),
+							     box.ySize(),
+							     box.zSize(),
+							     transpose);
+	}
+
 	/**
 	 * Used only to get pseudo code in structure writer...
 	 *
@@ -1504,24 +1526,24 @@ public class StructureUtility {
 	}
 
 	public static ExtendedFacing getExtendedFacingFromLookVector(Vec3 lookVec) {
+		final Vec3 EAST  = Vec3.createVectorHelper(1, 0, 0);
+		final Vec3 UP    = Vec3.createVectorHelper(0, 1, 0);
 		final Vec3 SOUTH = Vec3.createVectorHelper(0, 0, 1);
-		final Vec3 EAST = Vec3.createVectorHelper(1, 0, 0);
-		final Vec3 UP = Vec3.createVectorHelper(0, 1, 0);
 
 		double southScalarProjection = lookVec.dotProduct(SOUTH);
 		Vec3 southVectorProjection = Vec3.createVectorHelper(SOUTH.xCoord * southScalarProjection,
-				SOUTH.yCoord * southScalarProjection,
-				SOUTH.zCoord * southScalarProjection);
+									 			 			 SOUTH.yCoord * southScalarProjection,
+															 SOUTH.zCoord * southScalarProjection);
 
 		double eastScalarProjection = lookVec.dotProduct(EAST);
 		Vec3 eastVectorProjection = Vec3.createVectorHelper(EAST.xCoord * eastScalarProjection,
-				EAST.yCoord * eastScalarProjection,
-				EAST.zCoord * eastScalarProjection);
+															EAST.yCoord * eastScalarProjection,
+															EAST.zCoord * eastScalarProjection);
 
 		double upScalarProjection = lookVec.dotProduct(UP);
 		Vec3 upVectorProjection = Vec3.createVectorHelper(UP.xCoord * upScalarProjection,
-				UP.yCoord * upScalarProjection,
-				UP.zCoord * upScalarProjection);
+								 						  UP.yCoord * upScalarProjection,
+														  UP.zCoord * upScalarProjection);
 
 		ExtendedFacing facing = null;
 
@@ -1555,26 +1577,5 @@ public class StructureUtility {
 		}
 
 		return maxOrdinal;
-	}
-
-	public static Vec3Impl getBasePos(Box box, ExtendedFacing facing) {
-		Vec3Impl basePos = Vec3Impl.NULL_VECTOR;
-		switch (facing.getDirection()) {
-			case NORTH:
-				basePos = new Vec3Impl(box.xMax, box.yMax, box.zMin);
-				break;
-			case SOUTH:
-				basePos = new Vec3Impl(box.xMin, box.yMax, box.zMax);
-				break;
-			case WEST:
-				basePos = new Vec3Impl(box.xMin, box.yMax, box.zMin);
-				break;
-			case EAST:
-				basePos = new Vec3Impl(box.xMax, box.yMax, box.zMax);
-				break;
-			default:
-				break;
-		}
-		return basePos;
 	}
 }

@@ -21,21 +21,7 @@ public class CommandBuild extends SubCommand {
                 return;
             }
 
-            Vec3Impl basePosition = StructureUtility.getBasePos(CommandData.box(), CommandData.facing());
-
-            String structureDefinition = StructureUtility.getPseudoJavaCode(sender.getEntityWorld(),
-                                                                            CommandData.facing(),
-                                                                            basePosition.get0(),
-                                                                            basePosition.get1(),
-                                                                            basePosition.get2(),
-                                                                            0,
-                                                                            0,
-                                                                            0,
-                                                                            te -> te.getClass().getCanonicalName(),
-                                                                            CommandData.box().xSize(),
-                                                                            CommandData.box().ySize(),
-                                                                            CommandData.box().zSize(),
-                                                                            false);
+            String structureDefinition = StructureUtility.getPseudoJavaCode(sender.getEntityWorld(), CommandData.facing(), CommandData.box(), false);
 
             StructureLib.LOGGER.info(structureDefinition);
         } else if (args.length == 1 && "help".equalsIgnoreCase(args[0])) {

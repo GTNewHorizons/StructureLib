@@ -75,21 +75,7 @@ public class ItemDebugStructureWriter extends Item {
         if (corners[0] != null && corners[1] != null) {
             ExtendedFacing facing = StructureUtility.getExtendedFacingFromLookVector(player.getLookVec());
 
-            Vec3Impl basePosition = StructureUtility.getBasePos(box, facing);
-
-            String structureDefinition = StructureUtility.getPseudoJavaCode(player.getEntityWorld(),
-                                                                            facing,
-                                                                            basePosition.get0(),
-                                                                            basePosition.get1(),
-                                                                            basePosition.get2(),
-                                                                            0,
-                                                                            0,
-                                                                            0,
-                                                                            te -> te.getClass().getCanonicalName(),
-                                                                            box.xSize(),
-                                                                            box.ySize(),
-                                                                            box.zSize(),
-                                                                            false);
+            String structureDefinition = StructureUtility.getPseudoJavaCode(player.getEntityWorld(), facing, box, false);
 
             StructureLib.LOGGER.info(structureDefinition);
         }

@@ -2,6 +2,7 @@ package com.gtnewhorizon.structurelib.util;
 
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -166,5 +167,26 @@ public class Box {
                     break;
             }
         }
+    }
+
+    public Vec3Impl getBasePosition(ExtendedFacing facing) {
+        Vec3Impl basePos = Vec3Impl.NULL_VECTOR;
+        switch (facing.getDirection()) {
+            case NORTH:
+                basePos = new Vec3Impl(this.xMax, this.yMax, this.zMin);
+                break;
+            case SOUTH:
+                basePos = new Vec3Impl(this.xMin, this.yMax, this.zMax);
+                break;
+            case WEST:
+                basePos = new Vec3Impl(this.xMin, this.yMax, this.zMin);
+                break;
+            case EAST:
+                basePos = new Vec3Impl(this.xMax, this.yMax, this.zMax);
+                break;
+            default:
+                break;
+        }
+        return basePos;
     }
 }
