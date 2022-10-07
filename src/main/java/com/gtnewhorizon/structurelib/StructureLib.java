@@ -1,11 +1,11 @@
 package com.gtnewhorizon.structurelib;
 
-import com.gtnewhorizon.structurelib.commands.CommandStructureLib;
-import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import com.gtnewhorizon.structurelib.block.BlockHint;
+import com.gtnewhorizon.structurelib.commands.CommandStructureLib;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
+import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import com.gtnewhorizon.structurelib.proxy.CommonProxy;
 import com.gtnewhorizon.structurelib.util.XSTR;
 import cpw.mods.fml.common.Mod;

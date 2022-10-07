@@ -1,7 +1,7 @@
 package com.gtnewhorizon.structurelib.alignment;
 
-import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import com.gtnewhorizon.structurelib.alignment.enumerable.Direction;
+import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 

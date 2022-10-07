@@ -5,7 +5,6 @@ import net.minecraft.command.WrongUsageException;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
-import tv.twitch.chat.Chat;
 
 public class CommandClear extends SubCommand {
     public CommandClear() {
