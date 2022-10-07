@@ -4,6 +4,7 @@ import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
 import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
+import com.gtnewhorizon.structurelib.util.Box;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
@@ -1554,5 +1555,26 @@ public class StructureUtility {
 		}
 
 		return maxOrdinal;
+	}
+
+	public static Vec3Impl getBasePos(Box box, ExtendedFacing facing) {
+		Vec3Impl basePos = Vec3Impl.NULL_VECTOR;
+		switch (facing.getDirection()) {
+			case NORTH:
+				basePos = new Vec3Impl(box.xMax, box.yMax, box.zMin);
+				break;
+			case SOUTH:
+				basePos = new Vec3Impl(box.xMin, box.yMax, box.zMax);
+				break;
+			case WEST:
+				basePos = new Vec3Impl(box.xMin, box.yMax, box.zMin);
+				break;
+			case EAST:
+				basePos = new Vec3Impl(box.xMax, box.yMax, box.zMax);
+				break;
+			default:
+				break;
+		}
+		return basePos;
 	}
 }

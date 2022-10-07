@@ -21,7 +21,7 @@ public class CommandBuild extends SubCommand {
                 return;
             }
 
-            Vec3Impl basePosition = CommandData.getBasePos();
+            Vec3Impl basePosition = StructureUtility.getBasePos(CommandData.box(), CommandData.facing());
 
             String structureDefinition = StructureUtility.getPseudoJavaCode(sender.getEntityWorld(),
                                                                             CommandData.facing(),

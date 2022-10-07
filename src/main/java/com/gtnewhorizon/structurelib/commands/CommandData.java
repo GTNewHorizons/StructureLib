@@ -45,27 +45,6 @@ public final class CommandData {
         return box;
     }
 
-    public static Vec3Impl getBasePos() {
-        Vec3Impl basePos = Vec3Impl.NULL_VECTOR;
-        switch (facing.getDirection()) {
-            case NORTH:
-                basePos = new Vec3Impl(box.xMax, box.yMax, box.zMin);
-                break;
-            case SOUTH:
-                basePos = new Vec3Impl(box.xMin, box.yMax, box.zMax);
-                break;
-            case WEST:
-                basePos = new Vec3Impl(box.xMin, box.yMax, box.zMin);
-                break;
-            case EAST:
-                basePos = new Vec3Impl(box.xMax, box.yMax, box.zMax);
-                break;
-            default:
-                break;
-        }
-        return basePos;
-    }
-
     public static void reset() {
         corners[0] = null;
         corners[1] = null;
