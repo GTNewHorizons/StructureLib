@@ -8,10 +8,16 @@ import net.minecraft.util.ChatComponentText;
 
 import java.util.List;
 
-public class CommandPos2 extends SubCommand {
-    public CommandPos2() {
-        super("pos2");
+public class CommandPos extends SubCommand {
+    public enum Variant {
+        pos1, pos2
     }
+    public CommandPos(Variant variant) {
+        super(variant.name());
+        this.variant = variant;
+    }
+
+    private final Variant variant;
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
@@ -30,28 +36,28 @@ public class CommandPos2 extends SubCommand {
                 }
             }
 
-            CommandData.corners(1,
+            CommandData.corners(this.variant.ordinal(),
                                 new Vec3Impl(sender.getPlayerCoordinates().posX + xOffset,
                                              sender.getPlayerCoordinates().posY + yOffset,
                                              sender.getPlayerCoordinates().posZ + zOffset),
-                                             sender.getEntityWorld());
+                                sender.getEntityWorld());
 
             StructureLibAPI.hintParticle(sender.getEntityWorld(),
-                                         CommandData.corners()[1].get0(),
-                                         CommandData.corners()[1].get1(),
-                                         CommandData.corners()[1].get2(),
+                                         CommandData.corners()[variant.ordinal()].get0(),
+                                         CommandData.corners()[variant.ordinal()].get1(),
+                                         CommandData.corners()[variant.ordinal()].get2(),
                                          StructureLibAPI.getBlockHint(),
-                                         1);
+                                         this.variant.ordinal());
         } else if (args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             printHelp(sender, null);
         } else {
-            throw new WrongUsageException("idk what to put here yet");
+            throw new WrongUsageException("Invalid number of arguments. Run \"structurelib " + this.variant.name() + " help\" for more details");
         }
     }
 
     @Override
     public void printHelp(ICommandSender sender, String subCommand) {
-        sender.addChatMessage(new ChatComponentText("CommandPos2 help"));
+        sender.addChatMessage(new ChatComponentText("Command" + this.variant.name() + " help"));
     }
 
     @Override
