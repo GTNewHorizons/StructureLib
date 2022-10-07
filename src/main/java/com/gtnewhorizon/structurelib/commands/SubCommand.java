@@ -37,6 +37,11 @@ public abstract class SubCommand extends CommandBase implements ICommand {
     public SubCommand addChildCommand(SubCommand child) {
         child.setParent(this);
         children.put(child.getCommandName(), child);
+
+        for (String alias : child.aliases) {
+            children.put(alias, child);
+        }
+
         return this;
     }
 
