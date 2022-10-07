@@ -6,12 +6,10 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.StructureUtility;
 import com.gtnewhorizon.structurelib.util.Box;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
 
 import static com.gtnewhorizon.structurelib.StructureLibAPI.MOD_ID;
 import static com.gtnewhorizon.structurelib.StructureLibAPI.getBlockHint;
