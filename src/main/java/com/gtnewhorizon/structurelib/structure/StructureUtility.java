@@ -11,6 +11,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -1517,4 +1518,57 @@ public class StructureUtility {
 		return shape;
 	}
 
+	public static ExtendedFacing getExtendedFacingFromLookVector(Vec3 lookVec) {
+		final Vec3 SOUTH = Vec3.createVectorHelper(0, 0, 1);
+		final Vec3 EAST = Vec3.createVectorHelper(1, 0, 0);
+		final Vec3 UP = Vec3.createVectorHelper(0, 1, 0);
+
+		double southScalarProjection = lookVec.dotProduct(SOUTH);
+		Vec3 southVectorProjection = Vec3.createVectorHelper(SOUTH.xCoord * southScalarProjection,
+				SOUTH.yCoord * southScalarProjection,
+				SOUTH.zCoord * southScalarProjection);
+
+		double eastScalarProjection = lookVec.dotProduct(EAST);
+		Vec3 eastVectorProjection = Vec3.createVectorHelper(EAST.xCoord * eastScalarProjection,
+				EAST.yCoord * eastScalarProjection,
+				EAST.zCoord * eastScalarProjection);
+
+		double upScalarProjection = lookVec.dotProduct(UP);
+		Vec3 upVectorProjection = Vec3.createVectorHelper(UP.xCoord * upScalarProjection,
+				UP.yCoord * upScalarProjection,
+				UP.zCoord * upScalarProjection);
+
+		ExtendedFacing facing = null;
+
+		//we want the facing opposite the player look vector
+		int max = maxOrdinal(southVectorProjection.lengthVector(),
+						  	 eastVectorProjection.lengthVector(),
+							 upVectorProjection.lengthVector());
+
+		switch(max) {
+			case 0:
+				facing = (southVectorProjection.zCoord > 0) ? ExtendedFacing.NORTH_NORMAL_NONE : ExtendedFacing.SOUTH_NORMAL_NONE;
+				break;
+			case 1:
+				facing = (eastVectorProjection.xCoord > 0) ? ExtendedFacing.WEST_NORMAL_NONE : ExtendedFacing.EAST_NORMAL_NONE;
+				break;
+			case 2:
+				facing = (upVectorProjection.yCoord > 0) ? ExtendedFacing.DOWN_NORMAL_NONE : ExtendedFacing.UP_NORMAL_NONE;
+				break;
+		}
+
+		return facing;
+	}
+
+	private static int maxOrdinal(double... values) {
+		int maxOrdinal = 0;
+
+		for (int i = 0; i < values.length; i++) {
+			if (values[i] > values[maxOrdinal]) {
+				maxOrdinal = i;
+			}
+		}
+
+		return maxOrdinal;
+	}
 }
