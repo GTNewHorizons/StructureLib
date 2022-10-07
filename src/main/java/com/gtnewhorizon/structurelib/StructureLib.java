@@ -4,6 +4,7 @@ import com.gtnewhorizon.structurelib.block.BlockHint;
 import com.gtnewhorizon.structurelib.commands.CommandStructureLib;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
+import com.gtnewhorizon.structurelib.item.ItemDebugStructureWriter;
 import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import com.gtnewhorizon.structurelib.proxy.CommonProxy;
@@ -51,6 +52,7 @@ public class StructureLib {
 	static Item itemBlockHint;
 	static Item itemFrontRotationTool;
 	static Item itemConstructableTrigger;
+	static Item itemDebugStructureWriter;
 	public static final CreativeTabs creativeTab = new CreativeTabs("structurelib") {
 		@Override
 		@SideOnly(Side.CLIENT)
@@ -66,6 +68,7 @@ public class StructureLib {
 		itemBlockHint = ItemBlock.getItemFromBlock(StructureLibAPI.getBlockHint());
 		GameRegistry.registerItem(itemFrontRotationTool = new ItemFrontRotationTool(), itemFrontRotationTool.getUnlocalizedName());
 		GameRegistry.registerItem(itemConstructableTrigger = new ItemConstructableTrigger(), itemConstructableTrigger.getUnlocalizedName());
+		GameRegistry.registerItem(itemDebugStructureWriter = new ItemDebugStructureWriter(), itemDebugStructureWriter.getUnlocalizedName());
 		proxy.preInit(e);
 	}
 

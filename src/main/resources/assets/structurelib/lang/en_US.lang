@@ -15,6 +15,8 @@ tile.structurelib.blockhint.13.name=Hint air
 tile.structurelib.blockhint.14.name=Hint no air
 tile.structurelib.blockhint.15.name=Hint error
 
+item.structurelib.debugStructureWriter.name=Debug Structure Writer
+
 item.structurelib.frontRotationTool.name=Front Rotation Tool (Standalone)
 item.structurelib.frontRotationTool.desc.0=Triggers Front Rotation Interface
 item.structurelib.frontRotationTool.desc.1=Rotates only the front panel,
