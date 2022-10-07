@@ -5,6 +5,8 @@ import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatStyle;
+import net.minecraft.util.EnumChatFormatting;
 
 import java.util.List;
 
@@ -56,12 +58,15 @@ public class CommandPos extends SubCommand {
     }
 
     @Override
-    public void printHelp(ICommandSender sender, String subCommand) {
-        sender.addChatMessage(new ChatComponentText("Command" + this.variant.name() + " help"));
+    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args) {
+        return null;
     }
 
     @Override
-    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args) {
-        return null;
+    public void printHelp(ICommandSender sender, String subCommand) {
+        ChatStyle header = new ChatStyle().setColor(EnumChatFormatting.AQUA);
+        sender.addChatMessage(new ChatComponentText("/structurelib < pos1 | pos2 >").setChatStyle(header));
+
+        sender.addChatMessage(new ChatComponentText("Use to select the corners of the cuboid containing the multiblock."));
     }
 }

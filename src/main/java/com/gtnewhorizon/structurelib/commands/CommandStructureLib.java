@@ -1,11 +1,10 @@
 package com.gtnewhorizon.structurelib.commands;
 
-import com.gtnewhorizon.structurelib.StructureLib;
-import com.gtnewhorizon.structurelib.structure.StructureUtility;
-import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatStyle;
+import net.minecraft.util.EnumChatFormatting;
 
 import java.util.List;
 
@@ -16,8 +15,8 @@ public class CommandStructureLib extends SubCommand {
         setPermLevel(PermLevel.ADMIN);
         aliases.add("slib");
 
-        this.addChildCommand(new CommandPos1());
-        this.addChildCommand(new CommandPos2());
+        this.addChildCommand(new CommandPos(CommandPos.Variant.pos1));
+        this.addChildCommand(new CommandPos(CommandPos.Variant.pos2));
         this.addChildCommand(new CommandSetFacing());
         this.addChildCommand(new CommandBuild());
         this.addChildCommand(new CommandClear());
@@ -26,7 +25,7 @@ public class CommandStructureLib extends SubCommand {
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
-        if (args.length < 1) {
+        if (args.length < 1 || "help".equalsIgnoreCase(args[0])) {
             printHelp(sender, null);
         } else {
             if (children.containsKey(args[0])) {
@@ -51,6 +50,28 @@ public class CommandStructureLib extends SubCommand {
 
     @Override
     public void printHelp(ICommandSender sender, String subCommand) {
-        sender.addChatMessage(new ChatComponentText("CommandStructureLib help"));
+        if (subCommand == null) {
+            ChatStyle header = new ChatStyle().setColor(EnumChatFormatting.AQUA).setBold(true);
+            sender.addChatMessage(new ChatComponentText("Structure Lib Commands").setChatStyle(header));
+
+            sender.addChatMessage(new ChatComponentText("Format: \"/structurelib <command>\" or \"/slib <command>\""));
+
+            ChatStyle bodyHeader = new ChatStyle().setColor(EnumChatFormatting.GRAY);
+            sender.addChatMessage(new ChatComponentText(String.format("%-10s%10s", "Command", "Aliases")).setChatStyle(bodyHeader));
+
+            ChatStyle body = new ChatStyle().setColor(EnumChatFormatting.DARK_GRAY);
+            this.children.values().stream()
+                                  .sorted()
+                                  .forEach(command -> {
+                                      ChatComponentText cct = new ChatComponentText(String.format("%-10s%10s",
+                                                                                    command.name,
+                                                                                    String.join(", ", command.aliases)));
+                                      cct.setChatStyle(body);
+                                      sender.addChatMessage(cct);
+            });
+
+            ChatStyle footer = new ChatStyle().setColor(EnumChatFormatting.GRAY);
+            sender.addChatMessage(new ChatComponentText("Run \"help\" after any command to see more information about it."));
+        }
     }
 }

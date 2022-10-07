@@ -2,6 +2,10 @@ package com.gtnewhorizon.structurelib.commands;
 
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatStyle;
+import net.minecraft.util.EnumChatFormatting;
+import tv.twitch.chat.Chat;
 
 public class CommandClear extends SubCommand {
     public CommandClear() {
@@ -17,12 +21,17 @@ public class CommandClear extends SubCommand {
         } else if (args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             printHelp(sender, null);
         } else {
-            throw new WrongUsageException("This command doesn't take any arguments");
+            throw new WrongUsageException("This command does not take any arguments");
         }
     }
 
     @Override
     public void printHelp(ICommandSender sender, String command) {
-        super.printHelp(sender, command);
+        ChatStyle header = new ChatStyle().setColor(EnumChatFormatting.AQUA);
+
+        String aliases = String.join(" | ", this.name, String.join(" | ", this.aliases));
+        sender.addChatMessage(new ChatComponentText("/structurelib < " + aliases + " >").setChatStyle(header));
+
+        sender.addChatMessage(new ChatComponentText("Use to clear set positions and facings as well as remove hint particles"));
     }
 }
