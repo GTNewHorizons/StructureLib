@@ -4,10 +4,7 @@ import com.gtnewhorizon.structurelib.structure.StructureUtility;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.ChatStyle;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.*;
 
 import java.util.List;
 
@@ -29,7 +26,7 @@ public class CommandSetFacing extends SubCommand {
         } else if (args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             printHelp(sender, null);
         } else {
-            throw new WrongUsageException("This command does not take any arguments.");
+            throw new WrongUsageException(StatCollector.translateToLocal("structurelib.command.errorMessage"));
         }
     }
 
@@ -44,7 +41,7 @@ public class CommandSetFacing extends SubCommand {
 
         sender.addChatMessage(new ChatComponentText("/structurelib facing").setChatStyle(header));
 
-        sender.addChatMessage(new ChatComponentText("Use to select the front face of the multiblock."));
-        sender.addChatMessage(new ChatComponentText("The face selected is the one closest to the one you're looking at."));
+        sender.addChatMessage(new ChatComponentTranslation("structurelib.command.setFacing.desc.0"));
+        sender.addChatMessage(new ChatComponentTranslation("structurelib.command.setFacing.desc.1"));
     }
 }

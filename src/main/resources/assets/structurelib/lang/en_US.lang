@@ -78,6 +78,9 @@ structurelib.command.refresh.desc.0=Use to redraw the bounding box you have sele
 structurelib.command.refresh.desc.1=Requirements: the bounding box needs to have been created through running:
 structurelib.command.refresh.errorMessage=Pos1 and Pos2 have not both been set yet.
 
+structurelib.command.setFacing.desc.0=Use to select the front face of the multiblock.
+structurelib.command.setFacing.desc.1=The face selected is the one closest to the one you're looking at.
+
 structurelib.command.structureLib.desc.0=Structure Lib Commands
 structurelib.command.structureLib.desc.1=Format: "/structurelib <command>" or "/slib <command>"
 structurelib.command.structureLib.desc.2=Command
