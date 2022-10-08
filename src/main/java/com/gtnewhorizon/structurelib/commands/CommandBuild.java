@@ -5,9 +5,7 @@ import com.gtnewhorizon.structurelib.structure.StructureUtility;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.ChatStyle;
-import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.*;
 
 public class CommandBuild extends SubCommand {
     public CommandBuild() {
@@ -27,7 +25,7 @@ public class CommandBuild extends SubCommand {
         } else if (args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             printHelp(sender, null);
         } else {
-            throw new WrongUsageException("This command does not take any arguments.");
+            throw new WrongUsageException(StatCollector.translateToLocal("structurelib.command.errorMessage"));
         }
     }
 
@@ -36,10 +34,10 @@ public class CommandBuild extends SubCommand {
         ChatStyle header = new ChatStyle().setColor(EnumChatFormatting.AQUA);
         sender.addChatMessage(new ChatComponentText("/structurelib build").setChatStyle(header));
 
-        sender.addChatMessage(new ChatComponentText("Use to write out the structure you've selected."));
+        sender.addChatMessage(new ChatComponentTranslation("structurelib.command.build.desc.0"));
 
         ChatStyle requirements = new ChatStyle().setColor(EnumChatFormatting.RED);
-        sender.addChatMessage(new ChatComponentText("Requirements: The bounding box needs to be created and the facing needs to be selected using the following commands:").setChatStyle(requirements));
+        sender.addChatMessage(new ChatComponentText("structurelib.command.build.desc.1").setChatStyle(requirements));
         sender.addChatMessage(new ChatComponentText("/structurelib pos1"));
         sender.addChatMessage(new ChatComponentText("/structurelib pos2"));
         sender.addChatMessage(new ChatComponentText("/structurelib facing"));

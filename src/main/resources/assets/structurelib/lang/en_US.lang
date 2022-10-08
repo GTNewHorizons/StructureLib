@@ -16,6 +16,9 @@ tile.structurelib.blockhint.14.name=Hint no air
 tile.structurelib.blockhint.15.name=Hint error
 
 item.structurelib.debugStructureWriter.name=Debug Structure Writer
+item.structurelib.debugStructureWriter.desc.1=
+item.structurelib.debugStructureWriter.desc.2=
+item.structurelib.debugStructureWriter.desc.3=
 
 item.structurelib.frontRotationTool.name=Front Rotation Tool (Standalone)
 item.structurelib.frontRotationTool.desc.0=Triggers Front Rotation Interface
@@ -63,6 +66,9 @@ structurelib.config.client.hologram.removeColliding=Remove Colliding Holograms
 structurelib.config.client.hologram.removeColliding.tooltip=Whether an attempt will be made to remove any existing hologram that collides with a new hologram.
 
 structurelib.command.errorMessage=Invalid Argument(s)
+
+structurelib.command.build.desc.0=Use to write out the structure you've selected.
+structurelib.command.build.desc.1=Requirements: The bounding box needs to be created and the facing needs to be selected using the following commands:
 
 structurelib.command.structureLib.desc.0=Structure Lib Commands
 structurelib.command.structureLib.desc.1=Format: "/structurelib <command>" or "/slib <command>"
