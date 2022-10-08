@@ -2,13 +2,13 @@ package com.gtnewhorizon.structurelib.commands;
 
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.ChatStyle;
-import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.*;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static net.minecraft.util.StatCollector.translateToLocal;
 
 public class CommandStructureLib extends SubCommand {
     public CommandStructureLib() {
@@ -54,26 +54,27 @@ public class CommandStructureLib extends SubCommand {
     public void printHelp(ICommandSender sender, String subCommand) {
         if (subCommand == null) {
             ChatStyle header = new ChatStyle().setColor(EnumChatFormatting.AQUA).setBold(true);
-            sender.addChatMessage(new ChatComponentText("Structure Lib Commands").setChatStyle(header));
+            sender.addChatMessage(new ChatComponentTranslation("structurelib.command.structureLib.desc.0").setChatStyle(header));
 
-            sender.addChatMessage(new ChatComponentText("Format: \"/structurelib <command>\" or \"/slib <command>\""));
+            sender.addChatMessage(new ChatComponentTranslation("structurelib.command.structureLib.desc.1"));
 
             ChatStyle bodyHeader = new ChatStyle().setColor(EnumChatFormatting.GRAY);
-            sender.addChatMessage(new ChatComponentText(String.format("%-10s%10s", "Command", "Aliases")).setChatStyle(bodyHeader));
+            sender.addChatMessage(new ChatComponentText(String.format("%-10s%10s",
+                                                                      translateToLocal("structurelib.command.structureLib.desc.2"),
+                                                                      translateToLocal("structurelib.command.structureLib.desc.3"))).setChatStyle(bodyHeader));
 
             ChatStyle body = new ChatStyle().setColor(EnumChatFormatting.DARK_GRAY);
             new HashSet<>(this.children.values()).stream()
-                                  .sorted()
-                                  .forEach(command -> {
-                                      ChatComponentText cct = new ChatComponentText(String.format("%-10s%10s",
-                                                                                    command.name,
-                                                                                    String.join(", ", command.aliases)));
-                                      cct.setChatStyle(body);
-                                      sender.addChatMessage(cct);
+                    .sorted()
+                    .forEach(command -> {
+                        ChatComponentText cct = new ChatComponentText(String.format("%-10s%10s",
+                                                                command.name,
+                                                                String.join(", ", command.aliases)));
+                        cct.setChatStyle(body);
+                        sender.addChatMessage(cct);
             });
 
-            ChatStyle footer = new ChatStyle().setColor(EnumChatFormatting.GRAY);
-            sender.addChatMessage(new ChatComponentText("Run \"help\" after any command to see more information about it."));
+            sender.addChatMessage(new ChatComponentTranslation("structurelib.command.structureLib.desc.4"));
         }
     }
 }
