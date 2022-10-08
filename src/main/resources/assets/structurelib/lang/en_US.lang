@@ -74,6 +74,10 @@ structurelib.command.clear.desc.0=Use to clear set positions and facings as well
 
 structurelib.command.pos.desc.0=Use to select the corners of the cuboid containing the multiblock.
 
+structurelib.command.refresh.desc.0=Use to redraw the bounding box you have selected.
+structurelib.command.refresh.desc.1=Requirements: the bounding box needs to have been created through running:
+structurelib.command.refresh.errorMessage=Pos1 and Pos2 have not both been set yet.
+
 structurelib.command.structureLib.desc.0=Structure Lib Commands
 structurelib.command.structureLib.desc.1=Format: "/structurelib <command>" or "/slib <command>"
 structurelib.command.structureLib.desc.2=Command
