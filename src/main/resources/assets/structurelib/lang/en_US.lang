@@ -70,6 +70,8 @@ structurelib.command.errorMessage=Invalid Argument(s)
 structurelib.command.build.desc.0=Use to write out the structure you've selected.
 structurelib.command.build.desc.1=Requirements: The bounding box needs to be created and the facing needs to be selected using the following commands:
 
+structurelib.command.clear.desc.0=Use to clear set positions and facings as well as remove hint particles
+
 structurelib.command.structureLib.desc.0=Structure Lib Commands
 structurelib.command.structureLib.desc.1=Format: "/structurelib <command>" or "/slib <command>"
 structurelib.command.structureLib.desc.2=Command
