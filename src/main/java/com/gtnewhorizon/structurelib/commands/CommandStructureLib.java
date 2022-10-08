@@ -6,7 +6,9 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CommandStructureLib extends SubCommand {
     public CommandStructureLib() {
@@ -60,7 +62,7 @@ public class CommandStructureLib extends SubCommand {
             sender.addChatMessage(new ChatComponentText(String.format("%-10s%10s", "Command", "Aliases")).setChatStyle(bodyHeader));
 
             ChatStyle body = new ChatStyle().setColor(EnumChatFormatting.DARK_GRAY);
-            this.children.values().stream()
+            new HashSet<>(this.children.values()).stream()
                                   .sorted()
                                   .forEach(command -> {
                                       ChatComponentText cct = new ChatComponentText(String.format("%-10s%10s",
