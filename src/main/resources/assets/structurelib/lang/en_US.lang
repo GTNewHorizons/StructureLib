@@ -62,6 +62,8 @@ structurelib.config.client.hologram.maxCoexisting.tooltip=Number of holograms th
 structurelib.config.client.hologram.removeColliding=Remove Colliding Holograms
 structurelib.config.client.hologram.removeColliding.tooltip=Whether an attempt will be made to remove any existing hologram that collides with a new hologram.
 
+structurelib.command.errorMessage=Invalid Argument(s)
+
 structurelib.command.structureLib.desc.0=Structure Lib Commands
 structurelib.command.structureLib.desc.1=Format: "/structurelib <command>" or "/slib <command>"
 structurelib.command.structureLib.desc.2=Command

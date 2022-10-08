@@ -33,7 +33,7 @@ public class CommandStructureLib extends SubCommand {
             if (children.containsKey(args[0])) {
                 processChildCommand(sender, args);
             } else {
-                throw new WrongUsageException("Invalid Argument(s)");
+                throw new WrongUsageException(StatCollector.translateToLocal("structurelib.command.errorMessage"));
             }
         }
     }
