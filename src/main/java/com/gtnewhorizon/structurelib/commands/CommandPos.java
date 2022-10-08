@@ -4,9 +4,7 @@ import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.ChatStyle;
-import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.*;
 
 import java.util.List;
 
@@ -53,7 +51,7 @@ public class CommandPos extends SubCommand {
         } else if (args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             printHelp(sender, null);
         } else {
-            throw new WrongUsageException("Invalid number of arguments. Run \"structurelib " + this.variant.name() + " help\" for more details");
+            throw new WrongUsageException(StatCollector.translateToLocal("structurelib.command.errorMessage"));
         }
     }
 
@@ -67,6 +65,6 @@ public class CommandPos extends SubCommand {
         ChatStyle header = new ChatStyle().setColor(EnumChatFormatting.AQUA);
         sender.addChatMessage(new ChatComponentText("/structurelib < pos1 | pos2 >").setChatStyle(header));
 
-        sender.addChatMessage(new ChatComponentText("Use to select the corners of the cuboid containing the multiblock."));
+        sender.addChatMessage(new ChatComponentTranslation("structurelib.command.pos.desc.0"));
     }
 }

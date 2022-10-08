@@ -72,6 +72,8 @@ structurelib.command.build.desc.1=Requirements: The bounding box needs to be cre
 
 structurelib.command.clear.desc.0=Use to clear set positions and facings as well as remove hint particles
 
+structurelib.command.pos.desc.0=Use to select the corners of the cuboid containing the multiblock.
+
 structurelib.command.structureLib.desc.0=Structure Lib Commands
 structurelib.command.structureLib.desc.1=Format: "/structurelib <command>" or "/slib <command>"
 structurelib.command.structureLib.desc.2=Command
