@@ -11,6 +11,7 @@ import com.gtnewhorizon.structurelib.proxy.CommonProxy;
 import com.gtnewhorizon.structurelib.util.XSTR;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
@@ -70,6 +71,11 @@ public class StructureLib {
 		GameRegistry.registerItem(itemConstructableTrigger = new ItemConstructableTrigger(), itemConstructableTrigger.getUnlocalizedName());
 		GameRegistry.registerItem(itemDebugStructureWriter = new ItemDebugStructureWriter(), itemDebugStructureWriter.getUnlocalizedName());
 		proxy.preInit(e);
+	}
+
+	@Mod.EventHandler
+	public void init(FMLInitializationEvent event) {
+		proxy.init(event);
 	}
 
 	public static void addClientSideChatMessages(String... messages) {
