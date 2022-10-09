@@ -16,9 +16,9 @@ tile.structurelib.blockhint.14.name=Hint no air
 tile.structurelib.blockhint.15.name=Hint error
 
 item.structurelib.debugStructureWriter.name=Debug Structure Writer
-item.structurelib.debugStructureWriter.desc.1=
-item.structurelib.debugStructureWriter.desc.2=
-item.structurelib.debugStructureWriter.desc.3=
+item.structurelib.debugStructureWriter.mode.0=Set Corners
+item.structurelib.debugStructureWriter.mode.1=Set Center
+item.structurelib.debugStructureWriter.mode.2=Clear
 
 item.structurelib.frontRotationTool.name=Front Rotation Tool (Standalone)
 item.structurelib.frontRotationTool.desc.0=Triggers Front Rotation Interface
