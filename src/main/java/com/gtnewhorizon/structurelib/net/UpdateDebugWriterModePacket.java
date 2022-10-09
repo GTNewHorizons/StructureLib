@@ -7,6 +7,8 @@ import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.item.ItemStack;
 
+import static com.gtnewhorizon.structurelib.StructureLibAPI.MOD_ID;
+
 public class UpdateDebugWriterModePacket implements IMessage, IMessageHandler<UpdateDebugWriterModePacket, IMessage> {
     int damageValue;
 
@@ -32,6 +34,17 @@ public class UpdateDebugWriterModePacket implements IMessage, IMessageHandler<Up
 
         if (itemStack.getItem() instanceof ItemDebugStructureWriter) {
             itemStack.setItemDamage(message.damageValue);
+
+            String textureName = MOD_ID + ":itemDebugStructure";
+            switch (((ItemDebugStructureWriter) itemStack.getItem()).mode()) {
+                case Clear:
+                    textureName += "Eraser";
+                    break;
+                default:
+                    textureName += "Writer";
+                    break;
+            }
+            itemStack.getItem().setTextureName(textureName);
         }
 
         return null;

@@ -27,12 +27,12 @@ public class EventHandler {
                     if (event.dwheel != 0) {
                         int value = idsw.mode().ordinal() + Math.max(-1, Math.min(event.dwheel, 1));
 
-                        if (value > ItemDebugStructureWriter.Usage.values().length)
+                        if (value > ItemDebugStructureWriter.Usage.values().length - 1)
                             value = 0;
                         if (value < 0)
                             value = ItemDebugStructureWriter.Usage.values().length - 1;
 
-                        idsw.mode(ItemDebugStructureWriter.Usage.getUsageFromOrdinal(value));
+                        idsw.mode(ItemDebugStructureWriter.Usage.values()[value]);
 
                         StructureLib.net.sendToServer(new UpdateDebugWriterModePacket(value));
 

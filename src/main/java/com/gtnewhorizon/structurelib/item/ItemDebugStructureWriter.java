@@ -8,9 +8,11 @@ import com.gtnewhorizon.structurelib.util.Box;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIcon;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
@@ -45,10 +47,14 @@ public class ItemDebugStructureWriter extends Item {
 
     private Box box;
 
+    @SideOnly(Side.CLIENT)
+    private IIcon eraser;
+
     public ItemDebugStructureWriter() {
         setMaxStackSize(1);
         setUnlocalizedName("structurelib.debugStructureWriter");
         setTextureName(MOD_ID + ":itemDebugStructureWriter");
+        setHasSubtypes(true);
         setCreativeTab(StructureLib.creativeTab);
 
         box = null;
@@ -127,6 +133,21 @@ public class ItemDebugStructureWriter extends Item {
 
             StructureLib.LOGGER.info(structureDefinition);
         }
+    }
+
+    @SideOnly(Side.CLIENT)
+    @Override
+    public IIcon getIconFromDamage(int damage)
+    {
+        return damage == Usage.Clear.ordinal() ? this.eraser : super.getIconFromDamage(damage);
+    }
+
+    @SideOnly(Side.CLIENT)
+    @Override
+    public void registerIcons(IIconRegister iconRegister)
+    {
+        super.registerIcons(iconRegister);
+        this.eraser = iconRegister.registerIcon(MOD_ID + ":itemDebugStructureEraser");
     }
 
     @Override
