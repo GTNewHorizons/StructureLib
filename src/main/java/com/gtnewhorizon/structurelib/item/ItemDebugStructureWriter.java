@@ -30,7 +30,6 @@ public class ItemDebugStructureWriter extends Item {
     private Usage mode = Usage.SetCorners;
     private final Vec3Impl[] corners = new Vec3Impl[2];
     private Vec3Impl center = null;
-    private int index = 0;
     private Box box;
 
     @SideOnly(Side.CLIENT)
@@ -56,9 +55,9 @@ public class ItemDebugStructureWriter extends Item {
 
     @Override
     public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ) {
-        if (player.isSneaking() == false) {
-            doStuff(world, new Vec3Impl(x, y, z));
-        }
+        Vec3Impl pos = new Vec3Impl(x, y, z);
+        doStuff(world, pos, player, player.isSneaking() ? 1 : 0);
+
         return true;
     }
 
@@ -67,26 +66,21 @@ public class ItemDebugStructureWriter extends Item {
         if (player.worldObj.isRemote) {
             return itemStack;
         }
+        Vec3Impl pos = new Vec3Impl((int) Math.floor(player.posX),
+                                    (int) Math.floor(player.posY),
+                                    (int) Math.floor(player.posZ));
 
-        if (player.isSneaking() == false) {
-                doStuff(world, new Vec3Impl((int) Math.floor(player.posX),
-                                            (int) Math.floor(player.posY),
-                                            (int) Math.floor(player.posZ)));
-        } else {
-            writeStructure(player);
-        }
+        doStuff(world, pos, player, player.isSneaking() ? 1 : 0);
 
         return itemStack;
     }
 
-    private void doStuff(World world, Vec3Impl pos) {
+    private void doStuff(World world, Vec3Impl pos, EntityPlayer player, int index) {
         switch (this.mode) {
             case SetCorners:
                 corners[index] = pos;
 
                 StructureLibAPI.hintParticle(world, corners[index].get0(), corners[index].get1(), corners[index].get2(), getBlockHint(), index);
-
-                index = (index + 1) % 2;
 
                 tryMakeAndDrawBox(world);
                 break;
@@ -98,7 +92,9 @@ public class ItemDebugStructureWriter extends Item {
                 corners[0] = null;
                 corners[1] = null;
                 center = null;
-                index = 0;
+                break;
+            case Build:
+                writeStructure(player);
                 break;
         }
     }
@@ -149,13 +145,13 @@ public class ItemDebugStructureWriter extends Item {
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.1"));
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.2"));
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.3"));
-                description.add("----------------------------------------");
+                description.add("");
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.4"));
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.5"));
                 break;
             case SetCenter:
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.6"));
-                description.add("----------------------------------------");
+                description.add("");
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.4"));
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.5"));
                 break;
@@ -164,11 +160,12 @@ public class ItemDebugStructureWriter extends Item {
                 break;
             case Build:
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.8"));
-                description.add("----------------------------------------");
+                description.add("");
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.9"));
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.10"));
                 break;
         }
+        description.add("");
         description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.11"));
     }
 }
