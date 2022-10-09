@@ -12,39 +12,25 @@ import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
+
+import java.util.List;
 
 import static com.gtnewhorizon.structurelib.StructureLibAPI.MOD_ID;
 import static com.gtnewhorizon.structurelib.StructureLibAPI.getBlockHint;
 
 public class ItemDebugStructureWriter extends Item {
     public enum Usage {
-        SetCorners, SetCenter, Clear;
-
-        public static Usage getUsageFromOrdinal(int ordinal) {
-            Usage value = null;
-            switch (ordinal) {
-                case 0:
-                    value = SetCorners;
-                    break;
-                case 1:
-                    value = SetCenter;
-                    break;
-                case 2:
-                    value = Clear;
-                    break;
-            }
-            return value;
-        }
+        SetCorners, SetCenter, Clear, Build
     }
 
     private Usage mode = Usage.SetCorners;
     private final Vec3Impl[] corners = new Vec3Impl[2];
     private Vec3Impl center = null;
     private int index = 0;
-
     private Box box;
 
     @SideOnly(Side.CLIENT)
@@ -57,7 +43,7 @@ public class ItemDebugStructureWriter extends Item {
         setHasSubtypes(true);
         setCreativeTab(StructureLib.creativeTab);
 
-        box = null;
+        this.box = null;
     }
 
     public Usage mode() {
@@ -151,19 +137,38 @@ public class ItemDebugStructureWriter extends Item {
     }
 
     @Override
-    public String getItemStackDisplayName(ItemStack itemStack) {
-        String name = "";
-        switch (itemStack.getItemDamage()) {
-            case 0:
-                name = StatCollector.translateToLocal("item.structurelib.debugStructureWriter.mode.0");
+    @SuppressWarnings("unchecked")
+    public void addInformation(ItemStack itemStack, EntityPlayer player, List description, boolean p_77624_4_) {
+        String mode = EnumChatFormatting.DARK_AQUA +
+                      StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.0") +
+                      " (" + StatCollector.translateToLocal("item.structurelib.debugStructureWriter.mode." + this.mode.ordinal()) + ")";
+        description.add(mode);
+
+        switch (this.mode) {
+            case SetCorners:
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.1"));
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.2"));
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.3"));
+                description.add("----------------------------------------");
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.4"));
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.5"));
                 break;
-            case 1:
-                name = StatCollector.translateToLocal("item.structurelib.debugStructureWriter.mode.1");
+            case SetCenter:
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.6"));
+                description.add("----------------------------------------");
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.4"));
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.5"));
                 break;
-            case 2:
-                name = StatCollector.translateToLocal("item.structurelib.debugStructureWriter.mode.2");
+            case Clear:
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.7"));
+                break;
+            case Build:
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.8"));
+                description.add("----------------------------------------");
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.9"));
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.10"));
                 break;
         }
-        return name;
+        description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.11"));
     }
 }
