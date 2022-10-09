@@ -56,7 +56,7 @@ public class ItemDebugStructureWriter extends Item {
     @Override
     public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ) {
         Vec3Impl pos = new Vec3Impl(x, y, z);
-        doStuff(world, pos, player, player.isSneaking() ? 1 : 0);
+        doStuff(world, pos, player);
 
         return true;
     }
@@ -70,12 +70,14 @@ public class ItemDebugStructureWriter extends Item {
                                     (int) Math.floor(player.posY),
                                     (int) Math.floor(player.posZ));
 
-        doStuff(world, pos, player, player.isSneaking() ? 1 : 0);
+        doStuff(world, pos, player);
 
         return itemStack;
     }
 
-    private void doStuff(World world, Vec3Impl pos, EntityPlayer player, int index) {
+    private void doStuff(World world, Vec3Impl pos, EntityPlayer player) {
+        int index = player.isSneaking() ? 1 : 0;
+
         switch (this.mode) {
             case SetCorners:
                 corners[index] = pos;
@@ -111,7 +113,7 @@ public class ItemDebugStructureWriter extends Item {
         if (corners[0] != null && corners[1] != null) {
             ExtendedFacing facing = StructureUtility.getExtendedFacingFromLookVector(player.getLookVec());
 
-            String structureDefinition = StructureUtility.getPseudoJavaCode(player.getEntityWorld(), facing, box, false);
+            String structureDefinition = StructureUtility.getPseudoJavaCode(player.getEntityWorld(), facing, box, player.isSneaking());
 
             StructureLib.LOGGER.info(structureDefinition);
         }
@@ -130,6 +132,11 @@ public class ItemDebugStructureWriter extends Item {
     {
         super.registerIcons(iconRegister);
         this.eraser = iconRegister.registerIcon(MOD_ID + ":itemDebugStructureEraser");
+    }
+
+    @Override
+    public String getItemStackDisplayName(ItemStack itemStack) {
+        return super.getItemStackDisplayName(itemStack) + " (" + StatCollector.translateToLocal("item.structurelib.debugStructureWriter.mode." + this.mode.ordinal()) + ")";
     }
 
     @Override
@@ -160,12 +167,14 @@ public class ItemDebugStructureWriter extends Item {
                 break;
             case Build:
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.8"));
-                description.add("");
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.9"));
+                description.add("");
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.10"));
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.11"));
+
                 break;
         }
         description.add("");
-        description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.11"));
+        description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.12"));
     }
 }
