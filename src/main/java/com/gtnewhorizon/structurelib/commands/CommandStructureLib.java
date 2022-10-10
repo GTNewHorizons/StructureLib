@@ -23,6 +23,7 @@ public class CommandStructureLib extends SubCommand {
         this.addChildCommand(new CommandBuild());
         this.addChildCommand(new CommandClear());
         this.addChildCommand(new CommandRefresh());
+        this.addChildCommand(new CommandSetController());
     }
 
     @Override

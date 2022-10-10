@@ -22,7 +22,7 @@ public class CommandBuild extends SubCommand {
             String structureDefinition = StructureUtility.getPseudoJavaCode(sender.getEntityWorld(),
                                                                             CommandData.facing(),
                                                                             CommandData.box(),
-                                                                            Vec3Impl.NULL_VECTOR,
+                                                                            CommandData.controller(),
                                                                             false);
 
             StructureLib.LOGGER.info(structureDefinition);

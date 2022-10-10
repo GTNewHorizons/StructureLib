@@ -91,6 +91,9 @@ structurelib.command.clear.desc.0=Use to clear set positions and facings as well
 structurelib.command.pos.desc.0=Use to select the corners of the cuboid containing the multiblock.
 structurelib.command.pos.desc.1=Use the optional <x> <y> <z> arguments to set a relative offset from the player's position
 
+structurelib.command.controller.desc.0=Use to select the corners of the cuboid containing the multiblock.
+structurelib.command.controller.desc.1=Use the optional <x> <y> <z> arguments to set a relative offset from the player's position
+
 structurelib.command.refresh.desc.0=Use to redraw the bounding box you have selected.
 structurelib.command.refresh.desc.1=Requirements: the bounding box needs to have been created through running:
 structurelib.command.refresh.errorMessage=Pos1 and Pos2 have not both been set yet.

@@ -4,10 +4,12 @@ import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.util.Box;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 public final class CommandData {
     private static final Vec3Impl[] corners = new Vec3Impl[2];
+    private static Vec3Impl controller = null;
 
     private static Box box = null;
 
@@ -27,6 +29,14 @@ public final class CommandData {
             box = new Box(corners[0], corners[1]);
             box.drawBoundingBox(world);
         }
+    }
+
+    public static Vec3Impl controller() {
+        return controller;
+    }
+
+    public static void controller(Vec3Impl newController) {
+        controller = newController;
     }
 
     public static ExtendedFacing facing() {
@@ -59,6 +69,7 @@ public final class CommandData {
     public static boolean isReady() {
         return  box != null &&
                 world != null &&
-                facing != null;
+                facing != null &&
+                controller != null;
     }
 }
