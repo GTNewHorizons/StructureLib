@@ -63,8 +63,9 @@ public class CommandPos extends SubCommand {
     @Override
     public void printHelp(ICommandSender sender, String subCommand) {
         ChatStyle header = new ChatStyle().setColor(EnumChatFormatting.AQUA);
-        sender.addChatMessage(new ChatComponentText("/structurelib < pos1 | pos2 >").setChatStyle(header));
+        sender.addChatMessage(new ChatComponentText("/structurelib <pos1|pos2> <x> <y> <z>").setChatStyle(header));
 
         sender.addChatMessage(new ChatComponentTranslation("structurelib.command.pos.desc.0"));
+        sender.addChatMessage(new ChatComponentTranslation("structurelib.command.pos.desc.1"));
     }
 }
