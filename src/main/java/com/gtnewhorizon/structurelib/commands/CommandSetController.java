@@ -1,6 +1,5 @@
 package com.gtnewhorizon.structurelib.commands;
 
-import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;

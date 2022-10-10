@@ -6,7 +6,6 @@ import net.minecraft.util.*;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static net.minecraft.util.StatCollector.translateToLocal;
 

@@ -4,7 +4,6 @@ import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.util.Box;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 public final class CommandData {

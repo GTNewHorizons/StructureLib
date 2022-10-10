@@ -1,6 +1,5 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
