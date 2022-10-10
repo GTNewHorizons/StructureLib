@@ -19,7 +19,11 @@ public class CommandBuild extends SubCommand {
                 return;
             }
 
-            String structureDefinition = StructureUtility.getPseudoJavaCode(sender.getEntityWorld(), CommandData.facing(), CommandData.box(), false);
+            String structureDefinition = StructureUtility.getPseudoJavaCode(sender.getEntityWorld(),
+                                                                            CommandData.facing(),
+                                                                            CommandData.box(),
+                                                                            Vec3Impl.NULL_VECTOR,
+                                                                            false);
 
             StructureLib.LOGGER.info(structureDefinition);
         } else if (args.length == 1 && "help".equalsIgnoreCase(args[0])) {

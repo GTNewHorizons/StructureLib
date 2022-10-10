@@ -1285,17 +1285,23 @@ public class StructureUtility {
 	public static String getPseudoJavaCode(World world,
 										   ExtendedFacing facing,
 										   Box box,
+										   Vec3Impl center,
 										   boolean transpose) {
 		Vec3Impl basePosition = box.getBasePosition(facing);
+		StructureLibAPI.hintParticleTinted(world, basePosition.get0(), basePosition.get1(), basePosition.get2(), StructureLibAPI.getBlockHint(), 13, new short[] {0, 0, 255});
+		StructureLibAPI.hintParticleTinted(world, center.get0(), center.get1(), center.get2(), StructureLibAPI.getBlockHint(), 13, new short[] {255, 0, 0});
+
+		Vec3Impl offsetVector = center.sub(basePosition);
+		offsetVector = facing.getWorldOffset(offsetVector);
 
 		return getPseudoJavaCode(world,
 							     facing,
-							     basePosition.get0(),
-							     basePosition.get1(),
-							     basePosition.get2(),
-							     0,
-							     0,
-							     0,
+							     center.get0(),
+							     center.get1(),
+							     center.get2(),
+							     offsetVector.get0(),
+								 offsetVector.get1(),
+								 offsetVector.get2(),
 							     te -> te.getClass().getCanonicalName(),
 							     box.xSize(),
 							     box.ySize(),
