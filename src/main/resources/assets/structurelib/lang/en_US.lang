@@ -29,10 +29,12 @@ item.structurelib.debugStructureWriter.desc.9=Sneak + Use to print a transposed 
 item.structurelib.debugStructureWriter.desc.10=Requires to have both selected the cuboid and
 item.structurelib.debugStructureWriter.desc.11=to have set the controller location.
 item.structurelib.debugStructureWriter.desc.12=Sneak + Scroll to change the mode.
+item.structurelib.debugStructureWriter.desc.13=Use to redraw the selected bounding box.
 item.structurelib.debugStructureWriter.mode.0=Set Corners
 item.structurelib.debugStructureWriter.mode.1=Set Center
-item.structurelib.debugStructureWriter.mode.2=Clear
-item.structurelib.debugStructureWriter.mode.3=Build
+item.structurelib.debugStructureWriter.mode.2=Build
+item.structurelib.debugStructureWriter.mode.3=Refresh
+item.structurelib.debugStructureWriter.mode.4=Clear
 
 item.structurelib.frontRotationTool.name=Front Rotation Tool (Standalone)
 item.structurelib.frontRotationTool.desc.0=Triggers Front Rotation Interface

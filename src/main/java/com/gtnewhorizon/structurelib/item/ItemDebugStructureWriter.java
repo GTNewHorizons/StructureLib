@@ -24,7 +24,7 @@ import static com.gtnewhorizon.structurelib.StructureLibAPI.getBlockHint;
 
 public class ItemDebugStructureWriter extends Item {
     public enum Usage {
-        SetCorners, SetCenter, Clear, Build
+        SetCorners, SetCenter, Build, Refresh, Clear
     }
 
     private Usage mode = Usage.SetCorners;
@@ -84,6 +84,7 @@ public class ItemDebugStructureWriter extends Item {
 
                 StructureLibAPI.hintParticle(world, corners[index].get0(), corners[index].get1(), corners[index].get2(), getBlockHint(), index);
 
+            case Refresh:
                 tryMakeAndDrawBox(world);
                 break;
             case SetCenter:
@@ -113,7 +114,11 @@ public class ItemDebugStructureWriter extends Item {
         if (corners[0] != null && corners[1] != null) {
             ExtendedFacing facing = StructureUtility.getExtendedFacingFromLookVector(player.getLookVec());
 
-            String structureDefinition = StructureUtility.getPseudoJavaCode(player.getEntityWorld(), facing, box, player.isSneaking());
+            String structureDefinition = StructureUtility.getPseudoJavaCode(player.getEntityWorld(),
+                                                                            facing,
+                                                                            box,
+                                                                            this.center != null ? this.center : Vec3Impl.NULL_VECTOR,
+                                                                            player.isSneaking());
 
             StructureLib.LOGGER.info(structureDefinition);
         }
@@ -171,7 +176,9 @@ public class ItemDebugStructureWriter extends Item {
                 description.add("");
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.10"));
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.11"));
-
+                break;
+            case Refresh:
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.13"));
                 break;
         }
         description.add("");
