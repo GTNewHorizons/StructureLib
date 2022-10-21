@@ -18,6 +18,22 @@ public class CommandBuild extends SubCommand {
             StructureData data = CommandData.data(sender);
 
             if (!data.isReady()) {
+                if (data.corners()[0] == null) {
+                    sender.addChatMessage(new ChatComponentTranslation("structurelib.command.build.error.0"));
+                }
+
+                if (data.corners()[1] == null) {
+                    sender.addChatMessage(new ChatComponentTranslation("structurelib.command.build.error.1"));
+                }
+
+                if (data.controller() == null) {
+                    sender.addChatMessage(new ChatComponentTranslation("structurelib.command.build.error.2"));
+                }
+
+                if (data.facing() == null) {
+                    sender.addChatMessage(new ChatComponentTranslation("structurelib.command.build.error.3"));
+                }
+
                 return;
             }
 

@@ -85,6 +85,10 @@ structurelib.command.errorMessage=Invalid Argument(s)
 
 structurelib.command.build.desc.0=Use to write out the structure you've selected.
 structurelib.command.build.desc.1=Requirements: The bounding box needs to be created and the facing needs to be selected using the following commands:
+structurelib.command.build.error.0=Corner 1 has not been set.
+structurelib.command.build.error.1=Corner 2 has not been set.
+structurelib.command.build.error.2=The controller location has not been set.
+structurelib.command.build.error.3=The facing has not been set.
 
 structurelib.command.clear.desc.0=Use to clear set positions and facings as well as remove hint particles
 
