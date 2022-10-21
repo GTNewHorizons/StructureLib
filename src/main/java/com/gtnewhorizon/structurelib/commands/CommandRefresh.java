@@ -1,5 +1,6 @@
 package com.gtnewhorizon.structurelib.commands;
 
+import com.gtnewhorizon.structurelib.util.StructureData;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.util.*;
@@ -12,7 +13,7 @@ public class CommandRefresh extends SubCommand {
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length == 0) {
-            CommandData.Data data = CommandData.data(sender);
+            StructureData data = CommandData.data(sender);
 
             if (data.box() != null) {
                 data.box().drawBoundingBox(sender.getEntityWorld());

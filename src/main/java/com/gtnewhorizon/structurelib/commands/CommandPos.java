@@ -1,6 +1,7 @@
 package com.gtnewhorizon.structurelib.commands;
 
 import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.util.StructureData;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
@@ -36,7 +37,7 @@ public class CommandPos extends SubCommand {
                 }
             }
 
-            CommandData.Data data = CommandData.data(sender);
+            StructureData data = CommandData.data(sender);
 
             data.corners(this.variant.ordinal(),
                          new Vec3Impl(sender.getPlayerCoordinates().posX + xOffset,

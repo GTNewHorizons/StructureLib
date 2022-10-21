@@ -4,7 +4,7 @@ import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.StructureUtility;
-import com.gtnewhorizon.structurelib.util.Box;
+import com.gtnewhorizon.structurelib.util.StructureData;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -24,13 +24,12 @@ import static com.gtnewhorizon.structurelib.StructureLibAPI.getBlockHint;
 
 public class ItemDebugStructureWriter extends Item {
     public enum Usage {
-        SetCorners, SetCenter, Build, Refresh, Clear
+        SetCorners, SetController, Build, Refresh, Clear
     }
 
     private Usage mode = Usage.SetCorners;
-    private final Vec3Impl[] corners = new Vec3Impl[2];
-    private Vec3Impl center = null;
-    private Box box;
+
+    StructureData data = new StructureData();
 
     @SideOnly(Side.CLIENT)
     private IIcon eraser;
@@ -42,7 +41,7 @@ public class ItemDebugStructureWriter extends Item {
         setHasSubtypes(true);
         setCreativeTab(StructureLib.creativeTab);
 
-        this.box = null;
+        this.data.box(null);
     }
 
     public Usage mode() {
@@ -80,21 +79,21 @@ public class ItemDebugStructureWriter extends Item {
 
         switch (this.mode) {
             case SetCorners:
-                corners[index] = pos;
+                this.data.corners(index, pos, world);
 
-                StructureLibAPI.hintParticle(world, corners[index].get0(), corners[index].get1(), corners[index].get2(), getBlockHint(), index);
+                Vec3Impl hintPos = this.data.corners()[index];
+                StructureLibAPI.hintParticle(world, hintPos.get0(), hintPos.get1(), hintPos.get2(), getBlockHint(), index);
 
             case Refresh:
-                tryMakeAndDrawBox(world);
+                if (data.box() != null) {
+                    data.box().drawBoundingBox(world);
+                }
                 break;
-            case SetCenter:
-                center = pos;
+            case SetController:
+                this.data.controller(pos);
                 break;
             case Clear:
-                StructureLib.proxy.clearHints(world);
-                corners[0] = null;
-                corners[1] = null;
-                center = null;
+                this.data.reset();
                 break;
             case Build:
                 writeStructure(player);
@@ -102,22 +101,14 @@ public class ItemDebugStructureWriter extends Item {
         }
     }
 
-    private void tryMakeAndDrawBox(World world) {
-        if (corners[0] != null && corners[1] != null) {
-            this.box = new Box(corners[0], corners[1]);
-
-            box.drawBoundingBox(world);
-        }
-    }
-
     private void writeStructure(EntityPlayer player) {
-        if (corners[0] != null && corners[1] != null) {
+        if (this.data.cornersSet() && this.data.controller() != null) {
             ExtendedFacing facing = StructureUtility.getExtendedFacingFromLookVector(player.getLookVec());
 
             String structureDefinition = StructureUtility.getPseudoJavaCode(player.getEntityWorld(),
                                                                             facing,
-                                                                            box,
-                                                                            this.center != null ? this.center : Vec3Impl.NULL_VECTOR,
+                                                                            this.data.box(),
+                                                                            this.data.controller() != null ? this.data.controller() : Vec3Impl.NULL_VECTOR,
                                                                             player.isSneaking());
 
             StructureLib.LOGGER.info(structureDefinition);
@@ -161,7 +152,7 @@ public class ItemDebugStructureWriter extends Item {
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.4"));
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.5"));
                 break;
-            case SetCenter:
+            case SetController:
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.6"));
                 description.add("");
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.4"));

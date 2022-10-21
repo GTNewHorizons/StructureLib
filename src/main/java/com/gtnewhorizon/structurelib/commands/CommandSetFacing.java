@@ -1,6 +1,7 @@
 package com.gtnewhorizon.structurelib.commands;
 
 import com.gtnewhorizon.structurelib.structure.StructureUtility;
+import com.gtnewhorizon.structurelib.util.StructureData;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayer;
@@ -20,7 +21,7 @@ public class CommandSetFacing extends SubCommand {
 
             Vec3 playerDirection = player.getLookVec();
 
-            CommandData.Data data = CommandData.data(sender);
+            StructureData data = CommandData.data(sender);
 
             data.facing(StructureUtility.getExtendedFacingFromLookVector(playerDirection));
 
