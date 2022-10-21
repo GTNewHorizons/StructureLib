@@ -14,14 +14,16 @@ public class CommandBuild extends SubCommand {
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length == 0) {
-            if (!CommandData.isReady()) {
+            CommandData.Data data = CommandData.data(sender);
+
+            if (!data.isReady()) {
                 return;
             }
 
             String structureDefinition = StructureUtility.getPseudoJavaCode(sender.getEntityWorld(),
-                                                                            CommandData.facing(),
-                                                                            CommandData.box(),
-                                                                            CommandData.controller(),
+                                                                            data.facing(),
+                                                                            data.box(),
+                                                                            data.controller(),
                                                                             false);
 
             StructureLib.LOGGER.info(structureDefinition);

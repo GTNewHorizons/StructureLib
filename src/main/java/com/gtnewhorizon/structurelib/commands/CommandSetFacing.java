@@ -20,9 +20,11 @@ public class CommandSetFacing extends SubCommand {
 
             Vec3 playerDirection = player.getLookVec();
 
-            CommandData.facing(StructureUtility.getExtendedFacingFromLookVector(playerDirection));
+            CommandData.Data data = CommandData.data(sender);
 
-            sender.addChatMessage(new ChatComponentText(CommandData.facing().toString()));
+            data.facing(StructureUtility.getExtendedFacingFromLookVector(playerDirection));
+
+            sender.addChatMessage(new ChatComponentText(data.facing().toString()));
         } else if (args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             printHelp(sender, null);
         } else {

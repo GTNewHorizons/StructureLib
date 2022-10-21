@@ -29,9 +29,9 @@ public class CommandSetController extends SubCommand {
                 }
             }
 
-            CommandData.controller(new Vec3Impl(sender.getPlayerCoordinates().posX + xOffset,
-                                                sender.getPlayerCoordinates().posY + yOffset,
-                                                sender.getPlayerCoordinates().posZ + zOffset));
+            CommandData.data(sender).controller(new Vec3Impl(sender.getPlayerCoordinates().posX + xOffset,
+                                                             sender.getPlayerCoordinates().posY + yOffset,
+                                                             sender.getPlayerCoordinates().posZ + zOffset));
 
         } else if (args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             printHelp(sender, null);

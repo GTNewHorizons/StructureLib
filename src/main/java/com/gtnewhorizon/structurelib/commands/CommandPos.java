@@ -36,16 +36,18 @@ public class CommandPos extends SubCommand {
                 }
             }
 
-            CommandData.corners(this.variant.ordinal(),
-                                new Vec3Impl(sender.getPlayerCoordinates().posX + xOffset,
-                                             sender.getPlayerCoordinates().posY + yOffset,
-                                             sender.getPlayerCoordinates().posZ + zOffset),
-                                sender.getEntityWorld());
+            CommandData.Data data = CommandData.data(sender);
+
+            data.corners(this.variant.ordinal(),
+                         new Vec3Impl(sender.getPlayerCoordinates().posX + xOffset,
+                                      sender.getPlayerCoordinates().posY + yOffset,
+                                      sender.getPlayerCoordinates().posZ + zOffset),
+                         sender.getEntityWorld());
 
             StructureLibAPI.hintParticle(sender.getEntityWorld(),
-                                         CommandData.corners()[variant.ordinal()].get0(),
-                                         CommandData.corners()[variant.ordinal()].get1(),
-                                         CommandData.corners()[variant.ordinal()].get2(),
+                                         data.corners()[variant.ordinal()].get0(),
+                                         data.corners()[variant.ordinal()].get1(),
+                                         data.corners()[variant.ordinal()].get2(),
                                          StructureLibAPI.getBlockHint(),
                                          this.variant.ordinal());
         } else if (args.length == 1 && "help".equalsIgnoreCase(args[0])) {

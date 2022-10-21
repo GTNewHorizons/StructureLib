@@ -12,8 +12,10 @@ public class CommandRefresh extends SubCommand {
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length == 0) {
-            if (CommandData.box() != null) {
-                CommandData.box().drawBoundingBox(sender.getEntityWorld());
+            CommandData.Data data = CommandData.data(sender);
+
+            if (data.box() != null) {
+                data.box().drawBoundingBox(sender.getEntityWorld());
             } else {
                 throw new WrongUsageException(StatCollector.translateToLocal("structurelib.command.refresh.errorMessage"));
             }

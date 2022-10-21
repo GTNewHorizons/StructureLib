@@ -14,7 +14,7 @@ public class CommandClear extends SubCommand {
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length == 0) {
-            CommandData.reset();
+            CommandData.data(sender).reset();
         } else if (args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             printHelp(sender, null);
         } else {
