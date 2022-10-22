@@ -65,7 +65,9 @@ public class StructureData {
         this.corners[0] = null;
         this.corners[1] = null;
 
-        StructureLib.proxy.clearHints(world);
+        if (this.world != null) {
+            StructureLib.proxy.clearHints(world);
+        }
 
         this.world = null;
         this.facing = null;
