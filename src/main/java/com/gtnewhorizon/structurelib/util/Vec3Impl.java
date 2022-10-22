@@ -15,6 +15,16 @@ public class Vec3Impl implements Comparable<Vec3Impl> {
         this.val2 = in2;
     }
 
+    public Vec3Impl(int[] components) {
+        if (components.length != 3) {
+            throw new RuntimeException("Invalid array length");
+        }
+
+        this.val0 = components[0];
+        this.val1 = components[1];
+        this.val2 = components[2];
+    }
+
     public int compareTo(Vec3Impl o) {
         return val1 == o.val1 ? val2 == o.val2 ? val0 - o.val0 : val2 - o.val2 : val1 - o.val1;
     }
@@ -50,6 +60,10 @@ public class Vec3Impl implements Comparable<Vec3Impl> {
      */
     public int get2() {
         return this.val2;
+    }
+
+    public int[] components() {
+        return new int[] { this.val0, this.val1, this.val2 };
     }
 
     public Vec3Impl offset(ForgeDirection facing, int n) {
