@@ -22,17 +22,13 @@ public class EventHandler {
                 ItemStack itemStack = player.getHeldItem();
 
                 if (itemStack != null && itemStack.getItem() instanceof ItemDebugStructureWriter) {
-                    ItemDebugStructureWriter idsw = (ItemDebugStructureWriter) itemStack.getItem();
-
                     if (event.dwheel != 0) {
-                        int value = idsw.mode().ordinal() + Math.max(-1, Math.min(event.dwheel, 1));
+                        int value = itemStack.getItemDamage() + Math.max(-1, Math.min(event.dwheel, 1));
 
-                        if (value > ItemDebugStructureWriter.Usage.values().length - 1)
+                        if (value > ItemDebugStructureWriter.Mode.values().length - 1)
                             value = 0;
                         if (value < 0)
-                            value = ItemDebugStructureWriter.Usage.values().length - 1;
-
-                        idsw.mode(ItemDebugStructureWriter.Usage.values()[value]);
+                            value = ItemDebugStructureWriter.Mode.values().length - 1;
 
                         StructureLib.net.sendToServer(new UpdateDebugWriterModePacket(value));
 
