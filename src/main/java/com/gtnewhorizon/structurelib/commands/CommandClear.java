@@ -1,5 +1,6 @@
 package com.gtnewhorizon.structurelib.commands;
 
+import com.gtnewhorizon.structurelib.util.StructureData;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.util.*;
@@ -14,7 +15,7 @@ public class CommandClear extends SubCommand {
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length == 0) {
-            CommandData.data(sender).reset();
+            StructureData.data(sender).reset();
         } else if (args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             printHelp(sender, null);
         } else {

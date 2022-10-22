@@ -9,6 +9,8 @@ import net.minecraft.util.*;
 
 import java.util.List;
 
+import static com.gtnewhorizon.structurelib.util.StructureData.StructureDataEntry;
+
 public class CommandPos extends SubCommand {
     public enum Variant {
         pos1, pos2
@@ -37,7 +39,7 @@ public class CommandPos extends SubCommand {
                 }
             }
 
-            StructureData data = CommandData.data(sender);
+            StructureDataEntry data = StructureData.data(sender);
 
             data.corners(this.variant.ordinal(),
                          new Vec3Impl(sender.getPlayerCoordinates().posX + xOffset,

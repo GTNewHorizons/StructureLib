@@ -1,5 +1,6 @@
 package com.gtnewhorizon.structurelib.commands;
 
+import com.gtnewhorizon.structurelib.util.StructureData;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
@@ -29,9 +30,9 @@ public class CommandSetController extends SubCommand {
                 }
             }
 
-            CommandData.data(sender).controller(new Vec3Impl(sender.getPlayerCoordinates().posX + xOffset,
-                                                             sender.getPlayerCoordinates().posY + yOffset,
-                                                             sender.getPlayerCoordinates().posZ + zOffset));
+            StructureData.data(sender).controller(new Vec3Impl(sender.getPlayerCoordinates().posX + xOffset,
+                                                               sender.getPlayerCoordinates().posY + yOffset,
+                                                               sender.getPlayerCoordinates().posZ + zOffset));
 
         } else if (args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             printHelp(sender, null);

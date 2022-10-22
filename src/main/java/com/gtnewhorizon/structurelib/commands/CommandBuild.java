@@ -7,6 +7,8 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.util.*;
 
+import static com.gtnewhorizon.structurelib.util.StructureData.StructureDataEntry;
+
 public class CommandBuild extends SubCommand {
     public CommandBuild() {
         super("build");
@@ -15,7 +17,7 @@ public class CommandBuild extends SubCommand {
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length == 0) {
-            StructureData data = CommandData.data(sender);
+            StructureDataEntry data = StructureData.data(sender);
 
             if (!data.isReady()) {
                 if (data.corners()[0] == null) {

@@ -9,6 +9,8 @@ import net.minecraft.util.*;
 
 import java.util.List;
 
+import static com.gtnewhorizon.structurelib.util.StructureData.StructureDataEntry;
+
 public class CommandSetFacing extends SubCommand {
     public CommandSetFacing() {
         super("facing");
@@ -21,7 +23,7 @@ public class CommandSetFacing extends SubCommand {
 
             Vec3 playerDirection = player.getLookVec();
 
-            StructureData data = CommandData.data(sender);
+            StructureDataEntry data = StructureData.data(sender);
 
             data.facing(StructureUtility.getExtendedFacingFromLookVector(playerDirection));
 
