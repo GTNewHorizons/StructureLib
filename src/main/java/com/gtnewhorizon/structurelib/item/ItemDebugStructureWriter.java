@@ -4,9 +4,11 @@ import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.StructureUtility;
+import com.gtnewhorizon.structurelib.util.Box;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -19,7 +21,6 @@ import net.minecraft.world.World;
 
 import java.util.List;
 
-import static com.gtnewhorizon.structurelib.util.StructureData.StructureDataEntry;
 import static com.gtnewhorizon.structurelib.StructureLibAPI.MOD_ID;
 import static com.gtnewhorizon.structurelib.StructureLibAPI.getBlockHint;
 
@@ -29,9 +30,12 @@ public class ItemDebugStructureWriter extends Item {
     }
 
     @SideOnly(Side.CLIENT)
-    private IIcon eraser;
+    private IIcon eraserIcon;
 
-    private final StructureDataEntry data;
+    private static final String TAG_POS_1 = "pos1";
+    private static final String TAG_POS_2 = "pos2";
+    private static final String TAG_POS_CONTROLLER = "pos3";
+    private static final String TAG_MODE = "mode";
 
     public ItemDebugStructureWriter() {
         setMaxStackSize(1);
@@ -39,114 +43,146 @@ public class ItemDebugStructureWriter extends Item {
         setTextureName(MOD_ID + ":itemDebugStructureWriter");
         setHasSubtypes(true);
         setCreativeTab(StructureLib.creativeTab);
-
-        this.data = new StructureDataEntry();
-        this.data.box(null);
     }
 
-    public static Mode getModeFromNBT(ItemStack itemStack) {
-        NBTTagCompound nbt = itemStack.getTagCompound();
-
-        if (nbt == null) {
-            itemStack.stackTagCompound = new NBTTagCompound();
+    public static void checkNBT(ItemStack itemStack) {
+        if (!itemStack.hasTagCompound()) {
+            itemStack.setTagCompound(new NBTTagCompound());
         }
+    }
 
-        return Mode.values()[itemStack.stackTagCompound.getByte("mode")];
+    public static Mode readModeFromNBT(ItemStack itemStack) {
+        checkNBT(itemStack);
+        return Mode.values()[itemStack.stackTagCompound.getByte(TAG_MODE)];
+    }
+
+    public static void writeModeToNBT(ItemStack itemStack, Mode mode) {
+        checkNBT(itemStack);
+        itemStack.getTagCompound().setByte(TAG_MODE, (byte) mode.ordinal());
+    }
+
+    public static Vec3Impl readPosFromNBT(ItemStack itemStack, String NBTTag) {
+        checkNBT(itemStack);
+
+        int[] components = itemStack.getTagCompound().getIntArray(NBTTag);
+
+        return components.length == 3 ? new Vec3Impl(components) : null;
+    }
+
+    public static void writePosToNBT(ItemStack itemStack, Vec3Impl pos, String NBTTag) {
+        checkNBT(itemStack);
+        itemStack.getTagCompound().setIntArray(NBTTag, pos.components());
     }
 
     @Override
     public boolean onItemUseFirst(ItemStack itemStack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ) {
         Vec3Impl pos = new Vec3Impl(x, y, z);
         doStuff(itemStack, world, pos, player);
-
         return true;
     }
 
     @Override
     public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer player) {
-        if (player.worldObj.isRemote) {
-            return itemStack;
+        Mode mode = readModeFromNBT(itemStack);
+        switch (mode) {
+            case Build:
+            case Clear:
+            case Refresh:
+                doStuff(itemStack, world, Vec3Impl.NULL_VECTOR, player);
         }
-        Vec3Impl pos = new Vec3Impl((int) Math.floor(player.posX),
-                                    (int) Math.floor(player.posY),
-                                    (int) Math.floor(player.posZ));
-
-        doStuff(itemStack, world, pos, player);
-
         return itemStack;
     }
 
     private void doStuff(ItemStack itemStack, World world, Vec3Impl pos, EntityPlayer player) {
         int index = player.isSneaking() ? 1 : 0;
 
-        Mode mode = getModeFromNBT(itemStack);
+        Mode mode = readModeFromNBT(itemStack);
 
         switch (mode) {
             case SetCorners:
-                this.data.corners(index, pos, world);
+                writePosToNBT(itemStack, pos, index == 0 ? TAG_POS_1 : TAG_POS_2);
 
-                Vec3Impl hintPos = this.data.corners()[index];
-                StructureLibAPI.hintParticle(world, hintPos.get0(), hintPos.get1(), hintPos.get2(), getBlockHint(), index);
+                if (world.isRemote) {
+                    StructureLibAPI.hintParticleTinted(world, pos.get0(), pos.get1(), pos.get2(), getBlockHint(), index, new short[]{255, 0, 255});
+                }
             case Refresh:
-                if (data.box() != null) {
-                    data.box().drawBoundingBox(world);
+                Vec3Impl pos1 = readPosFromNBT(itemStack, TAG_POS_1);
+                Vec3Impl pos2 = readPosFromNBT(itemStack, TAG_POS_2);
+
+                if (pos1 != null && pos2 != null) {
+                    Box box = new Box(pos1, pos2);
+                    box.drawBoundingBox(world);
                 }
                 break;
             case SetController:
-                this.data.controller(pos);
+                writePosToNBT(itemStack, pos, TAG_POS_CONTROLLER);
                 break;
             case Build:
-                writeStructure(player);
+                writeStructure(itemStack, player);
                 break;
             case Clear:
-                this.data.reset();
+                itemStack.setTagCompound(null);
+                writeModeToNBT(itemStack, mode);
+                StructureLib.proxy.clearHints(world);
                 break;
         }
     }
 
-    private void writeStructure(EntityPlayer player) {
-        if (this.data.cornersSet() && this.data.controller() != null) {
-            ExtendedFacing facing = StructureUtility.getExtendedFacingFromLookVector(player.getLookVec());
+    private void writeStructure(ItemStack itemStack, EntityPlayer player) {
+        Vec3Impl pos1 = readPosFromNBT(itemStack, TAG_POS_1);
+        Vec3Impl pos2 = readPosFromNBT(itemStack, TAG_POS_2);
+        Vec3Impl posController = readPosFromNBT(itemStack, TAG_POS_CONTROLLER);
 
-            String structureDefinition = StructureUtility.getPseudoJavaCode(player.getEntityWorld(),
-                                                                            facing,
-                                                                            this.data.box(),
-                                                                            this.data.controller() != null ? this.data.controller() : Vec3Impl.NULL_VECTOR,
-                                                                            player.isSneaking());
-
-            StructureLib.LOGGER.info(structureDefinition);
+        if (pos1 == null || pos2 == null || posController == null) {
+            return;
         }
+
+        Box box = new Box(pos1, pos2);
+
+        ExtendedFacing facing = StructureUtility.getExtendedFacingFromLookVector(player.getLookVec());
+
+        String structureDefinition = StructureUtility.getPseudoJavaCode(player.getEntityWorld(),
+                facing,
+                box,
+                posController,
+                player.isSneaking());
+
+        StructureLib.LOGGER.info(structureDefinition);
     }
 
     @SideOnly(Side.CLIENT)
     @Override
-    public IIcon getIconFromDamage(int damage)
-    {
-        return damage == Mode.Clear.ordinal() ? this.eraser : super.getIconFromDamage(damage);
-    }
-
-    @SideOnly(Side.CLIENT)
-    @Override
-    public void registerIcons(IIconRegister iconRegister)
-    {
+    public void registerIcons(IIconRegister iconRegister) {
         super.registerIcons(iconRegister);
-        this.eraser = iconRegister.registerIcon(MOD_ID + ":itemDebugStructureEraser");
+        this.eraserIcon = iconRegister.registerIcon(MOD_ID + ":itemDebugStructureEraser");
+    }
+
+    @Override
+    public IIcon getIconIndex(ItemStack itemStack) {
+        return readModeFromNBT(itemStack) != Mode.Clear ? this.itemIcon : this.eraserIcon;
+    }
+
+    @Override
+    public IIcon getIconFromDamage(int damage) {
+        Mode mode = Mode.values()[damage];
+
+        return mode != Mode.Clear ? this.itemIcon : this.eraserIcon;
     }
 
     @Override
     public String getItemStackDisplayName(ItemStack itemStack) {
         return String.format("%s (%s)", super.getItemStackDisplayName(itemStack),
-                                        StatCollector.translateToLocal("item.structurelib.debugStructureWriter.mode." + itemStack.getTagCompound().getByte("mode")));
+                StatCollector.translateToLocal("item.structurelib.debugStructureWriter.mode." + readModeFromNBT(itemStack).ordinal()));
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public void addInformation(ItemStack itemStack, EntityPlayer player, List description, boolean p_77624_4_) {
-        String modeString = String.format("%s (%s)", EnumChatFormatting.DARK_AQUA + StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.0"),
-                                                     StatCollector.translateToLocal("item.structurelib.debugStructureWriter.mode." + itemStack.getTagCompound().getByte("mode")));
-        description.add(modeString);
+        Mode mode = readModeFromNBT(itemStack);
 
-        Mode mode = getModeFromNBT(itemStack);
+        String modeString = String.format("%s (%s)", EnumChatFormatting.DARK_AQUA + StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.0"),
+                StatCollector.translateToLocal("item.structurelib.debugStructureWriter.mode." + mode.ordinal()));
+        description.add(modeString);
 
         switch (mode) {
             case SetCorners:

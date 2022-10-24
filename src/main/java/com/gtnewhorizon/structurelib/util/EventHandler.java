@@ -11,6 +11,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.MouseEvent;
 
+import com.gtnewhorizon.structurelib.item.ItemDebugStructureWriter.Mode;
+
 public class EventHandler {
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
@@ -23,14 +25,17 @@ public class EventHandler {
 
                 if (itemStack != null && itemStack.getItem() instanceof ItemDebugStructureWriter) {
                     if (event.dwheel != 0) {
-                        int value = itemStack.getItemDamage() + Math.max(-1, Math.min(event.dwheel, 1));
+                        int value = ItemDebugStructureWriter.readModeFromNBT(itemStack).ordinal() + Math.max(-1, Math.min(event.dwheel, 1));
 
                         if (value > ItemDebugStructureWriter.Mode.values().length - 1)
                             value = 0;
                         if (value < 0)
                             value = ItemDebugStructureWriter.Mode.values().length - 1;
 
-                        StructureLib.net.sendToServer(new UpdateDebugWriterModePacket(value));
+                        Mode mode = ItemDebugStructureWriter.Mode.values()[value];
+                        ItemDebugStructureWriter.writeModeToNBT(itemStack, mode);
+
+                        StructureLib.net.sendToServer(new UpdateDebugWriterModePacket(itemStack));
 
                         event.setCanceled(true);
                     }

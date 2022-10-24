@@ -6,36 +6,45 @@ import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagByte;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
+
+import java.io.IOException;
 
 public class UpdateDebugWriterModePacket implements IMessage, IMessageHandler<UpdateDebugWriterModePacket, IMessage> {
-    int damageValue;
+    NBTTagCompound tagCompound;
 
     public UpdateDebugWriterModePacket() {}
 
-    public UpdateDebugWriterModePacket(int damageValue) {
-        this.damageValue = damageValue;
+    public UpdateDebugWriterModePacket(ItemStack itemStack) {
+        this.tagCompound = itemStack.copy().getTagCompound();
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        this.damageValue = buf.readInt();
+        PacketBuffer pb = new PacketBuffer(buf);
+        try {
+            this.tagCompound = pb.readNBTTagCompoundFromBuffer();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeInt(this.damageValue);
+        PacketBuffer pb = new PacketBuffer(buf);
+        try {
+            pb.writeNBTTagCompoundToBuffer(this.tagCompound);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public IMessage onMessage(UpdateDebugWriterModePacket message, MessageContext ctx) {
         ItemStack itemStack = ctx.getServerHandler().playerEntity.inventory.getCurrentItem();
-
-//        if (itemStack.getItem() instanceof ItemDebugStructureWriter) {
-//            itemStack.setItemDamage(message.damageValue);
-//        }
-
-        itemStack.setTagInfo("mode", new NBTTagByte((byte) message.damageValue));
+        itemStack.setTagCompound(message.tagCompound);
+        itemStack.setItemDamage(ItemDebugStructureWriter.readModeFromNBT(itemStack).ordinal());
 
         return null;
     }
