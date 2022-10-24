@@ -43,6 +43,11 @@ public class UpdateDebugWriterModePacket implements IMessage, IMessageHandler<Up
     @Override
     public IMessage onMessage(UpdateDebugWriterModePacket message, MessageContext ctx) {
         ItemStack itemStack = ctx.getServerHandler().playerEntity.inventory.getCurrentItem();
+
+        if (!(itemStack.getItem() instanceof ItemDebugStructureWriter)) {
+            return null;
+        }
+
         itemStack.setTagCompound(message.tagCompound);
         itemStack.setItemDamage(ItemDebugStructureWriter.readModeFromNBT(itemStack).ordinal());
 
