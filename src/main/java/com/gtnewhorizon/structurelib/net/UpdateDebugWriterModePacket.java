@@ -1,10 +1,12 @@
 package com.gtnewhorizon.structurelib.net;
 
 import com.gtnewhorizon.structurelib.item.ItemDebugStructureWriter;
+import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -22,22 +24,12 @@ public class UpdateDebugWriterModePacket implements IMessage, IMessageHandler<Up
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        PacketBuffer pb = new PacketBuffer(buf);
-        try {
-            this.tagCompound = pb.readNBTTagCompoundFromBuffer();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        this.tagCompound = ByteBufUtils.readTag(buf);
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        PacketBuffer pb = new PacketBuffer(buf);
-        try {
-            pb.writeNBTTagCompoundToBuffer(this.tagCompound);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        ByteBufUtils.writeTag(buf, tagCompound);
     }
 
     @Override
