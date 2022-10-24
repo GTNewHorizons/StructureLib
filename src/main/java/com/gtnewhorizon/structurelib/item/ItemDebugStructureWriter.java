@@ -186,33 +186,28 @@ public class ItemDebugStructureWriter extends Item {
         switch (mode) {
             case SetCorners:
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.1"));
+                description.add("");
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.2"));
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.3"));
-                description.add("");
-                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.4"));
-                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.5"));
                 break;
             case SetController:
-                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.6"));
-                description.add("");
                 description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.4"));
-                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.5"));
                 break;
             case Build:
-                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.8"));
-                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.9"));
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.5"));
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.6"));
                 description.add("");
-                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.10"));
-                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.11"));
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.7"));
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.8"));
                 break;
             case Refresh:
-                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.13"));
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.9"));
                 break;
             case Clear:
-                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.7"));
+                description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.10"));
                 break;
         }
         description.add("");
-        description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.12"));
+        description.add(StatCollector.translateToLocal("item.structurelib.debugStructureWriter.desc.11"));
     }
 }
