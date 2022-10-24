@@ -1,5 +1,4 @@
-package com.gtnewhorizon.structurelib.commands;// largely based on:
-// https://github.com/GTNewHorizons/Railcraft/blob/master/src/main/java/mods/railcraft/common/commands/SubCommand.java
+package com.gtnewhorizon.structurelib.commands;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommand;
