@@ -92,6 +92,7 @@ structurelib.command.clear.desc.0=Use to clear set positions and facings as well
 
 structurelib.command.pos.desc.0=Use to select the corners of the cuboid containing the multiblock.
 structurelib.command.pos.desc.1=Use the optional <x> <y> <z> arguments to set a relative offset from the player's position
+structurelib.command.pos.error.0=Optional arguments should be a positional offset represented by three integers.
 
 structurelib.command.controller.desc.0=Use to select the corners of the cuboid containing the multiblock.
 structurelib.command.controller.desc.1=Use the optional <x> <y> <z> arguments to set a relative offset from the player's position

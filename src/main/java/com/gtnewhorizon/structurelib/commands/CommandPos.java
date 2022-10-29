@@ -35,7 +35,7 @@ public class CommandPos extends SubCommand {
                     yOffset = Integer.parseInt(args[1]);
                     zOffset = Integer.parseInt(args[2]);
                 } catch (NumberFormatException e) {
-                    throw new WrongUsageException("Optional arguments should be a positional offset represented by three integers.");
+                    throw new WrongUsageException(StatCollector.translateToLocal("structurelib.command.pos.error.0"));
                 }
             }
 
