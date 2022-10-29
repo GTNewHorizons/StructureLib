@@ -17,7 +17,7 @@ public class Vec3Impl implements Comparable<Vec3Impl> {
 
     public Vec3Impl(int[] components) {
         if (components.length != 3) {
-            throw new RuntimeException("Invalid array length");
+            throw new IllegalArgumentException("Invalid array length");
         }
 
         this.val0 = components[0];
