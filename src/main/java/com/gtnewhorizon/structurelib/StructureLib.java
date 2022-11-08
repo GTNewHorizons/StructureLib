@@ -96,7 +96,7 @@ public class StructureLib {
 
 	@Mod.EventHandler
 	public void serverStarting(FMLServerStartingEvent event) {
-		CommandHandler commandHandler = (CommandHandler) event.getServer().getCommandManager();
-		commandHandler.registerCommand(commandStructureLib);
+//		CommandHandler commandHandler = (CommandHandler) event.getServer().getCommandManager();
+//		commandHandler.registerCommand(commandStructureLib);
 	}
 }
