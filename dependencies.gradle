@@ -1,9 +1,9 @@
 // Add your dependencies here
 
 dependencies {
-    compile("com.github.GTNewHorizons:GTNHLib:0.0.1:dev")
-    runtimeOnly("com.github.GTNewHorizons:NotEnoughItems:2.2.20-GTNH:dev")
+    api("com.github.GTNewHorizons:GTNHLib:0.0.10:dev")
+    runtimeOnly("com.github.GTNewHorizons:NotEnoughItems:2.3.25-GTNH:dev")
 
-    testImplementation(platform('org.junit:junit-bom:5.8.2'))
+    testImplementation(platform('org.junit:junit-bom:5.9.2'))
     testImplementation('org.junit.jupiter:junit-jupiter')
 }

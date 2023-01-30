@@ -8,6 +8,8 @@ javadoc {
     include "com/gtnewhorizon/structurelib/StructureLibAPI.java"
     include "com/gtnewhorizon/structurelib/StructureEvent.java"
 
+    classpath += sourceSets.patchedMc.output
+
     options {
         overview "src/main/javadoc/overview.html"
         links 'https://docs.oracle.com/javase/8/docs/api/'
@@ -15,8 +17,9 @@ javadoc {
     }
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+tasks.register('javadocJar', Jar) {
+    dependsOn javadoc
+    archiveClassifier = 'javadoc'
     from javadoc.destinationDir
 }
 
