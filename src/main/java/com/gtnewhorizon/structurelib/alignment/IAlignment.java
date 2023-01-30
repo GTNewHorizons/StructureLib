@@ -1,12 +1,14 @@
 package com.gtnewhorizon.structurelib.alignment;
 
+import net.minecraftforge.common.util.ForgeDirection;
+
 import com.gtnewhorizon.structurelib.alignment.enumerable.Direction;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.alignment.enumerable.Flip;
 import com.gtnewhorizon.structurelib.alignment.enumerable.Rotation;
-import net.minecraftforge.common.util.ForgeDirection;
 
 public interface IAlignment extends IAlignmentLimits, IAlignmentProvider {
+
     int DIRECTIONS_COUNT = Direction.VALUES.length;
     int ROTATIONS_COUNT = Rotation.VALUES.length;
     int FLIPS_COUNT = Flip.VALUES.length;
@@ -15,8 +17,8 @@ public interface IAlignment extends IAlignmentLimits, IAlignmentProvider {
     ExtendedFacing getExtendedFacing();
 
     /**
-     * Set the facing without additional checks.
-     * Tools altering facing should use {@link #toolSetExtendedFacing(ExtendedFacing)} instead.
+     * Set the facing without additional checks. Tools altering facing should use
+     * {@link #toolSetExtendedFacing(ExtendedFacing)} instead.
      */
     void setExtendedFacing(ExtendedFacing alignment);
 
@@ -57,9 +59,8 @@ public interface IAlignment extends IAlignmentLimits, IAlignmentProvider {
 
     default boolean toolSetDirection(ForgeDirection direction) {
         if (direction == null || direction == ForgeDirection.UNKNOWN) {
-            for (int i = 0, j = getDirection().ordinal() + 1, valuesLength = Direction.VALUES.length;
-                    i < valuesLength;
-                    i++) {
+            for (int i = 0, j = getDirection().ordinal() + 1, valuesLength = Direction.VALUES.length; i
+                    < valuesLength; i++) {
                 if (toolSetDirection(Direction.VALUES[(j + i) % valuesLength].getForgeDirection())) {
                     return true;
                 }
@@ -97,8 +98,11 @@ public interface IAlignment extends IAlignmentLimits, IAlignmentProvider {
             int rotations = Rotation.VALUES.length;
             for (int ii = 0, jj = getFlip().ordinal(); ii < flips; ii++) {
                 for (int i = 1, j = getRotation().ordinal(); i < rotations; i++) {
-                    if (checkedSetExtendedFacing(ExtendedFacing.of(
-                            getDirection(), Rotation.VALUES[(j + i) % rotations], Flip.VALUES[(jj + ii) % flips]))) {
+                    if (checkedSetExtendedFacing(
+                            ExtendedFacing.of(
+                                    getDirection(),
+                                    Rotation.VALUES[(j + i) % rotations],
+                                    Flip.VALUES[(jj + ii) % flips]))) {
                         return true;
                     }
                 }
@@ -140,9 +144,8 @@ public interface IAlignment extends IAlignmentLimits, IAlignmentProvider {
 
     default boolean toolSetExtendedFacing(ExtendedFacing extendedFacing) {
         if (extendedFacing == null) {
-            for (int i = 0, j = getExtendedFacing().ordinal() + 1, valuesLength = ExtendedFacing.VALUES.length;
-                    i < valuesLength;
-                    i++) {
+            for (int i = 0, j = getExtendedFacing().ordinal() + 1, valuesLength = ExtendedFacing.VALUES.length; i
+                    < valuesLength; i++) {
                 if (checkedSetExtendedFacing(ExtendedFacing.VALUES[(j + i) % valuesLength])) {
                     return true;
                 }

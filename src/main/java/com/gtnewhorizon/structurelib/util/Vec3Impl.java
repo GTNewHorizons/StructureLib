@@ -3,10 +3,12 @@ package com.gtnewhorizon.structurelib.util;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
 import net.minecraft.dispenser.IPosition;
 import net.minecraftforge.common.util.ForgeDirection;
 
 public class Vec3Impl implements Comparable<Vec3Impl> {
+
     public static final Vec3Impl NULL_VECTOR = new Vec3Impl(0, 0, 0);
     private static final Map<Vec3Impl, Vec3Impl> pool = new HashMap<>();
     private final int val0;
@@ -69,8 +71,7 @@ public class Vec3Impl implements Comparable<Vec3Impl> {
     }
 
     public Vec3Impl offset(ForgeDirection facing, int n) {
-        return n == 0
-                ? this
+        return n == 0 ? this
                 : new Vec3Impl(val0 + facing.offsetX * n, val1 + facing.offsetY * n, val2 + facing.offsetZ * n);
     }
 

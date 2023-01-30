@@ -1,25 +1,29 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import java.util.Map;
+import java.util.function.Predicate;
+
+import javax.annotation.Nonnull;
+
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
+
 import com.gtnewhorizon.structurelib.util.InventoryIterable;
 import com.gtnewhorizon.structurelib.util.InventoryUtility;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
-import java.util.Map;
-import java.util.function.Predicate;
-import javax.annotation.Nonnull;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
 
 /**
  * Represent an item source. Take only, cannot be placed back.
  */
 public interface IItemSource {
+
     /**
      * Retrieve some amount of items from this item source matching given filter.
      * <p>
-     * We probably don't need to get a lot of items from this method,
-     * so I don't care about the overhead of storing all fetched items even if downstream code doesn't need it
+     * We probably don't need to get a lot of items from this method, so I don't care about the overhead of storing all
+     * fetched items even if downstream code doesn't need it
      *
      * @param predicate filtering predicate. should return true for ItemStacks that should be added to result collection
      * @param simulate  whether to actually commit the modification. true for dry run, false otherwise.
@@ -64,11 +68,11 @@ public interface IItemSource {
     /**
      * Take exactly one item. ItemStack given must have a stack size of 1.
      * <p>
-     * This is meant to be an optimized version of {@link #takeOne(Predicate, boolean)}.
-     * Implementations that support item storage indexed by ItemStack can use this to speed up calculation.
+     * This is meant to be an optimized version of {@link #takeOne(Predicate, boolean)}. Implementations that support
+     * item storage indexed by ItemStack can use this to speed up calculation.
      *
-     * @param stack    what item to extract. The NBT tag of this ItemStack is siginifcant and will be
-     *                 considered during matching. must have a stack size of 1.
+     * @param stack    what item to extract. The NBT tag of this ItemStack is siginifcant and will be considered during
+     *                 matching. must have a stack size of 1.
      * @param simulate whether to actually commit the modification. true for dry run, false otherwise.
      * @return true if found. false otherwise
      * @throws IllegalArgumentException if given stack is invalid, or has a stack size other than 1.
@@ -82,8 +86,8 @@ public interface IItemSource {
     /**
      * Take some item. Will not take item if it cannot find enough items to take.
      * <p>
-     * This is meant to be an optimized version of {@link #takeOne(Predicate, boolean)}.
-     * Implementations that support indexing off ItemStack can use this to speed up calculation.
+     * This is meant to be an optimized version of {@link #takeOne(Predicate, boolean)}. Implementations that support
+     * indexing off ItemStack can use this to speed up calculation.
      *
      * @param stack    what item and how many to extract. The NBT tag of this ItemStack is siginifcant and will be
      *                 considered during matching
@@ -110,6 +114,7 @@ public interface IItemSource {
      */
     static IItemSource fromPlayer(EntityPlayerMP player) {
         return new IItemSource() {
+
             @Nonnull
             @Override
             public Map<ItemStack, Integer> take(Predicate<ItemStack> p, boolean s, int c) {

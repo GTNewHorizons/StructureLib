@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib.util;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
+
 import net.minecraft.block.Block;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -11,6 +12,7 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 
 public final class ItemStackPredicate implements Predicate<ItemStack> {
+
     public static ItemStackPredicate from(Item item) {
         return new ItemStackPredicate(item);
     }
@@ -20,8 +22,7 @@ public final class ItemStackPredicate implements Predicate<ItemStack> {
     }
 
     public static ItemStackPredicate from(ItemStack itemStack, NBTMode mode) {
-        return new ItemStackPredicate(itemStack.getItem())
-                .setMeta(Items.feather.getDamage(itemStack))
+        return new ItemStackPredicate(itemStack.getItem()).setMeta(Items.feather.getDamage(itemStack))
                 .setTag(mode, itemStack.stackTagCompound);
     }
 
@@ -63,13 +64,16 @@ public final class ItemStackPredicate implements Predicate<ItemStack> {
     }
 
     public enum NBTMode implements BiPredicate<NBTTagCompound, NBTTagCompound> {
+
         IGNORE {
+
             @Override
             public boolean test(NBTTagCompound lhs, NBTTagCompound rhs) {
                 return true;
             }
         },
         IN {
+
             @Override
             public boolean test(NBTTagCompound lhs, NBTTagCompound rhs) {
                 if (lhs == null || lhs.hasNoTags()) return true;
@@ -87,6 +91,7 @@ public final class ItemStackPredicate implements Predicate<ItemStack> {
             }
         },
         EXACT {
+
             @Override
             public boolean test(NBTTagCompound lhs, NBTTagCompound rhs) {
                 if (lhs != null && lhs.hasNoTags()) lhs = null;
@@ -95,6 +100,7 @@ public final class ItemStackPredicate implements Predicate<ItemStack> {
             }
         },
         IGNORE_KNOWN_INSIGNIFICANT_TAGS {
+
             @Override
             public boolean test(NBTTagCompound lhs, NBTTagCompound rhs) {
                 // fast path for empty tags
@@ -105,8 +111,8 @@ public final class ItemStackPredicate implements Predicate<ItemStack> {
                 return EXACT.test(lhs, rhs);
             }
         };
-        private static final String[] KNOWN_INSIGNIFICANT_TAGS = {
-            "display", // TODO expand/refine this
+
+        private static final String[] KNOWN_INSIGNIFICANT_TAGS = { "display", // TODO expand/refine this
         };
     }
 }

@@ -2,14 +2,8 @@ package com.gtnewhorizon.structurelib;
 
 import static com.gtnewhorizon.structurelib.StructureLib.RANDOM;
 
-import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
-import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 import java.util.*;
+
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
@@ -31,12 +25,22 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
+
 import org.lwjgl.opengl.GL11;
+
+import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
+import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
+
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 
 public class ClientProxy extends CommonProxy {
 
-    private static final short[] RGBA_NO_TINT = {255, 255, 255, 255};
-    private static final short[] RGBA_RED_TINT = {255, 128, 128, 0};
+    private static final short[] RGBA_NO_TINT = { 255, 255, 255, 255 };
+    private static final short[] RGBA_RED_TINT = { 255, 128, 128, 0 };
     private static final Map<HintParticleInfo, HintGroup> allHints = new HashMap<>();
     /**
      * All batches of hints.
@@ -55,11 +59,10 @@ public class ClientProxy extends CommonProxy {
      */
     private static final List<HintParticleInfo> allHintsForRender = new ArrayList<>(10000);
     /**
-     * If the diff to current player position is too great sort the allHints.
-     * Initial value is very far off below y=0 but not huge enough to make a NaN.
+     * If the diff to current player position is too great sort the allHints. Initial value is very far off below y=0
+     * but not huge enough to make a NaN.
      * <p>
-     * We are using this supposedly immutable object as a mutable object here.
-     * So be aware.
+     * We are using this supposedly immutable object as a mutable object here. So be aware.
      */
     private static final Vec3 lastPlayerPos = Vec3.createVectorHelper(0, -1e30, 0);
     /**
@@ -158,11 +161,7 @@ public class ClientProxy extends CommonProxy {
     }
 
     @Override
-    public void addThrottledChat(
-            Object throttleKey,
-            EntityPlayer player,
-            IChatComponent text,
-            short intervalRequired,
+    public void addThrottledChat(Object throttleKey, EntityPlayer player, IChatComponent text, short intervalRequired,
             boolean forceUpdateLastSend) {
         if (player instanceof EntityPlayerMP)
             super.addThrottledChat(throttleKey, player, text, intervalRequired, forceUpdateLastSend);
@@ -250,6 +249,7 @@ public class ClientProxy extends CommonProxy {
     }
 
     private static class HintGroup {
+
         private final List<HintParticleInfo> hints = new LinkedList<>();
         private int creationTime = -1;
 
@@ -267,6 +267,7 @@ public class ClientProxy extends CommonProxy {
     }
 
     private static class HintParticleInfo {
+
         private final World w;
         // these are the block coordinate for e.g. w.getBlock()
         private final int x, y, z;
@@ -418,6 +419,7 @@ public class ClientProxy extends CommonProxy {
     }
 
     public static class FMLEventHandler {
+
         private void resetPlayerLocation() {
             lastPlayerPos.xCoord = Minecraft.getMinecraft().thePlayer.posX;
             lastPlayerPos.yCoord = Minecraft.getMinecraft().thePlayer.posY;
@@ -466,6 +468,7 @@ public class ClientProxy extends CommonProxy {
     }
 
     public static class ForgeEventHandler {
+
         @SubscribeEvent
         public void onWorldLoad(WorldEvent.Load e) {
             if (e.world.isRemote) {

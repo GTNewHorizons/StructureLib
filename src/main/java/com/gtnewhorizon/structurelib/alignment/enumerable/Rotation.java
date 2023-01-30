@@ -7,9 +7,11 @@ import static java.util.stream.Collectors.toMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+
 import javax.annotation.Nonnull;
 
 public enum Rotation {
+
     NORMAL(2, "normal"),
     CLOCKWISE(3, "clockwise"),
     UPSIDE_DOWN(0, "upside down"),
@@ -19,8 +21,8 @@ public enum Rotation {
     private final String name;
 
     public static final Rotation[] VALUES = values();
-    private static final Map<String, Rotation> NAME_LOOKUP =
-            stream(VALUES).collect(toMap(Rotation::getName2, (rotation) -> rotation));
+    private static final Map<String, Rotation> NAME_LOOKUP = stream(VALUES)
+            .collect(toMap(Rotation::getName2, (rotation) -> rotation));
 
     Rotation(int oppositeIn, String nameIn) {
         this.opposite = oppositeIn;

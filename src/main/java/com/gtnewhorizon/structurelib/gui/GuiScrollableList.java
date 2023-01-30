@@ -2,31 +2,34 @@ package com.gtnewhorizon.structurelib.gui;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.Tessellator;
+
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 /**
  * Shamelessly stolen from EnderCore, with some amount of edit to fit in one file. Original code from CrazyPants.
  * <p>
- * As the code has been released into public domain, it is now LGPL as part of this library as a whole.
- * You can go to EnderCore's repository to obtain a public domain copy though
+ * As the code has been released into public domain, it is now LGPL as part of this library as a whole. You can go to
+ * EnderCore's repository to obtain a public domain copy though
  *
  * Major edits
  * <ul>
- *     <li>Separate dwheel handling to handleDWheel. The next event calls often cause the mouse click event to
- *     not fire on other widgets</li>
- *     <li>scrollbar are now rendered within width</li>
- *     <li>added prepareDrawElements</li>
+ * <li>Separate dwheel handling to handleDWheel. The next event calls often cause the mouse click event to not fire on
+ * other widgets</li>
+ * <li>scrollbar are now rendered within width</li>
+ * <li>added prepareDrawElements</li>
  * </ul>
  *
  * @author CrazyPants
  * @author glee8e
  */
 public abstract class GuiScrollableList<T> {
+
     protected final int slotHeight;
     private final Minecraft mc = Minecraft.getMinecraft();
     protected final int originX;
@@ -113,8 +116,8 @@ public abstract class GuiScrollableList<T> {
 
     public abstract int getNumElements();
 
-    protected abstract void drawElement(
-            int elementIndex, int x, int y, int height, Tessellator tessellator, boolean isHovering);
+    protected abstract void drawElement(int elementIndex, int x, int y, int height, Tessellator tessellator,
+            boolean isHovering);
 
     protected boolean elementClicked(int elementIndex, boolean doubleClick, int mXRelative, int mYRelative) {
         return true;
@@ -165,8 +168,7 @@ public abstract class GuiScrollableList<T> {
     }
 
     /**
-     * draws the slot to the screen, pass in mouse's current x and y and partial
-     * ticks
+     * draws the slot to the screen, pass in mouse's current x and y and partial ticks
      */
     public void drawScreen(int mX, int mY, float partialTick) {
         this.mouseX = mX;
@@ -343,15 +345,17 @@ public abstract class GuiScrollableList<T> {
                 int y = mouseY - minY + (int) amountScrolled - margin;
                 int mouseOverElement = y / slotHeight;
 
-                if (mouseX >= minX
-                        && mouseX <= maxX
+                if (mouseX >= minX && mouseX <= maxX
                         && mouseOverElement >= 0
                         && y >= 0
                         && mouseOverElement < getNumElements()) {
-                    boolean doubleClick =
-                            mouseOverElement == selectedIndex && Minecraft.getSystemTime() - lastClickedTime < 250L;
+                    boolean doubleClick = mouseOverElement == selectedIndex
+                            && Minecraft.getSystemTime() - lastClickedTime < 250L;
                     if (elementClicked(
-                            mouseOverElement, doubleClick, mouseX - minX, y - slotHeight * mouseOverElement)) {
+                            mouseOverElement,
+                            doubleClick,
+                            mouseX - minX,
+                            y - slotHeight * mouseOverElement)) {
                         setSelection(mouseOverElement);
                         lastClickedTime = Minecraft.getSystemTime();
                     }

@@ -4,12 +4,14 @@ import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
 
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
+
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 
 public class UpdateHintParticleMessage implements IMessage {
+
     private int x;
     private short y;
     private int z;
@@ -53,6 +55,7 @@ public class UpdateHintParticleMessage implements IMessage {
     }
 
     public static class Handler implements IMessageHandler<UpdateHintParticleMessage, IMessage> {
+
         @Override
         public IMessage onMessage(UpdateHintParticleMessage msg, MessageContext ctx) {
             boolean updateResult = StructureLibAPI.updateHintParticleTint(
@@ -61,16 +64,13 @@ public class UpdateHintParticleMessage implements IMessage {
                     msg.x,
                     msg.y,
                     msg.z,
-                    new short[] {
-                        msg.r, msg.g, msg.b, msg.a,
-                    });
-            if (StructureLibAPI.isDebugEnabled())
-                LOGGER.debug(
-                        "Server instructed to update hint particle at ({}, {}, {}), result {}!",
-                        msg.x,
-                        msg.y,
-                        msg.z,
-                        updateResult);
+                    new short[] { msg.r, msg.g, msg.b, msg.a, });
+            if (StructureLibAPI.isDebugEnabled()) LOGGER.debug(
+                    "Server instructed to update hint particle at ({}, {}, {}), result {}!",
+                    msg.x,
+                    msg.y,
+                    msg.z,
+                    updateResult);
             return null;
         }
     }

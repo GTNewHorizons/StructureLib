@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib.structure;
 class ChatThrottleKey {
 
     static class NoExplicitChannel {
+
         private static final int hashOffset = NoExplicitChannel.class.hashCode();
         private final String subchannel;
 

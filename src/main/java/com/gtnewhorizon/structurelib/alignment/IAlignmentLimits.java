@@ -2,13 +2,15 @@ package com.gtnewhorizon.structurelib.alignment;
 
 import static com.gtnewhorizon.structurelib.alignment.IAlignment.STATES_COUNT;
 
-import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
-import com.gtnewhorizon.structurelib.alignment.enumerable.Flip;
-import com.gtnewhorizon.structurelib.alignment.enumerable.Rotation;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
+
 import net.minecraftforge.common.util.ForgeDirection;
+
+import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.alignment.enumerable.Flip;
+import com.gtnewhorizon.structurelib.alignment.enumerable.Rotation;
 
 public interface IAlignmentLimits {
 
@@ -37,6 +39,7 @@ public interface IAlignmentLimits {
     }
 
     class Builder {
+
         protected final boolean[] validStates = new boolean[STATES_COUNT];
 
         private Builder() {}
@@ -54,15 +57,13 @@ public interface IAlignmentLimits {
         }
 
         public Builder deny(ForgeDirection fd) {
-            ExtendedFacing.getAllWith(fd).stream()
-                    .mapToInt(ExtendedFacing::getIndex)
+            ExtendedFacing.getAllWith(fd).stream().mapToInt(ExtendedFacing::getIndex)
                     .forEach(v -> validStates[v] = false);
             return this;
         }
 
         public Builder allow(ForgeDirection fd) {
-            ExtendedFacing.getAllWith(fd).stream()
-                    .mapToInt(ExtendedFacing::getIndex)
+            ExtendedFacing.getAllWith(fd).stream().mapToInt(ExtendedFacing::getIndex)
                     .forEach(v -> validStates[v] = true);
             return this;
         }
@@ -78,29 +79,25 @@ public interface IAlignmentLimits {
         }
 
         public Builder deny(Rotation fd) {
-            ExtendedFacing.getAllWith(fd).stream()
-                    .mapToInt(ExtendedFacing::getIndex)
+            ExtendedFacing.getAllWith(fd).stream().mapToInt(ExtendedFacing::getIndex)
                     .forEach(v -> validStates[v] = false);
             return this;
         }
 
         public Builder allow(Rotation fd) {
-            ExtendedFacing.getAllWith(fd).stream()
-                    .mapToInt(ExtendedFacing::getIndex)
+            ExtendedFacing.getAllWith(fd).stream().mapToInt(ExtendedFacing::getIndex)
                     .forEach(v -> validStates[v] = true);
             return this;
         }
 
         public Builder deny(Flip fd) {
-            ExtendedFacing.getAllWith(fd).stream()
-                    .mapToInt(ExtendedFacing::getIndex)
+            ExtendedFacing.getAllWith(fd).stream().mapToInt(ExtendedFacing::getIndex)
                     .forEach(v -> validStates[v] = false);
             return this;
         }
 
         public Builder allow(Flip fd) {
-            ExtendedFacing.getAllWith(fd).stream()
-                    .mapToInt(ExtendedFacing::getIndex)
+            ExtendedFacing.getAllWith(fd).stream().mapToInt(ExtendedFacing::getIndex)
                     .forEach(v -> validStates[v] = true);
             return this;
         }

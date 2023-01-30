@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib.structure.adders;
 import net.minecraft.tileentity.TileEntity;
 
 public interface ITileAdder<T> {
+
     /**
      * Callback to add hatch, needs to check if tile is valid (and add it)
      *

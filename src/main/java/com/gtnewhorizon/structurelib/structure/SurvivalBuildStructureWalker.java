@@ -1,12 +1,14 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import com.gtnewhorizon.structurelib.StructureLibAPI;
-import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
-import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
+import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
+
 class SurvivalBuildStructureWalker<T> implements IStructureWalker<T> {
+
     final T object;
     final ItemStack trigger;
     private final int elementBudget;
@@ -16,16 +18,9 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T> {
 
     private final AutoPlaceEnvironment env;
 
-    public SurvivalBuildStructureWalker(
-            T object,
-            ItemStack trigger,
-            int elementBudget,
-            ISurvivalBuildEnvironment params,
-            IStructureDefinition<?> definition,
-            String piece,
-            ExtendedFacing facing,
-            int[] baseOffsetABC,
-            boolean check) {
+    public SurvivalBuildStructureWalker(T object, ItemStack trigger, int elementBudget,
+            ISurvivalBuildEnvironment params, IStructureDefinition<?> definition, String piece, ExtendedFacing facing,
+            int[] baseOffsetABC, boolean check) {
         this.object = object;
         this.trigger = trigger;
         this.elementBudget = elementBudget;

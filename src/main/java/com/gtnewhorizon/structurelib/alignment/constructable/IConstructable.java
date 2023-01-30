@@ -1,14 +1,17 @@
 package com.gtnewhorizon.structurelib.alignment.constructable;
 
+import net.minecraft.item.ItemStack;
+
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.item.ItemStack;
 
 /**
  * Created by Tec on 24.03.2017.
  */
 public interface IConstructable {
+
     void construct(ItemStack stackSize, boolean hintsOnly);
 
     /**

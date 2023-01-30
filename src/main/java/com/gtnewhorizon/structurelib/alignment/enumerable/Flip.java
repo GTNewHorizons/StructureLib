@@ -7,9 +7,11 @@ import static java.util.stream.Collectors.toMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+
 import javax.annotation.Nonnull;
 
 public enum Flip {
+
     NONE(3, "none"),
     HORIZONTAL(2, "horizontal"),
     VERTICAL(1, "vertical"),

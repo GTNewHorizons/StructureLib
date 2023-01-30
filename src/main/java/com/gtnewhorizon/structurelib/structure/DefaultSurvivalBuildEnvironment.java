@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib.structure;
 import net.minecraft.entity.player.EntityPlayer;
 
 class DefaultSurvivalBuildEnvironment implements ISurvivalBuildEnvironment {
+
     private final IItemSource source;
     private final EntityPlayer actor;
 

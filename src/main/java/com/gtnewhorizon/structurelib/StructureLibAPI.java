@@ -2,13 +2,6 @@ package com.gtnewhorizon.structurelib;
 
 import static com.gtnewhorizon.structurelib.StructureLib.proxy;
 
-import com.gtnewhorizon.structurelib.alignment.IAlignment;
-import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
-import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
-import com.gtnewhorizon.structurelib.net.AlignmentMessage;
-import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
-import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
-import cpw.mods.fml.common.network.NetworkRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -18,10 +11,20 @@ import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
+import com.gtnewhorizon.structurelib.alignment.IAlignment;
+import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
+import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.net.AlignmentMessage;
+import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
+import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
+import cpw.mods.fml.common.network.NetworkRegistry;
+
 /**
- * A stable interface into the structure lib's internals. Backwards compatibility is maintained to the maximum extend possible.
+ * A stable interface into the structure lib's internals. Backwards compatibility is maintained to the maximum extend
+ * possible.
  */
 public class StructureLibAPI {
+
     public static final String MOD_ID = "structurelib";
     public static final int HINT_BLOCK_META_GENERIC_0 = 0;
     public static final int HINT_BLOCK_META_GENERIC_1 = 1;
@@ -47,12 +50,13 @@ public class StructureLibAPI {
      * appropriate. Otherwise, these events will not be sent at all, regardless of whether a listener for these events
      * are registered.
      * <p>
-     * Identifiers are required to be value-comparable, i.e. overrides {@link Object#equals(Object)}.
-     * Suggested identifier includes
+     * Identifiers are required to be value-comparable, i.e. overrides {@link Object#equals(Object)}. Suggested
+     * identifier includes
      * <ul>
-     *     <li>Mod Instance or {@link cpw.mods.fml.common.ModContainer}</li>
-     *     <li>{@link com.gtnewhorizon.structurelib.alignment.constructable.IConstructable} and its friends, if you are triggering structure check via this interface.</li>
-     *     <li>{@link net.minecraft.util.ResourceLocation}</li>
+     * <li>Mod Instance or {@link cpw.mods.fml.common.ModContainer}</li>
+     * <li>{@link com.gtnewhorizon.structurelib.alignment.constructable.IConstructable} and its friends, if you are
+     * triggering structure check via this interface.</li>
+     * <li>{@link net.minecraft.util.ResourceLocation}</li>
      * </ul>
      * <p>
      * It's an API abuse for normal {@link IStructureDefinition} users to depend on this feature. They have full control
@@ -82,6 +86,7 @@ public class StructureLibAPI {
 
     /**
      * Check if instrumenting is enabled.
+     * 
      * @return true if enabled, false otherwise
      */
     public static boolean isInstrumentEnabled() {
@@ -89,18 +94,22 @@ public class StructureLibAPI {
     }
 
     /**
-     * Start a batch of hinting. All hints particles generated during one batch will be considered to belong to one hologram.
+     * Start a batch of hinting. All hints particles generated during one batch will be considered to belong to one
+     * hologram.
      * <p>
-     * You don't need to call this unless your constructable tool didn't call {@link com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility#handle(ItemStack, EntityPlayer, World, int, int, int, int)}
+     * You don't need to call this unless your constructable tool didn't call
+     * {@link com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility#handle(ItemStack, EntityPlayer, World, int, int, int, int)}
      */
     public static void startHinting(World w) {
         proxy.startHinting(w);
     }
 
     /**
-     * End current batch of hinting. All hints particles generated during one batch will be considered to belong to one hologram.
+     * End current batch of hinting. All hints particles generated during one batch will be considered to belong to one
+     * hologram.
      * <p>
-     * You don't need to call this unless your constructable tool didn't call {@link com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility#handle(ItemStack, EntityPlayer, World, int, int, int, int)}
+     * You don't need to call this unless your constructable tool didn't call
+     * {@link com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility#handle(ItemStack, EntityPlayer, World, int, int, int, int)}
      */
     public static void endHinting(World w) {
         proxy.endHinting(w);
@@ -114,7 +123,8 @@ public class StructureLibAPI {
      * @param y     y coord
      * @param z     z coord
      * @param icons 6 texture. in forge direction order.
-     * @param RGBa  a 4 short array. tint in rgba form. currently alpha channel is ignored, but we might change this later on.
+     * @param RGBa  a 4 short array. tint in rgba form. currently alpha channel is ignored, but we might change this
+     *              later on.
      */
     public static void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {
         proxy.hintParticleTinted(w, x, y, z, icons, RGBa);
@@ -129,7 +139,8 @@ public class StructureLibAPI {
      * @param z     z coord
      * @param block block to take texture from
      * @param meta  the meta of block to take texture from
-     * @param RGBa  a 4 short array. tint in rgba form. currently alpha channel is ignored, but we might change this later on.
+     * @param RGBa  a 4 short array. tint in rgba form. currently alpha channel is ignored, but we might change this
+     *              later on.
      */
     public static void hintParticleTinted(World w, int x, int y, int z, Block block, int meta, short[] RGBa) {
         proxy.hintParticleTinted(w, x, y, z, block, meta, RGBa);
@@ -165,9 +176,8 @@ public class StructureLibAPI {
     /**
      * Update the tint of given hint particle. Do nothing if particle not found.
      * <p>
-     * Can be called on either client side or server side.
-     * Server side will schedule a network message to update it for this player only.
-     * Will do nothing if no hint particle is found at given location.
+     * Can be called on either client side or server side. Server side will schedule a network message to update it for
+     * this player only. Will do nothing if no hint particle is found at given location.
      *
      * @return false if nothing updated. true if updated or update instruction sent.
      */
@@ -185,11 +195,13 @@ public class StructureLibAPI {
     }
 
     /**
-     * Query the ExtendedFacing of this tile entity from client side. Can be sent only on client side.
-     * The ExtendedFacing will later be set onto given tile entity via {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)}
-     * upon arrival of server reply.
+     * Query the ExtendedFacing of this tile entity from client side. Can be sent only on client side. The
+     * ExtendedFacing will later be set onto given tile entity via
+     * {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)} upon arrival of
+     * server reply.
      * <p>
-     * The server side will query the {@link ExtendedFacing} of this provider using {@link IAlignment#getExtendedFacing()}
+     * The server side will query the {@link ExtendedFacing} of this provider using
+     * {@link IAlignment#getExtendedFacing()}
      *
      * @throws IllegalArgumentException if is not tile entity or provided a null alignment
      */
@@ -200,7 +212,8 @@ public class StructureLibAPI {
     /**
      * Send the ExtendedFacing of this Tile Entity to all players. Can be called on server side only.
      * <p>
-     * The receiving tile entity will receive the {@link ExtendedFacing} via its {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)} method.
+     * The receiving tile entity will receive the {@link ExtendedFacing} via its
+     * {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)} method.
      *
      * @throws IllegalArgumentException if is not tile entity or provided a null alignment
      */
@@ -211,7 +224,8 @@ public class StructureLibAPI {
     /**
      * Send the ExtendedFacing of this Tile Entity to given player. Can be called on server side only.
      * <p>
-     * The receiving tile entity will receive the {@link ExtendedFacing} via its {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)} method.
+     * The receiving tile entity will receive the {@link ExtendedFacing} via its
+     * {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)} method.
      *
      * @throws IllegalArgumentException if is not tile entity or provided a null alignment
      */
@@ -220,9 +234,11 @@ public class StructureLibAPI {
     }
 
     /**
-     * Send the ExtendedFacing of this Tile Entity to all players around target point. Can be called on server side only.
+     * Send the ExtendedFacing of this Tile Entity to all players around target point. Can be called on server side
+     * only.
      * <p>
-     * The receiving tile entity will receive the {@link ExtendedFacing} via its {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)} method.
+     * The receiving tile entity will receive the {@link ExtendedFacing} via its
+     * {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)} method.
      *
      * @throws IllegalArgumentException if is not tile entity or provided a null alignment
      */
@@ -233,7 +249,8 @@ public class StructureLibAPI {
     /**
      * Send the ExtendedFacing of this Tile Entity to all players in that dimension. Can be called on server side only.
      * <p>
-     * The receiving tile entity will receive the {@link ExtendedFacing} via its {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)} method.
+     * The receiving tile entity will receive the {@link ExtendedFacing} via its
+     * {@link com.gtnewhorizon.structurelib.alignment.IAlignment#setExtendedFacing(ExtendedFacing)} method.
      *
      * @throws IllegalArgumentException if is not tile entity or provided a null alignment
      */
@@ -269,10 +286,11 @@ public class StructureLibAPI {
     }
 
     /**
-     * Determines if given block can be replaced without much effort. The exact predicate clauses is not stable and
-     * will be changed, but the general idea will always stay the same.
+     * Determines if given block can be replaced without much effort. The exact predicate clauses is not stable and will
+     * be changed, but the general idea will always stay the same.
      * <p>
-     * Use this in your {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, AutoPlaceEnvironment)}
+     * Use this in your
+     * {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, AutoPlaceEnvironment)}
      */
     @Deprecated
     public static boolean isBlockTriviallyReplaceable(World w, int x, int y, int z, EntityPlayerMP actor) {
@@ -280,10 +298,11 @@ public class StructureLibAPI {
     }
 
     /**
-     * Determines if given block can be replaced without much effort. The exact predicate clauses is not stable and
-     * will be changed, but the general idea will always stay the same.
+     * Determines if given block can be replaced without much effort. The exact predicate clauses is not stable and will
+     * be changed, but the general idea will always stay the same.
      * <p>
-     * Use this in your {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, AutoPlaceEnvironment)}
+     * Use this in your
+     * {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, AutoPlaceEnvironment)}
      */
     public static boolean isBlockTriviallyReplaceable(World w, int x, int y, int z, EntityPlayer actor) {
         // TODO extend this function a bit
@@ -294,35 +313,33 @@ public class StructureLibAPI {
     /**
      * Send chat to player, but throttled.
      *
-     * @param throttleKey      throttle key. Must properly implement {@link Object#hashCode()} and {@link Object#equals(Object)}
-     *                         to handle value equality.
+     * @param throttleKey      throttle key. Must properly implement {@link Object#hashCode()} and
+     *                         {@link Object#equals(Object)} to handle value equality.
      * @param player           player to send chat to
      * @param text             chat to send
-     * @param intervalRequired interval required before last recorded time to actually send the message. unit in millisecond.
-     *                         we purposefully chose to not use a bigger data type to limit how long this interval can be
+     * @param intervalRequired interval required before last recorded time to actually send the message. unit in
+     *                         millisecond. we purposefully chose to not use a bigger data type to limit how long this
+     *                         interval can be
      */
-    public static void addThrottledChat(
-            Object throttleKey, EntityPlayer player, IChatComponent text, short intervalRequired) {
+    public static void addThrottledChat(Object throttleKey, EntityPlayer player, IChatComponent text,
+            short intervalRequired) {
         addThrottledChat(throttleKey, player, text, intervalRequired, false);
     }
 
     /**
      * Send chat to player, but throttled.
      *
-     * @param throttleKey         throttle key. Must properly implement {@link Object#hashCode()} and {@link Object#equals(Object)}
-     *                            to handle value equality.
+     * @param throttleKey         throttle key. Must properly implement {@link Object#hashCode()} and
+     *                            {@link Object#equals(Object)} to handle value equality.
      * @param player              player to send chat to
      * @param text                chat to send
-     * @param intervalRequired    interval required before last recorded time to actually send the message. unit in millisecond.
-     *                            we purposefully chose to not use a bigger data type to limit how long this interval can be
+     * @param intervalRequired    interval required before last recorded time to actually send the message. unit in
+     *                            millisecond. we purposefully chose to not use a bigger data type to limit how long
+     *                            this interval can be
      * @param forceUpdateLastSend if true, always update the last send time, even if the message isn't actually sent.
      */
-    public static void addThrottledChat(
-            Object throttleKey,
-            EntityPlayer player,
-            IChatComponent text,
-            short intervalRequired,
-            boolean forceUpdateLastSend) {
+    public static void addThrottledChat(Object throttleKey, EntityPlayer player, IChatComponent text,
+            short intervalRequired, boolean forceUpdateLastSend) {
         proxy.addThrottledChat(throttleKey, player, text, intervalRequired, forceUpdateLastSend);
     }
 }

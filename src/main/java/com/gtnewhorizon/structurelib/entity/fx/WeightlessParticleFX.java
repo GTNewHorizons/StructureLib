@@ -1,20 +1,16 @@
 package com.gtnewhorizon.structurelib.entity.fx;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.particle.EntityFX;
 import net.minecraft.world.World;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+
 @SideOnly(Side.CLIENT)
 public class WeightlessParticleFX extends EntityFX {
-    public WeightlessParticleFX(
-            World p_i1205_1_,
-            double p_i1205_2_,
-            double p_i1205_4_,
-            double p_i1205_6_,
-            double p_i1205_8_,
-            double p_i1205_10_,
-            double p_i1205_12_) {
+
+    public WeightlessParticleFX(World p_i1205_1_, double p_i1205_2_, double p_i1205_4_, double p_i1205_6_,
+            double p_i1205_8_, double p_i1205_10_, double p_i1205_12_) {
         super(p_i1205_1_, p_i1205_2_, p_i1205_4_, p_i1205_6_, p_i1205_8_, p_i1205_10_, p_i1205_12_);
         this.motionX = p_i1205_8_ + (double) ((float) (Math.random() * 2.0D - 1.0D) * 0.05F);
         this.motionY = p_i1205_10_ + (double) ((float) (Math.random() * 2.0D - 1.0D) * 0.05F);

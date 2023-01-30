@@ -2,11 +2,13 @@ package com.gtnewhorizon.structurelib.structure;
 
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.*;
 
-import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.gtnewhorizon.structurelib.util.Vec3Impl;
+
 public class StructureDefinition<T> implements IStructureDefinition<T> {
+
     private final Map<Character, IStructureElement<T>> elements;
     private final Map<String, String> shapes;
     private final Map<String, IStructureElement<T>[]> structures;
@@ -16,11 +18,8 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         return new Builder<>();
     }
 
-    private StructureDefinition(
-            Map<Character, IStructureElement<T>> elements,
-            Map<String, String> shapes,
-            Map<String, IStructureElement<T>[]> structures,
-            Map<String, Set<Vec3Impl>> occupiedSpaces) {
+    private StructureDefinition(Map<Character, IStructureElement<T>> elements, Map<String, String> shapes,
+            Map<String, IStructureElement<T>[]> structures, Map<String, Set<Vec3Impl>> occupiedSpaces) {
         this.elements = elements;
         this.shapes = shapes;
         this.structures = structures;
@@ -28,6 +27,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
     }
 
     public static class Builder<T> {
+
         private static final char A = '\uA000';
         private static final char B = '\uB000';
         private static final char C = '\uC000';
@@ -54,11 +54,10 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
 
         /**
          * Adds shape. Shape is a two-dimensional string array. Each <b>character</b> inside any of these strings will
-         * be later mapped to a particular type of {@link IStructureElement} as indicated by {@link #addElement(Character, IStructureElement)}.
+         * be later mapped to a particular type of {@link IStructureElement} as indicated by
+         * {@link #addElement(Character, IStructureElement)}.
          * <p>
-         * next char is next block(a)
-         * next string is next line(b)
-         * next string[] is next slice(c)
+         * next char is next block(a) next string is next line(b) next string[] is next slice(c)
          * <p>
          * There are a few special reserved characters that are pre-mapped to some common structure elements
          * <ul>
@@ -71,7 +70,8 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
          * <p>
          *
          * @param name           unlocalized/code name
-         * @param structurePiece generated or written struct - DO NOT STORE IT ANYWHERE, or at least set them to null afterwards
+         * @param structurePiece generated or written struct - DO NOT STORE IT ANYWHERE, or at least set them to null
+         *                       afterwards
          * @return this builder
          */
         public Builder<T> addShape(String name, String[][] structurePiece) {
@@ -170,22 +170,25 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         public IStructureDefinition<T> build() {
             Map<String, IStructureElement<T>[]> structures = compileStructureMap();
             return new StructureDefinition<>(
-                    new HashMap<>(elements), new HashMap<>(shapes), structures, occupiedSpaces);
+                    new HashMap<>(elements),
+                    new HashMap<>(shapes),
+                    structures,
+                    occupiedSpaces);
         }
 
         @SuppressWarnings("unchecked")
         private Map<String, IStructureElement<T>[]> compileElementSetMap() {
             Set<Integer> missing = findMissing();
             if (missing.isEmpty()) {
-                return shapes.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()
-                        .chars()
-                        .mapToObj(c -> (char) c)
-                        .distinct()
-                        .map(elements::get)
-                        .toArray(IStructureElement[]::new)));
+                return shapes.entrySet().stream().collect(
+                        Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> e.getValue().chars().mapToObj(c -> (char) c).distinct().map(elements::get)
+                                        .toArray(IStructureElement[]::new)));
             } else {
-                throw new RuntimeException("Missing Structure Element bindings for (chars as integers): "
-                        + Arrays.toString(missing.toArray()));
+                throw new RuntimeException(
+                        "Missing Structure Element bindings for (chars as integers): "
+                                + Arrays.toString(missing.toArray()));
             }
         }
 
@@ -193,22 +196,21 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         private Map<String, IStructureElement<T>[]> compileStructureMap() {
             Set<Integer> missing = findMissing();
             if (missing.isEmpty()) {
-                return shapes.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()
-                        .chars()
-                        .mapToObj(c -> elements.get((char) c))
-                        .toArray(IStructureElement[]::new)));
+                return shapes.entrySet().stream().collect(
+                        Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> e.getValue().chars().mapToObj(c -> elements.get((char) c))
+                                        .toArray(IStructureElement[]::new)));
             } else {
-                throw new RuntimeException("Missing Structure Element bindings for (chars as integers): "
-                        + Arrays.toString(missing.toArray()));
+                throw new RuntimeException(
+                        "Missing Structure Element bindings for (chars as integers): "
+                                + Arrays.toString(missing.toArray()));
             }
         }
 
         private Set<Integer> findMissing() {
-            return shapes.values().stream()
-                    .flatMapToInt(CharSequence::chars)
-                    .filter(i -> !elements.containsKey((char) i))
-                    .boxed()
-                    .collect(Collectors.toSet());
+            return shapes.values().stream().flatMapToInt(CharSequence::chars)
+                    .filter(i -> !elements.containsKey((char) i)).boxed().collect(Collectors.toSet());
         }
     }
 

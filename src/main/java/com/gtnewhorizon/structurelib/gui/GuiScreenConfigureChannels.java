@@ -1,12 +1,10 @@
 package com.gtnewhorizon.structurelib.gui;
 
-import com.gtnewhorizon.structurelib.StructureLib;
-import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
-import com.gtnewhorizon.structurelib.gui.GuiScrollableList.IGuiScreen;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -15,12 +13,18 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
+
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import com.gtnewhorizon.structurelib.StructureLib;
+import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
+import com.gtnewhorizon.structurelib.gui.GuiScrollableList.IGuiScreen;
+
 public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen {
+
     private static final int KEY_MAX_WIDTH = 50;
     private final ItemStack trigger;
     private final GuiChannelsList list;
@@ -48,6 +52,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
         guiTop = (this.height - this.getYSize()) / 2;
 
         key = new GuiTextField(fontRendererObj, guiLeft + 45, guiTop + 119, 151 + 12 - 45, 12) {
+
             @Override
             public void writeText(String text) {
                 // force lower case
@@ -58,8 +63,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
             @Override
             public void mouseClicked(int p_146192_1_, int p_146192_2_, int p_146192_3_) {
                 super.mouseClicked(p_146192_1_, p_146192_2_, p_146192_3_);
-                boolean flag = p_146192_1_ >= this.xPosition
-                        && p_146192_1_ < this.xPosition + this.width
+                boolean flag = p_146192_1_ >= this.xPosition && p_146192_1_ < this.xPosition + this.width
                         && p_146192_2_ >= this.yPosition
                         && p_146192_2_ < this.yPosition + this.height;
                 if (flag && p_146192_3_ == 1) {
@@ -75,6 +79,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
             }
         };
         value = new GuiTextField(fontRendererObj, guiLeft + 45, guiTop + 139, 151 + 12 - 45, 12) {
+
             @Override
             public void writeText(String text) {
                 // ignore write requests containing non digit characters.
@@ -104,8 +109,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
             @Override
             public void mouseClicked(int p_146192_1_, int p_146192_2_, int p_146192_3_) {
                 super.mouseClicked(p_146192_1_, p_146192_2_, p_146192_3_);
-                boolean flag = p_146192_1_ >= this.xPosition
-                        && p_146192_1_ < this.xPosition + this.width
+                boolean flag = p_146192_1_ >= this.xPosition && p_146192_1_ < this.xPosition + this.width
                         && p_146192_2_ >= this.yPosition
                         && p_146192_2_ < this.yPosition + this.height;
                 if (flag && p_146192_3_ == 1) {
@@ -122,22 +126,30 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
 
         list.onGuiInit(this);
 
-        addButton(new GuiButton(
-                0, guiLeft + 12, guiTop + 157, 47, 20, I18n.format("item.structurelib.constructableTrigger.gui.add")));
-        addButton(new GuiButton(
-                1,
-                guiLeft + 65,
-                guiTop + 157,
-                47,
-                20,
-                I18n.format("item.structurelib.constructableTrigger.gui.unset")));
-        addButton(new GuiButton(
-                2,
-                guiLeft + 118,
-                guiTop + 157,
-                47,
-                20,
-                I18n.format("item.structurelib.constructableTrigger.gui.wipe")));
+        addButton(
+                new GuiButton(
+                        0,
+                        guiLeft + 12,
+                        guiTop + 157,
+                        47,
+                        20,
+                        I18n.format("item.structurelib.constructableTrigger.gui.add")));
+        addButton(
+                new GuiButton(
+                        1,
+                        guiLeft + 65,
+                        guiTop + 157,
+                        47,
+                        20,
+                        I18n.format("item.structurelib.constructableTrigger.gui.unset")));
+        addButton(
+                new GuiButton(
+                        2,
+                        guiLeft + 118,
+                        guiTop + 157,
+                        47,
+                        20,
+                        I18n.format("item.structurelib.constructableTrigger.gui.wipe")));
 
         updateButtons();
     }
@@ -238,8 +250,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
         // STACKOVERFLOW!
         String keyText = key.getText();
         boolean existing = !StringUtils.isEmpty(keyText) && ChannelDataAccessor.hasSubChannel(trigger, keyText);
-        getButtonList().get(0).displayString = existing
-                ? I18n.format("item.structurelib.constructableTrigger.gui.set")
+        getButtonList().get(0).displayString = existing ? I18n.format("item.structurelib.constructableTrigger.gui.set")
                 : I18n.format("item.structurelib.constructableTrigger.gui.add");
         getButtonList().get(0).enabled = !StringUtils.isBlank(value.getText());
         getButtonList().get(1).enabled = existing && !StringUtils.isBlank(value.getText());
@@ -300,14 +311,21 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
         super.drawScreen(mX, mY, partialTick);
         list.drawScreen(mX, mY, partialTick);
         fontRendererObj.drawString(
-                I18n.format("item.structurelib.constructableTrigger.gui.key"), guiLeft + 12, guiTop + 122, 0);
+                I18n.format("item.structurelib.constructableTrigger.gui.key"),
+                guiLeft + 12,
+                guiTop + 122,
+                0);
         key.drawTextBox();
         fontRendererObj.drawString(
-                I18n.format("item.structurelib.constructableTrigger.gui.value"), guiLeft + 12, guiTop + 142, 0);
+                I18n.format("item.structurelib.constructableTrigger.gui.value"),
+                guiLeft + 12,
+                guiTop + 142,
+                0);
         value.drawTextBox();
     }
 
     private class GuiChannelsList extends GuiScrollableList<Entry<String, Integer>> {
+
         private List<Entry<String, Integer>> cache;
 
         public GuiChannelsList(int width, int height, int originX, int originY, int slotHeight) {
@@ -316,11 +334,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
 
         @Override
         public Entry<String, Integer> getElementAt(int index) {
-            return ChannelDataAccessor.iterateChannelData(trigger)
-                    .sorted()
-                    .skip(index)
-                    .findFirst()
-                    .orElse(null);
+            return ChannelDataAccessor.iterateChannelData(trigger).sorted().skip(index).findFirst().orElse(null);
         }
 
         @Override
@@ -330,8 +344,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
 
         @Override
         protected boolean elementClicked(int elementIndex, boolean doubleClick, int mXRelative, int mYRelative) {
-            if (mXRelative >= margin + 1
-                    && mXRelative <= margin + 5
+            if (mXRelative >= margin + 1 && mXRelative <= margin + 5
                     && mYRelative >= margin / 2 + 1
                     && mYRelative <= margin / 2 + 5) {
                 Entry<String, Integer> e = getElementAt(elementIndex);
@@ -349,8 +362,8 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
         }
 
         @Override
-        protected void drawElement(
-                int elementIndex, int x, int y, int height, Tessellator tessellator, boolean isHovering) {
+        protected void drawElement(int elementIndex, int x, int y, int height, Tessellator tessellator,
+                boolean isHovering) {
             if (elementIndex < 0 || elementIndex >= cache.size()) {
                 return;
             }
@@ -382,8 +395,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
             // TODO optimize this to not create a billion string, or maybe cache this
             String s = fontRendererObj.trimStringToWidth(e, keyMaxWidth);
             if (s.length() != e.length()) {
-                StringBuilder buffer =
-                        new StringBuilder(s).deleteCharAt(s.length() - 1).append("...");
+                StringBuilder buffer = new StringBuilder(s).deleteCharAt(s.length() - 1).append("...");
                 while ((s = fontRendererObj.trimStringToWidth(buffer.toString(), keyMaxWidth)).length()
                         != buffer.length())
                     // drop last original char
@@ -391,9 +403,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
                 do {
                     buffer.append('.');
                 } while (fontRendererObj.getStringWidth(buffer.toString()) <= keyMaxWidth);
-                s = buffer.deleteCharAt(s.length() - 1)
-                        .insert(s.length() - 3, EnumChatFormatting.GRAY)
-                        .toString();
+                s = buffer.deleteCharAt(s.length() - 1).insert(s.length() - 3, EnumChatFormatting.GRAY).toString();
             }
             return s;
         }

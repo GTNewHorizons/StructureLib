@@ -1,32 +1,27 @@
 /**
- * Copyright (c) 2022, glee8e
- * This file is part of StructureLib.
+ * Copyright (c) 2022, glee8e This file is part of StructureLib.
  * <p>
- * StructureLib is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * StructureLib is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any
+ * later version.
  * <p>
- * StructureLib is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * StructureLib is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
  * <p>
- * You should have received a copy of the GNU Lesser General Public License
- * along with Foobar; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * You should have received a copy of the GNU Lesser General Public License along with Foobar; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 package com.gtnewhorizon.structurelib.util;
 
-import com.gtnewhorizon.gtnhlib.util.map.ItemStackMap;
-import com.gtnewhorizon.structurelib.util.InventoryUtility.ItemStackExtractor.APIType;
-import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Items;
@@ -34,10 +29,15 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryEnderChest;
 import net.minecraft.item.ItemStack;
 
+import com.gtnewhorizon.gtnhlib.util.map.ItemStackMap;
+import com.gtnewhorizon.structurelib.util.InventoryUtility.ItemStackExtractor.APIType;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
+
 /**
  * This class is part of API, but is not stable. Use at your own risk.
  */
 public class InventoryUtility {
+
     private static final SortedRegistry<ItemStackExtractor> stackExtractors = new SortedRegistry<>();
     private static final List<Predicate<? super EntityPlayerMP>> enableEnder = new CopyOnWriteArrayList<>();
     /**
@@ -47,6 +47,7 @@ public class InventoryUtility {
 
     static {
         inventoryProviders.register("5000-main-inventory", new InventoryProvider<InventoryIterable<InventoryPlayer>>() {
+
             @Override
             public InventoryIterable<InventoryPlayer> getInventory(EntityPlayerMP player) {
                 return new InventoryIterable<>(player.inventory, player.inventory.mainInventory.length);
@@ -59,8 +60,9 @@ public class InventoryUtility {
                 inv.getInventory().player.inventoryContainer.detectAndSendChanges();
             }
         });
-        inventoryProviders.register(
-                "7000-ender-inventory", new InventoryProvider<InventoryIterable<InventoryEnderChest>>() {
+        inventoryProviders
+                .register("7000-ender-inventory", new InventoryProvider<InventoryIterable<InventoryEnderChest>>() {
+
                     @Override
                     public InventoryIterable<InventoryEnderChest> getInventory(EntityPlayerMP player) {
                         if (enableEnder.stream().anyMatch(p -> p.test(player)))
@@ -86,8 +88,8 @@ public class InventoryUtility {
         stackExtractors.register(key, val);
     }
 
-    public static <Inv extends IInventory> void registerStackExtractor(
-            String key, Function<ItemStack, ? extends Inv> extractor) {
+    public static <Inv extends IInventory> void registerStackExtractor(String key,
+            Function<ItemStack, ? extends Inv> extractor) {
         registerStackExtractor(key, newItemStackProvider(extractor));
     }
 
@@ -95,8 +97,8 @@ public class InventoryUtility {
         inventoryProviders.register(key, val);
     }
 
-    public static <Inv extends IInventory> void registerInventoryProvider(
-            String key, Function<EntityPlayerMP, ? extends Inv> extractor) {
+    public static <Inv extends IInventory> void registerInventoryProvider(String key,
+            Function<EntityPlayerMP, ? extends Inv> extractor) {
         registerInventoryProvider(key, newInventoryProvider(extractor));
     }
 
@@ -107,6 +109,7 @@ public class InventoryUtility {
     public static <Inv extends IInventory> InventoryProvider<InventoryIterable<Inv>> newInventoryProvider(
             Function<EntityPlayerMP, ? extends Inv> extractor) {
         return new InventoryProvider<InventoryIterable<Inv>>() {
+
             @Override
             public InventoryIterable<Inv> getInventory(EntityPlayerMP player) {
                 Inv inv = extractor.apply(player);
@@ -122,24 +125,26 @@ public class InventoryUtility {
 
     public static ItemStackExtractor newItemStackProvider(Function<ItemStack, ? extends IInventory> extractor) {
         return new ItemStackExtractor() {
+
             @Override
             public boolean isAPIImplemented(APIType type) {
                 return type == APIType.MAIN;
             }
 
             @Override
-            public int takeFromStack(
-                    Predicate<ItemStack> predicate,
-                    boolean simulate,
-                    int count,
-                    ItemStackCounter store,
-                    ItemStack stack,
-                    ItemStack filter,
-                    EntityPlayerMP player) {
+            public int takeFromStack(Predicate<ItemStack> predicate, boolean simulate, int count,
+                    ItemStackCounter store, ItemStack stack, ItemStack filter, EntityPlayerMP player) {
                 IInventory inv = extractor.apply(stack);
                 if (inv == null) return 0;
                 int found = takeFromInventory(
-                        new InventoryIterable<>(inv), predicate, simulate, count, store, filter, player, false);
+                        new InventoryIterable<>(inv),
+                        predicate,
+                        simulate,
+                        count,
+                        store,
+                        filter,
+                        player,
+                        false);
                 if (found > 0) inv.markDirty();
                 return found;
             }
@@ -147,8 +152,8 @@ public class InventoryUtility {
     }
 
     /**
-     * take count amount of stacks that matches given filter. might take partial amount of stuff, so simulation is suggested
-     * if you ever need to take more than one.
+     * take count amount of stacks that matches given filter. might take partial amount of stuff, so simulation is
+     * suggested if you ever need to take more than one.
      *
      * @param player    source of stacks
      * @param predicate item stack filter
@@ -156,8 +161,8 @@ public class InventoryUtility {
      * @param count     let's hope int size is enough...
      * @return amount taken. never negative nor bigger than count...
      */
-    public static Map<ItemStack, Integer> takeFromInventory(
-            EntityPlayerMP player, Predicate<ItemStack> predicate, boolean simulate, int count) {
+    public static Map<ItemStack, Integer> takeFromInventory(EntityPlayerMP player, Predicate<ItemStack> predicate,
+            boolean simulate, int count) {
         ItemStackCounterImpl store = new ItemStackCounterImpl();
         int sum = 0;
         for (InventoryProvider<?> provider : inventoryProviders) {
@@ -168,8 +173,8 @@ public class InventoryUtility {
     }
 
     /**
-     * take count amount of stacks that matches given filter. might take partial amount of stuff, so simulation is suggested
-     * if you ever need to take more than one.
+     * take count amount of stacks that matches given filter. might take partial amount of stuff, so simulation is
+     * suggested if you ever need to take more than one.
      *
      * @param player   source of stacks
      * @param filter   the precise type of item to extract. stackSize matters
@@ -189,14 +194,9 @@ public class InventoryUtility {
     }
 
     // workaround java generics issue
-    private static <R extends Iterable<ItemStack>> int takeFromPlayer(
-            EntityPlayerMP player,
-            Predicate<ItemStack> predicate,
-            boolean simulate,
-            int count,
-            ItemStackCounterImpl store,
-            InventoryProvider<R> provider,
-            ItemStack filter) {
+    private static <R extends Iterable<ItemStack>> int takeFromPlayer(EntityPlayerMP player,
+            Predicate<ItemStack> predicate, boolean simulate, int count, ItemStackCounterImpl store,
+            InventoryProvider<R> provider, ItemStack filter) {
         R inv = provider.getInventory(player);
         if (inv == null) return 0;
         int taken = takeFromInventory(inv, predicate, simulate, count, store, filter, player, true);
@@ -215,29 +215,23 @@ public class InventoryUtility {
      * @param recursive do recursive lookup using {@link #getStackExtractors() stack extractors}
      * @return amount taken. never negative nor bigger than count...
      */
-    public static Map<ItemStack, Integer> takeFromInventory(
-            Iterable<ItemStack> inv, Predicate<ItemStack> predicate, boolean simulate, int count, boolean recursive) {
+    public static Map<ItemStack, Integer> takeFromInventory(Iterable<ItemStack> inv, Predicate<ItemStack> predicate,
+            boolean simulate, int count, boolean recursive) {
         ItemStackCounterImpl store = new ItemStackCounterImpl();
         takeFromInventory(inv, predicate, simulate, count, store, null, null, recursive);
         return store.getStore();
     }
 
-    private static int takeFromInventory(
-            @Nonnull Iterable<ItemStack> inv,
-            @Nonnull Predicate<ItemStack> predicate,
-            boolean simulate,
-            int count,
-            @Nonnull ItemStackCounter store,
-            @Nullable ItemStack filter,
-            @Nullable EntityPlayerMP player,
-            boolean recursive) {
+    private static int takeFromInventory(@Nonnull Iterable<ItemStack> inv, @Nonnull Predicate<ItemStack> predicate,
+            boolean simulate, int count, @Nonnull ItemStackCounter store, @Nullable ItemStack filter,
+            @Nullable EntityPlayerMP player, boolean recursive) {
         int found = 0;
         ItemStack copiedFilter = null;
         if (filter != null) {
             copiedFilter = new ItemStack(filter.getItem(), filter.stackSize, Items.feather.getDamage(filter));
             copiedFilter.setTagCompound(filter.stackTagCompound);
         }
-        for (Iterator<ItemStack> iterator = inv.iterator(); iterator.hasNext(); ) {
+        for (Iterator<ItemStack> iterator = inv.iterator(); iterator.hasNext();) {
             ItemStack stack = iterator.next();
             // invalid stack
             if (stack == null || stack.getItem() == null || stack.stackSize <= 0) continue;
@@ -272,9 +266,10 @@ public class InventoryUtility {
     }
 
     public interface OptimizedExtractor {
+
         /**
-         * Extract a particular type of item. The extractor can choose to not return all items contained within this item
-         * as long as it makes sense, but the author should inform the player of this.
+         * Extract a particular type of item. The extractor can choose to not return all items contained within this
+         * item as long as it makes sense, but the author should inform the player of this.
          * <p>
          * Whether optimized extractor do recursive extraction is at the discretion of implementor.
          *
@@ -288,12 +283,14 @@ public class InventoryUtility {
     }
 
     public interface InventoryProvider<R extends Iterable<ItemStack>> {
+
         R getInventory(EntityPlayerMP player);
 
         void markDirty(R inv);
     }
 
     public interface ItemStackExtractor {
+
         enum APIType {
             MAIN,
             EXTRACT_ONE_STACK,
@@ -302,13 +299,13 @@ public class InventoryUtility {
         boolean isAPIImplemented(APIType type);
 
         /**
-         * Extract a particular type of item. The extractor can choose to not return all items contained within this item
-         * as long as it makes sense, but the author should inform the player of this.
+         * Extract a particular type of item. The extractor can choose to not return all items contained within this
+         * item as long as it makes sense, but the author should inform the player of this.
          * <p>
          * Whether this method does recursive extraction is at the discretion of implementor.
          *
-         * @param predicate the main filtering predicate. never null. It's assumed predicate always returns true on filter,
-         *                  if that is not null
+         * @param predicate the main filtering predicate. never null. It's assumed predicate always returns true on
+         *                  filter, if that is not null
          * @param store     where to store extracted items. Should increment the
          * @param source    from where an extraction should be attempted
          * @param filter    stack to extract. should not be mutated! match the NBT tag using EXACT mode. might be null.
@@ -316,18 +313,12 @@ public class InventoryUtility {
          * @param player    executor of extraction, or null if from a machine
          * @return amount extracted, or -1 if this is not implemented
          */
-        int takeFromStack(
-                Predicate<ItemStack> predicate,
-                boolean simulate,
-                int count,
-                ItemStackCounter store,
-                ItemStack source,
-                ItemStack filter,
-                EntityPlayerMP player);
+        int takeFromStack(Predicate<ItemStack> predicate, boolean simulate, int count, ItemStackCounter store,
+                ItemStack source, ItemStack filter, EntityPlayerMP player);
 
         /**
-         * Extract a particular type of item. The extractor can choose to not return all items contained within this item
-         * as long as it makes sense, but the author should inform the player of this.
+         * Extract a particular type of item. The extractor can choose to not return all items contained within this
+         * item as long as it makes sense, but the author should inform the player of this.
          * <p>
          * Whether this method does recursive extraction is at the discretion of implementor.
          *
@@ -343,20 +334,15 @@ public class InventoryUtility {
 
         static ItemStackExtractor createOnlyOptimized(@Nonnull OptimizedExtractor optimizedExtractor) {
             return new ItemStackExtractor() {
+
                 @Override
                 public boolean isAPIImplemented(APIType type) {
                     return type == APIType.EXTRACT_ONE_STACK;
                 }
 
                 @Override
-                public int takeFromStack(
-                        Predicate<ItemStack> predicate,
-                        boolean simulate,
-                        int count,
-                        ItemStackCounter store,
-                        ItemStack stack,
-                        ItemStack filter,
-                        EntityPlayerMP player) {
+                public int takeFromStack(Predicate<ItemStack> predicate, boolean simulate, int count,
+                        ItemStackCounter store, ItemStack stack, ItemStack filter, EntityPlayerMP player) {
                     return 0;
                 }
 
@@ -369,6 +355,7 @@ public class InventoryUtility {
     }
 
     public interface ItemStackCounter {
+
         /**
          * Add some amount of stack. Note stackSize is used instead of stack.stackSize.
          */
@@ -376,6 +363,7 @@ public class InventoryUtility {
     }
 
     private static class ItemStackCounterImpl implements ItemStackCounter {
+
         private final Map<ItemStack, Integer> store = new ItemStackMap<>(true);
 
         @Override

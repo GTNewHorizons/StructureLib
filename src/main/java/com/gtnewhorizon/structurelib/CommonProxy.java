@@ -1,11 +1,9 @@
 package com.gtnewhorizon.structurelib;
 
-import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
-import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -15,7 +13,12 @@ import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
+import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
+import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+
 public class CommonProxy {
+
     public void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {}
 
     public void hintParticleTinted(World w, int x, int y, int z, Block block, int meta, short[] RGBa) {}
@@ -68,11 +71,7 @@ public class CommonProxy {
 
     private final Map<EntityPlayerMP, Map<Object, Long>> throttleMap = new WeakHashMap<>();
 
-    public void addThrottledChat(
-            Object throttleKey,
-            EntityPlayer player,
-            IChatComponent text,
-            short intervalRequired,
+    public void addThrottledChat(Object throttleKey, EntityPlayer player, IChatComponent text, short intervalRequired,
             boolean forceUpdateLastSend) {
         if (player instanceof EntityPlayerMP) {
             Map<Object, Long> submap = throttleMap.computeIfAbsent((EntityPlayerMP) player, p -> new HashMap<>());
@@ -80,13 +79,8 @@ public class CommonProxy {
         }
     }
 
-    protected static void addThrottledChat(
-            Object throttleKey,
-            EntityPlayer player,
-            IChatComponent text,
-            short intervalRequired,
-            boolean forceUpdateLastSend,
-            Map<Object, Long> submap) {
+    protected static void addThrottledChat(Object throttleKey, EntityPlayer player, IChatComponent text,
+            short intervalRequired, boolean forceUpdateLastSend, Map<Object, Long> submap) {
         long now = System.currentTimeMillis();
         Long old;
         if (forceUpdateLastSend) {

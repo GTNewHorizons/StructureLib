@@ -11,5 +11,6 @@ package com.gtnewhorizon.structurelib.structure;
  * @param <CTX> the temporary state context
  */
 public interface IWithExtendedContext<CTX> {
+
     CTX getCurrentContext();
 }

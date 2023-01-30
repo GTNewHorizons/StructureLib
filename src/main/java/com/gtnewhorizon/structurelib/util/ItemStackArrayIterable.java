@@ -1,9 +1,11 @@
 package com.gtnewhorizon.structurelib.util;
 
 import java.util.Iterator;
+
 import net.minecraft.item.ItemStack;
 
 public class ItemStackArrayIterable implements Iterable<ItemStack> {
+
     private final ItemStack[] stacks;
 
     public ItemStackArrayIterable(ItemStack[] stacks) {
@@ -17,6 +19,7 @@ public class ItemStackArrayIterable implements Iterable<ItemStack> {
     @Override
     public Iterator<ItemStack> iterator() {
         return new Iterator<ItemStack>() {
+
             private int ptr = 0;
 
             @Override

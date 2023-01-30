@@ -1,20 +1,24 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import com.google.common.collect.Iterables;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
 import javax.annotation.Nullable;
+
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
+import com.google.common.collect.Iterables;
+
 /**
  * Use StructureUtility to instantiate
  */
 public interface IStructureElementChain<T> extends IStructureElement<T> {
+
     IStructureElement<T>[] fallbacks();
 
     @Override
@@ -49,8 +53,8 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
 
     @Nullable
     @Override
-    default BlocksToPlace getBlocksToPlace(
-            T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+    default BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
+            AutoPlaceEnvironment env) {
         Predicate<ItemStack> predicate = null;
         List<Iterable<ItemStack>> is = new ArrayList<>();
         for (IStructureElement<T> fallback : fallbacks()) {
@@ -65,16 +69,8 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
     }
 
     @Override
-    default PlaceResult survivalPlaceBlock(
-            T t,
-            World world,
-            int x,
-            int y,
-            int z,
-            ItemStack trigger,
-            IItemSource s,
-            EntityPlayerMP actor,
-            Consumer<IChatComponent> chatter) {
+    default PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s,
+            EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
         boolean haveSkip = false;
         List<IChatComponent> bufferedNoise = new ArrayList<>();
         for (IStructureElement<T> fallback : fallbacks()) {
@@ -96,13 +92,13 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
     }
 
     @Override
-    default PlaceResult survivalPlaceBlock(
-            T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+    default PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
+            AutoPlaceEnvironment env) {
         boolean haveSkip = false;
         List<IChatComponent> bufferedNoise = new ArrayList<>();
         for (IStructureElement<T> fallback : fallbacks()) {
-            PlaceResult result =
-                    fallback.survivalPlaceBlock(t, world, x, y, z, trigger, env.withChatter(bufferedNoise::add));
+            PlaceResult result = fallback
+                    .survivalPlaceBlock(t, world, x, y, z, trigger, env.withChatter(bufferedNoise::add));
             switch (result) {
                 case REJECT:
                     break;

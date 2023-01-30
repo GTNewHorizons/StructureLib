@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 public class SortedRegistry<V> implements Iterable<V> {
+
     private final NavigableMap<String, V> store = new TreeMap<>();
     /**
      * Store stuff in an array for faster iteration access than a red black tree

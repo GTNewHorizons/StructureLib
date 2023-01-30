@@ -1,5 +1,15 @@
 package com.gtnewhorizon.structurelib;
 
+import net.minecraft.block.Block;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.launchwrapper.Launch;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.gtnewhorizon.structurelib.block.BlockHint;
 import com.gtnewhorizon.structurelib.command.CommandConfigureChannels;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
@@ -10,6 +20,7 @@ import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
 import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
 import com.gtnewhorizon.structurelib.util.XSTR;
+
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
@@ -20,14 +31,6 @@ import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.block.Block;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.launchwrapper.Launch;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * This class does not contain a stable API. Refrain from using this class.
@@ -39,6 +42,7 @@ import org.apache.logging.log4j.Logger;
         acceptableRemoteVersions = "*",
         guiFactory = "com.gtnewhorizon.structurelib.GuiFactory")
 public class StructureLib {
+
     private static final String STRUCTURECOMPAT_MODID = "structurecompat";
     public static boolean DEBUG_MODE;
     public static boolean PANIC_MODE = Boolean.getBoolean("structurelib.panic");
@@ -53,7 +57,10 @@ public class StructureLib {
 
     static {
         net.registerMessage(
-                AlignmentMessage.ServerHandler.class, AlignmentMessage.AlignmentQuery.class, 0, Side.SERVER);
+                AlignmentMessage.ServerHandler.class,
+                AlignmentMessage.AlignmentQuery.class,
+                0,
+                Side.SERVER);
         net.registerMessage(AlignmentMessage.ClientHandler.class, AlignmentMessage.AlignmentData.class, 1, Side.CLIENT);
         net.registerMessage(UpdateHintParticleMessage.Handler.class, UpdateHintParticleMessage.class, 2, Side.CLIENT);
         net.registerMessage(SetChannelDataMessage.Handler.class, SetChannelDataMessage.class, 3, Side.SERVER);
@@ -80,6 +87,7 @@ public class StructureLib {
     static Item itemFrontRotationTool;
     static Item itemConstructableTrigger;
     public static final CreativeTabs creativeTab = new CreativeTabs("structurelib") {
+
         @Override
         @SideOnly(Side.CLIENT)
         public Item getTabIconItem() {
@@ -93,7 +101,8 @@ public class StructureLib {
         GameRegistry.registerBlock(blockHint = new BlockHint(), ItemBlockHint.class, "blockhint");
         itemBlockHint = ItemBlock.getItemFromBlock(StructureLibAPI.getBlockHint());
         GameRegistry.registerItem(
-                itemFrontRotationTool = new ItemFrontRotationTool(), itemFrontRotationTool.getUnlocalizedName());
+                itemFrontRotationTool = new ItemFrontRotationTool(),
+                itemFrontRotationTool.getUnlocalizedName());
         GameRegistry.registerItem(
                 itemConstructableTrigger = new ItemConstructableTrigger(),
                 itemConstructableTrigger.getUnlocalizedName());
@@ -101,10 +110,7 @@ public class StructureLib {
         NetworkRegistry.INSTANCE.registerGuiHandler(instance(), new GuiHandler());
 
         if (Loader.isModLoaded(STRUCTURECOMPAT_MODID)) {
-            COMPAT = Loader.instance()
-                    .getIndexedModList()
-                    .get(STRUCTURECOMPAT_MODID)
-                    .getMod();
+            COMPAT = Loader.instance().getIndexedModList().get(STRUCTURECOMPAT_MODID).getMod();
         }
     }
 

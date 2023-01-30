@@ -1,10 +1,9 @@
 package com.gtnewhorizon.structurelib.command;
 
-import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
-import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
@@ -13,7 +12,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 
+import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
+
 public class CommandConfigureChannels extends CommandBase {
+
     @Override
     public String getCommandName() {
         return "sl_channel";
@@ -58,13 +61,12 @@ public class CommandConfigureChannels extends CommandBase {
                 if (!ChannelDataAccessor.hasSubChannel(heldItem)) {
                     sender.addChatMessage(new ChatComponentText("No subchannel"));
                 } else {
-                    sender.addChatMessage(new ChatComponentTranslation(
-                            "item.structurelib.constructableTrigger.desc.lshift.0",
-                            ChannelDataAccessor.countChannelData(heldItem)));
-                    ChannelDataAccessor.iterateChannelData(heldItem)
-                            .map(e -> e.getKey() + ": " + e.getValue())
-                            .map(ChatComponentText::new)
-                            .forEach(player::addChatMessage);
+                    sender.addChatMessage(
+                            new ChatComponentTranslation(
+                                    "item.structurelib.constructableTrigger.desc.lshift.0",
+                                    ChannelDataAccessor.countChannelData(heldItem)));
+                    ChannelDataAccessor.iterateChannelData(heldItem).map(e -> e.getKey() + ": " + e.getValue())
+                            .map(ChatComponentText::new).forEach(player::addChatMessage);
                 }
                 return;
             case "wipe":
@@ -73,13 +75,11 @@ public class CommandConfigureChannels extends CommandBase {
             case "get":
             case "unset":
                 if (args.length < 2) throw new WrongUsageException(getCommandUsage(sender));
-                channel =
-                        args.length == 2 ? args[1] : Arrays.stream(args).skip(1).collect(Collectors.joining());
+                channel = args.length == 2 ? args[1] : Arrays.stream(args).skip(1).collect(Collectors.joining());
                 break;
             case "set":
                 if (args.length < 3) throw new WrongUsageException(getCommandUsage(sender));
-                channel = args.length == 3
-                        ? args[1]
+                channel = args.length == 3 ? args[1]
                         : Arrays.stream(args).skip(1).limit(args.length - 2).collect(Collectors.joining());
                 break;
             default:
@@ -88,9 +88,9 @@ public class CommandConfigureChannels extends CommandBase {
 
         switch (args[0]) {
             case "get":
-                if (ChannelDataAccessor.hasSubChannel(heldItem, channel))
-                    sender.addChatMessage(new ChatComponentText(
-                            channel + " value: " + ChannelDataAccessor.getChannelData(heldItem, channel)));
+                if (ChannelDataAccessor.hasSubChannel(heldItem, channel)) sender.addChatMessage(
+                        new ChatComponentText(
+                                channel + " value: " + ChannelDataAccessor.getChannelData(heldItem, channel)));
                 else sender.addChatMessage(new ChatComponentText(channel + " value: N/A"));
                 break;
             case "clear":

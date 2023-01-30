@@ -9,5 +9,6 @@ import net.minecraft.block.Block;
  */
 @FunctionalInterface
 public interface ITierConverter<TIER> {
+
     TIER convert(Block block, int meta);
 }

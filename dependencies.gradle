@@ -2,7 +2,7 @@
 
 dependencies {
     compile("com.github.GTNewHorizons:GTNHLib:0.0.1:dev")
-    runtime("com.github.GTNewHorizons:NotEnoughItems:2.2.20-GTNH:dev")
+    runtimeOnly("com.github.GTNewHorizons:NotEnoughItems:2.2.20-GTNH:dev")
 
     testImplementation(platform('org.junit:junit-bom:5.8.2'))
     testImplementation('org.junit.jupiter:junit-jupiter')

@@ -1,10 +1,7 @@
 package com.gtnewhorizon.structurelib.block;
 
-import com.gtnewhorizon.structurelib.StructureLib;
-import com.gtnewhorizon.structurelib.StructureLibAPI;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import java.util.List;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -14,7 +11,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 
+import com.gtnewhorizon.structurelib.StructureLib;
+import com.gtnewhorizon.structurelib.StructureLibAPI;
+
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+
 public class BlockHint extends Block {
+
     private static final IIcon[] hint = new IIcon[16];
 
     public BlockHint() {

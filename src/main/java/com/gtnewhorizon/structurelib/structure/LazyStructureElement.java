@@ -2,13 +2,16 @@ package com.gtnewhorizon.structurelib.structure;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+
 import javax.annotation.Nullable;
+
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
 class LazyStructureElement<T> implements IStructureElementDeferred<T> {
+
     private Function<T, IStructureElement<T>> to;
     private IStructureElement<T> elem;
 
@@ -41,28 +44,20 @@ class LazyStructureElement<T> implements IStructureElementDeferred<T> {
 
     @Nullable
     @Override
-    public BlocksToPlace getBlocksToPlace(
-            T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+    public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
+            AutoPlaceEnvironment env) {
         return get(t).getBlocksToPlace(t, world, x, y, z, trigger, env);
     }
 
     @Override
-    public PlaceResult survivalPlaceBlock(
-            T t,
-            World world,
-            int x,
-            int y,
-            int z,
-            ItemStack trigger,
-            IItemSource s,
-            EntityPlayerMP actor,
-            Consumer<IChatComponent> chatter) {
+    public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s,
+            EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
         return get(t).survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
     }
 
     @Override
-    public PlaceResult survivalPlaceBlock(
-            T t, World world, int x, int y, int z, ItemStack trigger, AutoPlaceEnvironment env) {
+    public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
+            AutoPlaceEnvironment env) {
         return get(t).survivalPlaceBlock(t, world, x, y, z, trigger, env);
     }
 }

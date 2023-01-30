@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib.structure.adders;
 import net.minecraft.block.Block;
 
 public interface IBlockAdder<T> {
+
     /**
      * Callback on block added, needs to check if block is valid (and add it)
      *

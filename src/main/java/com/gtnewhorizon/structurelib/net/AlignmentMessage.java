@@ -1,20 +1,23 @@
 package com.gtnewhorizon.structurelib.net;
 
-import com.gtnewhorizon.structurelib.StructureLib;
-import com.gtnewhorizon.structurelib.alignment.IAlignment;
-import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
-import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
-import cpw.mods.fml.common.network.ByteBufUtils;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 
+import com.gtnewhorizon.structurelib.StructureLib;
+import com.gtnewhorizon.structurelib.alignment.IAlignment;
+import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
+import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+
+import cpw.mods.fml.common.network.ByteBufUtils;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
+import io.netty.buffer.ByteBuf;
+
 public abstract class AlignmentMessage implements IMessage {
+
     int mPosX;
     int mPosY;
     int mPosZ;
@@ -66,6 +69,7 @@ public abstract class AlignmentMessage implements IMessage {
     }
 
     public static class AlignmentQuery extends AlignmentMessage {
+
         public AlignmentQuery() {}
 
         public AlignmentQuery(IAlignmentProvider provider) {
@@ -78,6 +82,7 @@ public abstract class AlignmentMessage implements IMessage {
     }
 
     public static class AlignmentData extends AlignmentMessage {
+
         public AlignmentData() {}
 
         private AlignmentData(AlignmentQuery query) {
@@ -98,11 +103,11 @@ public abstract class AlignmentMessage implements IMessage {
     }
 
     public static class ClientHandler implements IMessageHandler<AlignmentData, IMessage> {
+
         @Override
         public IMessage onMessage(AlignmentData pMessage, MessageContext pCtx) {
             if (StructureLib.getCurrentPlayer().worldObj.provider.dimensionId == pMessage.mPosD) {
-                TileEntity te = StructureLib.getCurrentPlayer()
-                        .worldObj
+                TileEntity te = StructureLib.getCurrentPlayer().worldObj
                         .getTileEntity(pMessage.mPosX, pMessage.mPosY, pMessage.mPosZ);
                 if (te instanceof IAlignmentProvider) {
                     IAlignment alignment = ((IAlignmentProvider) te).getAlignment();
@@ -116,6 +121,7 @@ public abstract class AlignmentMessage implements IMessage {
     }
 
     public static class ServerHandler implements IMessageHandler<AlignmentQuery, AlignmentData> {
+
         @Override
         public AlignmentData onMessage(AlignmentQuery pMessage, MessageContext pCtx) {
             World world = DimensionManager.getWorld(pMessage.mPosD);

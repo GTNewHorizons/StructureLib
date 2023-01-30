@@ -1,22 +1,27 @@
 package com.gtnewhorizon.structurelib.net;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
+
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
+
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
-import org.apache.commons.lang3.tuple.Pair;
 
 public class SetChannelDataMessage implements IMessage {
+
     private final List<Map.Entry<String, Integer>> data = new ArrayList<>();
 
     public SetChannelDataMessage() {}
@@ -44,6 +49,7 @@ public class SetChannelDataMessage implements IMessage {
     }
 
     public static class Handler implements IMessageHandler<SetChannelDataMessage, IMessage> {
+
         @Override
         public IMessage onMessage(SetChannelDataMessage message, MessageContext ctx) {
             EntityPlayerMP player = ctx.getServerHandler().playerEntity;

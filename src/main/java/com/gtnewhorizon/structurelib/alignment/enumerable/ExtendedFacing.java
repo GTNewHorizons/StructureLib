@@ -6,16 +6,19 @@ import static java.lang.Math.abs;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.*;
 
-import com.google.common.collect.ImmutableSet;
-import com.gtnewhorizon.structurelib.alignment.IAlignment;
-import com.gtnewhorizon.structurelib.alignment.IntegerAxisSwap;
-import com.gtnewhorizon.structurelib.util.Vec3Impl;
 import java.util.*;
+
 import net.minecraft.util.StatCollector;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.google.common.collect.ImmutableSet;
+import com.gtnewhorizon.structurelib.alignment.IAlignment;
+import com.gtnewhorizon.structurelib.alignment.IntegerAxisSwap;
+import com.gtnewhorizon.structurelib.util.Vec3Impl;
+
 public enum ExtendedFacing {
+
     DOWN_NORMAL_NONE("down normal none"),
     DOWN_NORMAL_HORIZONTAL("down normal horizontal"),
     DOWN_NORMAL_VERTICAL("down normal vertical"),
@@ -119,31 +122,31 @@ public enum ExtendedFacing {
     public static final int STATES_COUNT = VALUES.length;
 
     static {
-        stream(values())
-                .forEach(extendedFacing ->
-                        FOR_FACING.compute(extendedFacing.direction, ((forgeDirection, extendedFacings) -> {
-                            if (extendedFacings == null) {
-                                extendedFacings = new ArrayList<>();
-                            }
-                            extendedFacings.add(extendedFacing);
-                            return extendedFacings;
-                        })));
+        stream(values()).forEach(
+                extendedFacing -> FOR_FACING.compute(extendedFacing.direction, ((forgeDirection, extendedFacings) -> {
+                    if (extendedFacings == null) {
+                        extendedFacings = new ArrayList<>();
+                    }
+                    extendedFacings.add(extendedFacing);
+                    return extendedFacings;
+                })));
     }
 
-    private static final Map<String, ExtendedFacing> NAME_LOOKUP =
-            stream(VALUES).collect(toMap(ExtendedFacing::getName2, (extendedFacing) -> extendedFacing));
+    private static final Map<String, ExtendedFacing> NAME_LOOKUP = stream(VALUES)
+            .collect(toMap(ExtendedFacing::getName2, (extendedFacing) -> extendedFacing));
     private static final EnumMap<ForgeDirection, ImmutableSet<ExtendedFacing>> LOOKUP_BY_DIRECTION = stream(VALUES)
-            .collect(groupingBy(
-                    ExtendedFacing::getDirection,
-                    () -> new EnumMap<>(ForgeDirection.class),
-                    collectingAndThen(toSet(), ImmutableSet::copyOf)));
-    private static final EnumMap<Rotation, ImmutableSet<ExtendedFacing>> LOOKUP_BY_ROTATION = stream(VALUES)
-            .collect(groupingBy(
+            .collect(
+                    groupingBy(
+                            ExtendedFacing::getDirection,
+                            () -> new EnumMap<>(ForgeDirection.class),
+                            collectingAndThen(toSet(), ImmutableSet::copyOf)));
+    private static final EnumMap<Rotation, ImmutableSet<ExtendedFacing>> LOOKUP_BY_ROTATION = stream(VALUES).collect(
+            groupingBy(
                     ExtendedFacing::getRotation,
                     () -> new EnumMap<>(Rotation.class),
                     collectingAndThen(toSet(), ImmutableSet::copyOf)));
-    private static final EnumMap<Flip, ImmutableSet<ExtendedFacing>> LOOKUP_BY_FLIP = stream(VALUES)
-            .collect(groupingBy(
+    private static final EnumMap<Flip, ImmutableSet<ExtendedFacing>> LOOKUP_BY_FLIP = stream(VALUES).collect(
+            groupingBy(
                     ExtendedFacing::getFlip,
                     () -> new EnumMap<>(Flip.class),
                     collectingAndThen(toSet(), ImmutableSet::copyOf)));
@@ -333,7 +336,7 @@ public enum ExtendedFacing {
     }
 
     /**
-     * Translates relative to front facing offset  to  world offset
+     * Translates relative to front facing offset to world offset
      *
      * @param abcOffset A,B,C offset (facing relative {@code L-->R,U-->D,F-->B})
      * @return X, Y, Z offset in world
@@ -377,10 +380,10 @@ public enum ExtendedFacing {
     }
 
     /**
-     * Translates world offset  to  relative front facing offset
+     * Translates world offset to relative front facing offset
      *
      * @param xyzOffset X,Y,Z offset in world
-     * @return A, B, C offset (facing relative  {@code L-->R,U-->D,F-->B})
+     * @return A, B, C offset (facing relative {@code L-->R,U-->D,F-->B})
      */
     public Vec3 getOffsetABC(Vec3 xyzOffset) {
         return integerAxisSwap.translate(xyzOffset);

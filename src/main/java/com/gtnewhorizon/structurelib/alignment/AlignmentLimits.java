@@ -1,8 +1,9 @@
 package com.gtnewhorizon.structurelib.alignment;
 
+import net.minecraftforge.common.util.ForgeDirection;
+
 import com.gtnewhorizon.structurelib.alignment.enumerable.Flip;
 import com.gtnewhorizon.structurelib.alignment.enumerable.Rotation;
-import net.minecraftforge.common.util.ForgeDirection;
 
 class AlignmentLimits implements IAlignmentLimits {
 

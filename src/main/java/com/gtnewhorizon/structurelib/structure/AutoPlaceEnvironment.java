@@ -1,19 +1,23 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
 import javax.annotation.Nonnull;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
 
+import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+
 /**
  * Represent the environment in which autoplace of a single element took place.
  */
 public class AutoPlaceEnvironment {
+
     private IItemSource source;
     private final EntityPlayer actor;
     private final Consumer<IChatComponent> chatter;
@@ -23,8 +27,8 @@ public class AutoPlaceEnvironment {
     final int[] offsetABC;
     private final int[] baseOffsetABC;
 
-    public static AutoPlaceEnvironment fromLegacy(
-            IItemSource source, EntityPlayer actor, Consumer<IChatComponent> chatter) {
+    public static AutoPlaceEnvironment fromLegacy(IItemSource source, EntityPlayer actor,
+            Consumer<IChatComponent> chatter) {
         if (source instanceof WrappedIItemSource) {
             AutoPlaceEnvironment original = ((WrappedIItemSource) source).container;
             // feels like this is extremely likely to cause issues, but this does allow us to recover lost info.
@@ -40,13 +44,8 @@ public class AutoPlaceEnvironment {
         return new AutoPlaceEnvironment(source, actor, chatter, null, null, null, null, null);
     }
 
-    AutoPlaceEnvironment(
-            EntityPlayer actor,
-            Consumer<IChatComponent> chatter,
-            IStructureDefinition<?> definition,
-            String piece,
-            ExtendedFacing facing,
-            int[] baseOffsetABC) {
+    AutoPlaceEnvironment(EntityPlayer actor, Consumer<IChatComponent> chatter, IStructureDefinition<?> definition,
+            String piece, ExtendedFacing facing, int[] baseOffsetABC) {
         this.source = null;
         this.actor = actor;
         this.chatter = chatter;
@@ -57,14 +56,8 @@ public class AutoPlaceEnvironment {
         this.baseOffsetABC = baseOffsetABC;
     }
 
-    AutoPlaceEnvironment(
-            IItemSource source,
-            EntityPlayer actor,
-            Consumer<IChatComponent> chatter,
-            IStructureDefinition<?> definition,
-            String piece,
-            ExtendedFacing facing,
-            int[] offsetABC,
+    AutoPlaceEnvironment(IItemSource source, EntityPlayer actor, Consumer<IChatComponent> chatter,
+            IStructureDefinition<?> definition, String piece, ExtendedFacing facing, int[] offsetABC,
             int[] baseOffsetABC) {
         this.source = definition != null && !(source instanceof WrappedIItemSource)
                 ? new WrappedIItemSource(this, source)
@@ -97,8 +90,7 @@ public class AutoPlaceEnvironment {
     }
 
     public APILevel getAPILevel() {
-        return definition == null
-                ? actor instanceof EntityPlayerMP ? APILevel.Legacy : APILevel.LegacyRelaxed
+        return definition == null ? actor instanceof EntityPlayerMP ? APILevel.Legacy : APILevel.LegacyRelaxed
                 : APILevel.V2;
     }
 
@@ -110,8 +102,8 @@ public class AutoPlaceEnvironment {
     }
 
     /**
-     * The initiator of actions. for very critical errors you can also just send the error messages here, bypassing
-     * any filter that {@link #getChatter()} might have. You might want to use
+     * The initiator of actions. for very critical errors you can also just send the error messages here, bypassing any
+     * filter that {@link #getChatter()} might have. You might want to use
      * {@link com.gtnewhorizon.structurelib.StructureLibAPI#addThrottledChat(Object, EntityPlayer, IChatComponent, short)}
      * to help reduce spam.
      */
@@ -179,6 +171,7 @@ public class AutoPlaceEnvironment {
     }
 
     private static class WrappedIItemSource implements IItemSource {
+
         final AutoPlaceEnvironment container;
         final IItemSource delegate;
 
@@ -221,13 +214,13 @@ public class AutoPlaceEnvironment {
      */
     public enum APILevel {
         /**
-         * Implements {@link #getChatter()}, {@link #getActor()} and {@link #getSource()}.
-         * {@link #getActor()} is guaranteed to be an {@link net.minecraft.entity.player.EntityPlayerMP}
+         * Implements {@link #getChatter()}, {@link #getActor()} and {@link #getSource()}. {@link #getActor()} is
+         * guaranteed to be an {@link net.minecraft.entity.player.EntityPlayerMP}
          */
         Legacy,
         /**
-         * Implements {@link #getChatter()}, {@link #getActor()} and {@link #getSource()}.
-         * {@link #getActor()} is <b>NOT</b> guaranteed to be an {@link net.minecraft.entity.player.EntityPlayerMP}
+         * Implements {@link #getChatter()}, {@link #getActor()} and {@link #getSource()}. {@link #getActor()} is
+         * <b>NOT</b> guaranteed to be an {@link net.minecraft.entity.player.EntityPlayerMP}
          */
         LegacyRelaxed,
         /**

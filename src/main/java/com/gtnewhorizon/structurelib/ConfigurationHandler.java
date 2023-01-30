@@ -1,15 +1,18 @@
 package com.gtnewhorizon.structurelib;
 
-import cpw.mods.fml.client.event.ConfigChangedEvent;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import java.io.File;
 import java.util.Map;
+
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
+import cpw.mods.fml.client.event.ConfigChangedEvent;
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+
 public enum ConfigurationHandler {
+
     INSTANCE;
 
     private Configuration config;
@@ -54,8 +57,8 @@ public enum ConfigurationHandler {
                 "client.hologram",
                 true,
                 "An attempt will be made to remove an existing hologram if it collides with a new hologram.");
-        hintLifespan =
-                config.getInt("hintLifespan", "client.hologram", 400, 1, 20000, "Ticks before a hologram disappears.");
+        hintLifespan = config
+                .getInt("hintLifespan", "client.hologram", 400, 1, 20000, "Ticks before a hologram disappears.");
         hintTransparency = config.getInt(
                 "hintTransparency",
                 "client.hologram",

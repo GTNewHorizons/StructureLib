@@ -2,10 +2,12 @@ package com.gtnewhorizon.structurelib.util;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 public class InventoryIterable<Inv extends IInventory> implements Iterable<ItemStack> {
+
     private final Inv inv;
     private final int maxSlot;
 
@@ -25,6 +27,7 @@ public class InventoryIterable<Inv extends IInventory> implements Iterable<ItemS
     @Override
     public Iterator<ItemStack> iterator() {
         return new Iterator<ItemStack>() {
+
             private int ptr = 0;
 
             @Override
