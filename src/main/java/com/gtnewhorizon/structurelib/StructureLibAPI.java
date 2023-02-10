@@ -86,7 +86,7 @@ public class StructureLibAPI {
 
     /**
      * Check if instrumenting is enabled.
-     * 
+     *
      * @return true if enabled, false otherwise
      */
     public static boolean isInstrumentEnabled() {
@@ -270,6 +270,13 @@ public class StructureLibAPI {
      */
     public static Item getItemBlockHint() {
         return StructureLib.itemBlockHint;
+    }
+
+    /**
+     * Get the hologram item.
+     */
+    public static Item getDefaultHologramItem() {
+        return StructureLib.itemConstructableTrigger;
     }
 
     /**
