@@ -42,54 +42,54 @@ import cpw.mods.fml.common.registry.GameRegistry;
 
 /**
  * A brief index of everything contained
- * <h1>Control blocks</h1> A lot of these might seem to make more sense as a default function on
+ * <h2>Control blocks</h2> A lot of these might seem to make more sense as a default function on
  * {@link IStructureElement}. However, in that case javac generic will often fail to infer the type for you, so we have
  * to define them as static methods
- * <h1>If block</h1> Provide if block, allowing downstream call only if user specified conditions are meet (i.e.
+ * <h2>If block</h2> Provide if block, allowing downstream call only if user specified conditions are meet (i.e.
  * predicate returns true)
  * <ul>
  * <li>{@link #onlyIf(Predicate, IStructureElement)} and its overloads</li>
  * </ul>
- * <h1>Switch block</h1> Provide switch block, allowing to select a downstream element by using a key or index computed
+ * <h2>Switch block</h2> Provide switch block, allowing to select a downstream element by using a key or index computed
  * from trigger item and/or context object.
  * <ul>
  * <li>{@link #partitionBy(Function, IStructureElement[])} and its overloads</li>
  * </ul>
- * <h1>Or Chain</h1> Provide a short-circuiting OR chain.
+ * <h2>Or Chain</h2> Provide a short-circuiting OR chain.
  * <ul>
  * <li>{@link #ofChain(IStructureElement[])} and its overloads</li>
  * </ul>
- * <h2>Side effect</h2> Provide callbacks on various occasion
+ * <h3>Side effect</h3> Provide callbacks on various occasion
  * <ul>
  * <li>{@link #onElementPass(Consumer, IStructureElement)}: Call an callback upon element check success</li>
  * <li>{@link #onElementFail(Consumer, IStructureElement)}: Call an callback upon element check failure</li>
  * </ul>
  *
- * <h1>Other Primitives</h1>
- * <h2>Error statement</h2> Unconditionally return false.
+ * <h2>Other Primitives</h2>
+ * <h3>Error statement</h3> Unconditionally return false.
  * <ul>
  * <li>{@link #error()}</li>
  * </ul>
- * <h2>Context Object Change</h2> Switch the context object.
+ * <h3>Context Object Change</h3> Switch the context object.
  * <ul>
  * <li>{@link #withContext(IStructureElement)}: switch context to the extended context</li>
  * </ul>
- * <h2>Channel Change</h2> Change the channel. See <a href="{@docRoot}/overview-summary.html#channels">Channels section
+ * <h3>Channel Change</h3> Change the channel. See <a href="{@docRoot}/overview-summary.html#channels">Channels section
  * on overview</a> for more information.
  * <ul>
  * <li>{@link #withChannel(String, IStructureElement)}: switch channel using
  * {@link ChannelDataAccessor#withChannel(ItemStack, String)} when a trigger item is present.</li>
  * </ul>
- * <h2>Spawn hint particle</h2> Just spawn a hint. Do nothing otherwise. Useful when you want to override the hint
+ * <h3>Spawn hint particle</h3> Just spawn a hint. Do nothing otherwise. Useful when you want to override the hint
  * provided by another structure element, or as a fallback to a structure element that is check only.
  * <ul>
  * <li>{@link #ofHint(int)}, {@link #ofHintDeferred(Supplier)} and its overloads</li>
  * </ul>
  *
- * <h1>Actual Element</h1> These elements are elements that can actually do structure check, spawn hint and do auto
+ * <h2>Actual Element</h2> These elements are elements that can actually do structure check, spawn hint and do auto
  * place. Elements listed in above 2 sections are not going to be helpful without elements like these. They also serve
  * as a reference implementation for your own custom {@link IStructureElement} implementations.
- * <h2>Simple Block Element</h2> These accept one or more different block types in one location.
+ * <h3>Simple Block Element</h3> These accept one or more different block types in one location.
  * <ul>
  * <li>{@link #ofBlock(Block, int, Block, int)}, {@link #ofBlocksFlat(Map, Block, int)},
  * {@link #ofBlocksMap(Map, Block, int)} and their overloads: the most basic form</li>
@@ -98,7 +98,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
  * <li>{@link #isAir()}, {@link #notAir()}: They are supplied by default under the identifier {@code '-'} and
  * {@code '+'} respectively, but are provided here regardless in case you want to use them as a fallback.</li>
  * </ul>
- * <h2>Complex Block Element</h2> In case your logic on determining which block is accepted is complex, use these.
+ * <h3>Complex Block Element</h3> In case your logic on determining which block is accepted is complex, use these.
  * <ul>
  * <li>{@link #ofBlockAdder(IBlockAdder, Block, int)}, {@link #ofBlockAdderHint(IBlockAdder, Block, int)} and their
  * overloads: hands off actual adder logic to an {@link IBlockAdder} you supplied. Save you the boilerplate of querying
@@ -110,7 +110,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
  * Similar to block adder, but for tile entities.</li>
  * </ul>
  *
- * <h1>Helper Methods</h1> These don't construct a {@link IStructureElement}, but is helpful to the instantiation or
+ * <h2>Helper Methods</h2> These don't construct a {@link IStructureElement}, but is helpful to the instantiation or
  * implementation of these.
  * <ul>
  * <li>{@link #survivalPlaceBlock(Block, int, World, int, int, int, IItemSource, EntityPlayer, Consumer)} and its
@@ -595,7 +595,7 @@ public class StructureUtility {
      * <b>Example:</b>
      * <p>
      * Assume you have 16 tier, each map to one block's 16 different meta. You will usually want something like this
-     * 
+     *
      * <pre>
      * public class Tile extends TileEntity {
      *     private static final Block B = getTargetBlock();
