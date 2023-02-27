@@ -1,4 +1,10 @@
 javadoc {
+    javadocTool = javaToolchains.javadocToolFor {
+        // Last version with frames, but it also has search
+        languageVersion = JavaLanguageVersion.of(11)
+        vendor = JvmVendorSpec.ADOPTIUM
+    }
+
     inputs.file  "src/main/javadoc/overview.html"
 
     include "com/gtnewhorizon/structurelib/alignment/**"
@@ -14,6 +20,7 @@ javadoc {
         overview "src/main/javadoc/overview.html"
         links 'https://docs.oracle.com/javase/8/docs/api/'
         links 'https://skmedix.github.io/ForgeJavaDocs/javadoc/forge/1.7.10-10.13.4.1614/'
+        addBooleanOption("-frames", true)
     }
 }
 
