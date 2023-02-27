@@ -54,7 +54,7 @@ jobs:
             echo Nothing to deploy
             exit 0
           fi
-          find . -name javadoc -type d -print | sed 's#^\./\(.*\)/javadoc$#\1#' > index.txt
+          find . -name javadoc -type d -print | sed 's#^\./\(.*\)/javadoc$#\1#' | sort --version-sort --reverse > index.txt
           git add index.txt
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
