@@ -271,10 +271,6 @@ public class ClientProxy extends CommonProxy {
         private final World w;
         // these are the block coordinate for e.g. w.getBlock()
         private final int x, y, z;
-        // these are the lower bounds for rendering. the upper bound would be X + size
-        // currently size is fixed to be 0.5
-        // it is not made into a constants because this will allow for easy changing during debug
-        private final double X, Y, Z;
         private final IIcon[] icons;
         private short[] tint;
         private boolean renderThrough;
@@ -286,9 +282,6 @@ public class ClientProxy extends CommonProxy {
             this.x = x;
             this.y = y;
             this.z = z;
-            X = x + 0.25;
-            Y = y + 0.25;
-            Z = z + 0.25;
             this.icons = icons;
             this.tint = tint;
         }
@@ -324,10 +317,10 @@ public class ClientProxy extends CommonProxy {
         }
 
         public boolean isInFrustrum(Frustrum frustrum) {
-            return frustrum.isBoxInFrustum(X, Y, Z, X + 0.5, Y + 0.5, Z + 0.5);
+            return frustrum.isBoxInFrustum(x +0.25, y +0.25, z+0.25, x + 0.75, y+ 0.75, z + 0.75);
         }
 
-        public void draw(Tessellator tes, double eyeX, double eyeY, double eyeZ) {
+        public void draw(Tessellator tes, double eyeX, double eyeY, double eyeZ, int eyeXint, int eyeYint, int eyeZint) {
             double size = 0.5;
 
             int brightness = w.blockExists(x, 0, z) ? w.getLightBrightnessForSkyBlocks(x, y, z, 0) : 0;
@@ -338,6 +331,10 @@ public class ClientProxy extends CommonProxy {
                     (int) (tint[1] * .95F),
                     (int) (tint[2] * 1F),
                     ConfigurationHandler.INSTANCE.getHintTransparency());
+
+            double X = (x - eyeXint) + 0.25;
+            double Y = (y - eyeYint) + 0.25;
+            double Z = (z - eyeZint) + 0.25;
 
             for (int i = 0; i < 6; i++) {
                 if (icons[i] == null) continue;
@@ -362,7 +359,9 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X, Y, Z + size, u, V);
                             tes.addVertexWithUV(X, Y, Z, u, v);
                             tes.addVertexWithUV(X + size, Y, Z, U, v);
+                            tes.addVertexWithUV(X + size, Y, Z, U, v);
                             tes.addVertexWithUV(X + size, Y, Z + size, U, V);
+                            tes.addVertexWithUV(X, Y, Z + size, u, V);
                             break;
                         case 1:
                             if ((Y + size <= eyeY) != (j == 1)) continue;
@@ -370,7 +369,9 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X, Y + size, Z, u, v);
                             tes.addVertexWithUV(X, Y + size, Z + size, u, V);
                             tes.addVertexWithUV(X + size, Y + size, Z + size, U, V);
+                            tes.addVertexWithUV(X + size, Y + size, Z + size, U, V);
                             tes.addVertexWithUV(X + size, Y + size, Z, U, v);
+                            tes.addVertexWithUV(X, Y + size, Z, u, v);
                             break;
                         case 2:
                             if ((Z >= eyeZ) != (j == 1)) continue;
@@ -378,7 +379,9 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X, Y, Z, U, V);
                             tes.addVertexWithUV(X, Y + size, Z, U, v);
                             tes.addVertexWithUV(X + size, Y + size, Z, u, v);
+                            tes.addVertexWithUV(X + size, Y + size, Z, u, v);
                             tes.addVertexWithUV(X + size, Y, Z, u, V);
+                            tes.addVertexWithUV(X, Y, Z, U, V);
                             break;
                         case 3:
                             if ((Z <= eyeZ) != (j == 1)) continue;
@@ -386,7 +389,9 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X + size, Y, Z + size, U, V);
                             tes.addVertexWithUV(X + size, Y + size, Z + size, U, v);
                             tes.addVertexWithUV(X, Y + size, Z + size, u, v);
+                            tes.addVertexWithUV(X, Y + size, Z + size, u, v);
                             tes.addVertexWithUV(X, Y, Z + size, u, V);
+                            tes.addVertexWithUV(X + size, Y, Z + size, U, V);
                             break;
                         case 4:
                             if ((X >= eyeX) != (j == 1)) continue;
@@ -394,7 +399,9 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X, Y, Z + size, U, V);
                             tes.addVertexWithUV(X, Y + size, Z + size, U, v);
                             tes.addVertexWithUV(X, Y + size, Z, u, v);
+                            tes.addVertexWithUV(X, Y + size, Z, u, v);
                             tes.addVertexWithUV(X, Y, Z, u, V);
+                            tes.addVertexWithUV(X, Y, Z + size, U, V);
                             break;
                         case 5:
                             if ((X + size <= eyeX) != (j == 1)) continue;
@@ -402,7 +409,9 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X + size, Y, Z, U, V);
                             tes.addVertexWithUV(X + size, Y + size, Z, U, v);
                             tes.addVertexWithUV(X + size, Y + size, Z + size, u, v);
+                            tes.addVertexWithUV(X + size, Y + size, Z + size, u, v);
                             tes.addVertexWithUV(X + size, Y, Z + size, u, V);
+                            tes.addVertexWithUV(X + size, Y, Z, U, V);
                             break;
                     }
                 }
@@ -414,7 +423,7 @@ public class ClientProxy extends CommonProxy {
         }
 
         public double getSquareDistanceTo(Vec3 point) {
-            return point.squareDistanceTo(X, Y, Z);
+            return point.squareDistanceTo(x + 0.5, y + 0.5, z + 0.5);
         }
     }
 
@@ -501,6 +510,7 @@ public class ClientProxy extends CommonProxy {
                     + (entitylivingbase.posY - entitylivingbase.lastTickPosY) * e.partialTicks;
             double d2 = entitylivingbase.lastTickPosZ
                     + (entitylivingbase.posZ - entitylivingbase.lastTickPosZ) * e.partialTicks;
+            int i0 = (int) d0, i1 = (int) d1, i2 = (int) d2;
             frustrum.setPosition(d0, d1, d2);
 
             GL11.glPushMatrix();
@@ -513,9 +523,9 @@ public class ClientProxy extends CommonProxy {
             // depth test begin as enabled
             boolean renderThrough = false;
             Minecraft.getMinecraft().renderEngine.bindTexture(TextureMap.locationBlocksTexture);
-            GL11.glTranslated(-RenderManager.renderPosX, -RenderManager.renderPosY, -RenderManager.renderPosZ);
+            GL11.glTranslated(-d0 + i0, -d1 + i1, -d2 + i2);
             Tessellator tes = Tessellator.instance;
-            tes.startDrawingQuads();
+            tes.startDrawing(GL11.GL_TRIANGLES);
             for (int i = 0, allHintsForRenderSize = allHintsForRender.size(); i < allHintsForRenderSize; i++) {
                 HintParticleInfo hint = allHintsForRender.get(i);
                 if (!hint.isInFrustrum(frustrum)) continue;
@@ -523,7 +533,7 @@ public class ClientProxy extends CommonProxy {
                     if (i > 0) {
                         p.endStartSection("Draw");
                         tes.draw();
-                        tes.startDrawingQuads();
+                        tes.startDrawing(GL11.GL_TRIANGLES);
                         p.endStartSection("Prepare");
                     }
                     if (hint.renderThrough) GL11.glDisable(GL11.GL_DEPTH_TEST);
@@ -531,7 +541,7 @@ public class ClientProxy extends CommonProxy {
                     renderThrough = hint.renderThrough;
                 }
                 // TODO verify if we need to add eyeHeight
-                hint.draw(tes, d0, d1, d2);
+                hint.draw(tes, d0, d1, d2, i0, i1, i2);
             }
             p.endStartSection("Draw");
             tes.draw();
