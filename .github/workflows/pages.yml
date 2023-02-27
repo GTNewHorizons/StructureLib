@@ -35,7 +35,7 @@ jobs:
       - name: Generate Index
         shell: bash
         run: |
-          find . -name javadoc -type d -print | sort --version-sort > index.txt
+          find . -name javadoc -type d -print | sort --version-sort --reverse > index.txt
           echo feature/doc >> index.txt
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
