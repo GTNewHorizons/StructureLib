@@ -10,7 +10,6 @@ import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.particle.EntityFX;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.culling.Frustrum;
-import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -317,10 +316,11 @@ public class ClientProxy extends CommonProxy {
         }
 
         public boolean isInFrustrum(Frustrum frustrum) {
-            return frustrum.isBoxInFrustum(x +0.25, y +0.25, z+0.25, x + 0.75, y+ 0.75, z + 0.75);
+            return frustrum.isBoxInFrustum(x + 0.25, y + 0.25, z + 0.25, x + 0.75, y + 0.75, z + 0.75);
         }
 
-        public void draw(Tessellator tes, double eyeX, double eyeY, double eyeZ, int eyeXint, int eyeYint, int eyeZint) {
+        public void draw(Tessellator tes, double eyeX, double eyeY, double eyeZ, int eyeXint, int eyeYint,
+                int eyeZint) {
             double size = 0.5;
 
             int brightness = w.blockExists(x, 0, z) ? w.getLightBrightnessForSkyBlocks(x, y, z, 0) : 0;
