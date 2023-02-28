@@ -98,7 +98,6 @@
                     res.json().then((rawVersions) => {
                         let versions = rawVersions['tree'].filter((e) => e['type'] === 'tree' && e['path'] !== 'feature')
                             .map((e) => e['path'])
-                        versions.push('feature/doc')
                         set_versions(versions)
                     })
                 })
