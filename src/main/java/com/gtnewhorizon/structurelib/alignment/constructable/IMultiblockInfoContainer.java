@@ -8,7 +8,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
 import com.gtnewhorizon.structurelib.structure.IItemSource;
+import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -41,24 +43,35 @@ public interface IMultiblockInfoContainer<T> {
 
     /**
      * Construct the structure using
-     * {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, java.util.function.Consumer)}
-     * 
+     * {@link com.gtnewhorizon.structurelib.structure.IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, AutoPlaceEnvironment)}
+     *
      * @return -1 if done, a helping pointer
      */
-    default int survivalConstruct(ItemStack stackSize, int elementBudge, IItemSource source,
-            EntityPlayerMP actorProfile, T tileEntity, ExtendedFacing aSide) {
-        return -1;
-    }
+    int survivalConstruct(ItemStack stackSize, int elementBudge, ISurvivalBuildEnvironment env, T tileEntity,
+            ExtendedFacing aSide);
 
     @SideOnly(Side.CLIENT)
     String[] getDescription(ItemStack stackSize);
 
-    /**
-     * Override this and return {@link #toConstructable(IMultiblockInfoContainer, Object, ExtendedFacing)} if
-     * {@link #survivalConstruct(ItemStack, int, IItemSource, EntityPlayerMP, Object, ExtendedFacing)} isn't a stub
-     */
-    default IConstructable toConstructable(T tileEntity, ExtendedFacing aSide) {
-        return new IConstructable() {
+    default ISurvivalConstructable toConstructable(T tileEntity, ExtendedFacing aSide) {
+        return new ISurvivalConstructable() {
+
+            @Override
+            public int survivalConstruct(ItemStack stackSize, int elementBudget, ISurvivalBuildEnvironment env) {
+                return IMultiblockInfoContainer.this
+                        .survivalConstruct(stackSize, elementBudget, env, tileEntity, aSide);
+            }
+
+            @Override
+            public int survivalConstruct(ItemStack stackSize, int elementBudget, IItemSource source,
+                    EntityPlayerMP actor) {
+                return IMultiblockInfoContainer.this.survivalConstruct(
+                        stackSize,
+                        elementBudget,
+                        ISurvivalBuildEnvironment.create(source, actor),
+                        tileEntity,
+                        aSide);
+            }
 
             @Override
             public void construct(ItemStack stackSize, boolean hintsOnly) {
@@ -68,28 +81,6 @@ public interface IMultiblockInfoContainer<T> {
             @Override
             public String[] getStructureDescription(ItemStack stackSize) {
                 return IMultiblockInfoContainer.this.getDescription(stackSize);
-            }
-        };
-    }
-
-    static <T> ISurvivalConstructable toConstructable(IMultiblockInfoContainer<T> thiz, T tileEntity,
-            ExtendedFacing aSide) {
-        return new ISurvivalConstructable() {
-
-            @Override
-            public int survivalConstruct(ItemStack stackSize, int elementBudget, IItemSource source,
-                    EntityPlayerMP actor) {
-                return thiz.survivalConstruct(stackSize, elementBudget, source, actor, tileEntity, aSide);
-            }
-
-            @Override
-            public void construct(ItemStack stackSize, boolean hintsOnly) {
-                thiz.construct(stackSize, hintsOnly, tileEntity, aSide);
-            }
-
-            @Override
-            public String[] getStructureDescription(ItemStack stackSize) {
-                return thiz.getDescription(stackSize);
             }
         };
     }
