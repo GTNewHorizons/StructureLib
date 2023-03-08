@@ -526,7 +526,8 @@ public class ClientProxy extends CommonProxy {
             GL11.glTranslated(-d0 + i0, -d1 + i1, -d2 + i2);
             Tessellator tes = Tessellator.instance;
             tes.startDrawing(GL11.GL_TRIANGLES);
-            for (int i = 0, allHintsForRenderSize = allHintsForRender.size(); i < allHintsForRenderSize; i++) {
+            for (int i = 0, allHintsForRenderSize = allHintsForRender.size(), cubeDrawn = 0; i
+                    < allHintsForRenderSize; i++, cubeDrawn++) {
                 HintParticleInfo hint = allHintsForRender.get(i);
                 if (!hint.isInFrustrum(frustrum)) continue;
                 if (renderThrough != hint.renderThrough) {
@@ -534,11 +535,20 @@ public class ClientProxy extends CommonProxy {
                         p.endStartSection("Draw");
                         tes.draw();
                         tes.startDrawing(GL11.GL_TRIANGLES);
+                        cubeDrawn = 0;
                         p.endStartSection("Prepare");
                     }
                     if (hint.renderThrough) GL11.glDisable(GL11.GL_DEPTH_TEST);
                     else GL11.glEnable(GL11.GL_DEPTH_TEST);
                     renderThrough = hint.renderThrough;
+                }
+                // Minecraft Tessellator draw in batch of 4096. This plays nicely with quads, but for trigs
+                // it might occasionally end up with one half in first batch and the other half in later batch.
+                // so we manually flush the buffer here if that would happen.
+                // 6 faces per particle, 2 trig per face, 3 vertex per trig
+                if ((cubeDrawn + 1) >= 4096 / (6 * 2 * 3)) {
+                    tes.draw();
+                    tes.startDrawing(GL11.GL_TRIANGLES);
                 }
                 // TODO verify if we need to add eyeHeight
                 hint.draw(tes, d0, d1, d2, i0, i1, i2);
