@@ -2591,7 +2591,7 @@ public class StructureUtility {
                     // we will bypass the chatter filter here, as this is a warning that player definitively want to see
                     // instead of some false positive error messages like item not find
                     warnNoExplicitSubChannel(env.getActor());
-                return backing.survivalPlaceBlock(t, world, x, y, z, trigger, env);
+                return backing.survivalPlaceBlock(t, world, x, y, z, newTrigger, env);
             }
         };
     }
