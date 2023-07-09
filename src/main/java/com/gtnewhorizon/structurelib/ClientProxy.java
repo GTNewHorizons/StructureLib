@@ -358,7 +358,7 @@ public class ClientProxy extends CommonProxy {
                     double V = icons[i].getMaxV();
                     switch (i) { // {DOWN, UP, NORTH, SOUTH, WEST, EAST}
                         case 0:
-                            // all these ifs is in form if ((is face unobstructed) != (is in unobstructred pass)) continue
+                            // all these ifs is in form if ((is face unobstructed) != (is in unobstructred pass))
                             if ((worldY >= eyeY) != (j == 1)) continue;
                             tes.setNormal(0, -1, 0);
                             tes.addVertexWithUV(X, Y, Z + size, u, V);
