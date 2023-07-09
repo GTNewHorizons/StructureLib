@@ -46,7 +46,6 @@ public class ClientProxy extends CommonProxy {
      */
     private static final List<HintGroup> allGroups = new ArrayList<>();
 
-    public static int HOLOGRAM_LIFETIME = 200;
     /**
      * Current batch of hints. Belongs to the same logical multiblock.
      */
@@ -335,26 +334,32 @@ public class ClientProxy extends CommonProxy {
             double X = (x - eyeXint) + 0.25;
             double Y = (y - eyeYint) + 0.25;
             double Z = (z - eyeZint) + 0.25;
+            double worldX = x + 0.25;
+            double worldY = y + 0.25;
+            double worldZ = z + 0.25;
 
-            for (int i = 0; i < 6; i++) {
-                if (icons[i] == null) continue;
+            // this rendering code is independently written by glee8e on July 10th, 2023
+            // and is released as part of StructureLib under LGPL terms, just like everything else in this project
+            // cube is a very special model. its facings can be rendered correctly by viewer distance without using
+            // surface normals and view vector
+            // here we do a 2 pass render.
+            // first pass we draw obstructed faces (i.e. faces that are further away from player)
+            // second pass we draw unobstructed faces
+            for (int j = 0; j < 2; j++) {
 
-                markTextureUsed(icons[i]);
+                for (int i = 0; i < 6; i++) {
+                    if (icons[i] == null) continue;
 
-                double u = icons[i].getMinU();
-                double U = icons[i].getMaxU();
-                double v = icons[i].getMinV();
-                double V = icons[i].getMaxV();
+                    markTextureUsed(icons[i]);
 
-                // cube is a very special model. its facings can be rendered correctly by viewer distance without using
-                // surface normals and view vector
-                // here we do a 2 pass render.
-                // first pass we draw obstructed faces (i.e. faces that are further away from player)
-                // second pass we draw unobstructed faces
-                for (int j = 0; j < 2; j++) {
+                    double u = icons[i].getMinU();
+                    double U = icons[i].getMaxU();
+                    double v = icons[i].getMinV();
+                    double V = icons[i].getMaxV();
                     switch (i) { // {DOWN, UP, NORTH, SOUTH, WEST, EAST}
                         case 0:
-                            if ((Y >= eyeY) != (j == 1)) continue;
+                            // all these ifs is in form if ((is face unobstructed) != (is in unobstructred pass)) continue
+                            if ((worldY >= eyeY) != (j == 1)) continue;
                             tes.setNormal(0, -1, 0);
                             tes.addVertexWithUV(X, Y, Z + size, u, V);
                             tes.addVertexWithUV(X, Y, Z, u, v);
@@ -364,7 +369,7 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X, Y, Z + size, u, V);
                             break;
                         case 1:
-                            if ((Y + size <= eyeY) != (j == 1)) continue;
+                            if ((worldY + size <= eyeY) != (j == 1)) continue;
                             tes.setNormal(0, 1, 0);
                             tes.addVertexWithUV(X, Y + size, Z, u, v);
                             tes.addVertexWithUV(X, Y + size, Z + size, u, V);
@@ -374,7 +379,7 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X, Y + size, Z, u, v);
                             break;
                         case 2:
-                            if ((Z >= eyeZ) != (j == 1)) continue;
+                            if ((worldZ >= eyeZ) != (j == 1)) continue;
                             tes.setNormal(0, 0, -1);
                             tes.addVertexWithUV(X, Y, Z, U, V);
                             tes.addVertexWithUV(X, Y + size, Z, U, v);
@@ -384,7 +389,7 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X, Y, Z, U, V);
                             break;
                         case 3:
-                            if ((Z <= eyeZ) != (j == 1)) continue;
+                            if ((worldZ + size <= eyeZ) != (j == 1)) continue;
                             tes.setNormal(0, 0, 1);
                             tes.addVertexWithUV(X + size, Y, Z + size, U, V);
                             tes.addVertexWithUV(X + size, Y + size, Z + size, U, v);
@@ -394,7 +399,7 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X + size, Y, Z + size, U, V);
                             break;
                         case 4:
-                            if ((X >= eyeX) != (j == 1)) continue;
+                            if ((worldX >= eyeX) != (j == 1)) continue;
                             tes.setNormal(-1, 0, 0);
                             tes.addVertexWithUV(X, Y, Z + size, U, V);
                             tes.addVertexWithUV(X, Y + size, Z + size, U, v);
@@ -404,7 +409,7 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X, Y, Z + size, U, V);
                             break;
                         case 5:
-                            if ((X + size <= eyeX) != (j == 1)) continue;
+                            if ((worldX + size <= eyeX) != (j == 1)) continue;
                             tes.setNormal(1, 0, 0);
                             tes.addVertexWithUV(X + size, Y, Z, U, V);
                             tes.addVertexWithUV(X + size, Y + size, Z, U, v);
@@ -550,7 +555,6 @@ public class ClientProxy extends CommonProxy {
                     tes.draw();
                     tes.startDrawing(GL11.GL_TRIANGLES);
                 }
-                // TODO verify if we need to add eyeHeight
                 hint.draw(tes, d0, d1, d2, i0, i1, i2);
             }
             p.endStartSection("Draw");
