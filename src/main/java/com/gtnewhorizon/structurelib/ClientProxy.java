@@ -346,7 +346,7 @@ public class ClientProxy extends CommonProxy {
             // first pass we draw obstructed faces (i.e. faces that are further away from player)
             // second pass we draw unobstructed faces
             for (int j = 0; j < 2; j++) {
-
+                boolean unobstructedPass = j == 1;
                 for (int i = 0; i < 6; i++) {
                     if (icons[i] == null) continue;
 
@@ -359,7 +359,7 @@ public class ClientProxy extends CommonProxy {
                     switch (i) { // {DOWN, UP, NORTH, SOUTH, WEST, EAST}
                         case 0:
                             // all these ifs is in form if ((is face unobstructed) != (is in unobstructred pass))
-                            if ((worldY >= eyeY) != (j == 1)) continue;
+                            if ((worldY >= eyeY) != unobstructedPass) continue;
                             tes.setNormal(0, -1, 0);
                             tes.addVertexWithUV(X, Y, Z + size, u, V);
                             tes.addVertexWithUV(X, Y, Z, u, v);
@@ -369,7 +369,7 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X, Y, Z + size, u, V);
                             break;
                         case 1:
-                            if ((worldY + size <= eyeY) != (j == 1)) continue;
+                            if ((worldY + size <= eyeY) != unobstructedPass) continue;
                             tes.setNormal(0, 1, 0);
                             tes.addVertexWithUV(X, Y + size, Z, u, v);
                             tes.addVertexWithUV(X, Y + size, Z + size, u, V);
@@ -379,7 +379,7 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X, Y + size, Z, u, v);
                             break;
                         case 2:
-                            if ((worldZ >= eyeZ) != (j == 1)) continue;
+                            if ((worldZ >= eyeZ) != unobstructedPass) continue;
                             tes.setNormal(0, 0, -1);
                             tes.addVertexWithUV(X, Y, Z, U, V);
                             tes.addVertexWithUV(X, Y + size, Z, U, v);
@@ -389,7 +389,7 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X, Y, Z, U, V);
                             break;
                         case 3:
-                            if ((worldZ + size <= eyeZ) != (j == 1)) continue;
+                            if ((worldZ + size <= eyeZ) != unobstructedPass) continue;
                             tes.setNormal(0, 0, 1);
                             tes.addVertexWithUV(X + size, Y, Z + size, U, V);
                             tes.addVertexWithUV(X + size, Y + size, Z + size, U, v);
@@ -399,7 +399,7 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X + size, Y, Z + size, U, V);
                             break;
                         case 4:
-                            if ((worldX >= eyeX) != (j == 1)) continue;
+                            if ((worldX >= eyeX) != unobstructedPass) continue;
                             tes.setNormal(-1, 0, 0);
                             tes.addVertexWithUV(X, Y, Z + size, U, V);
                             tes.addVertexWithUV(X, Y + size, Z + size, U, v);
@@ -409,7 +409,7 @@ public class ClientProxy extends CommonProxy {
                             tes.addVertexWithUV(X, Y, Z + size, U, V);
                             break;
                         case 5:
-                            if ((worldX + size <= eyeX) != (j == 1)) continue;
+                            if ((worldX + size <= eyeX) != unobstructedPass) continue;
                             tes.setNormal(1, 0, 0);
                             tes.addVertexWithUV(X + size, Y, Z, U, V);
                             tes.addVertexWithUV(X + size, Y + size, Z, U, v);
