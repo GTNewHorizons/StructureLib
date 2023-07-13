@@ -32,3 +32,5 @@ The project is developed using IDEA. Please manually configure the build to not 
 Due to me adding in ItemStackMap, which was derived from code from CodeChicken's LGPL mod NEI. This mod is effectively considered
 licensed under LGPL in its entirety since commit ebef584b8c518f8202cfe0984fb28a6d23e52b3d or any squash commit containing it, e.g.
 609e50428ee4e293f65f67f554a70b9fcfae97c4.
+
+Note while the LICENSE.txt is added by a much later commit, all code on previous commits are covered by this as well.
