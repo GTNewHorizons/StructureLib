@@ -191,6 +191,9 @@ public interface IAlignment extends IAlignmentLimits, IAlignmentProvider {
                 .isNewExtendedFacingValid(alignment.getDirection(), alignment.getRotation(), alignment.getFlip());
     }
 
+    /**
+     * Check if this object support a flip change, assuming both direction and rotation is not changed.
+     */
     default boolean isFlipChangeAllowed() {
         ExtendedFacing facing = getExtendedFacing();
         for (Flip flip : Flip.VALUES) {
@@ -200,6 +203,9 @@ public interface IAlignment extends IAlignmentLimits, IAlignmentProvider {
         return false;
     }
 
+    /**
+     * Check if this object support a rotation change, assuming both direction and flip is not changed.
+     */
     default boolean isRotationChangeAllowed() {
         ExtendedFacing facing = getExtendedFacing();
         for (Rotation rotation : Rotation.VALUES) {
