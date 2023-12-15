@@ -623,8 +623,8 @@ public class StructureUtility {
      * </pre>
      *
      * @param tierExtractor a function to extract tier info from a block. This function can return null and will never
-     *                      be passed a null block or an invalid block meta. If this function returns null, then the block
-     *                      would be considered invalid.
+     *                      be passed a null block or an invalid block meta. If this function returns null, then the
+     *                      block would be considered invalid.
      * @param allKnownTiers A list of all known tiers as of calling. Can be empty or null. No hint will be spawned if
      *                      empty or null. Cannot have null elements. First element denotes the most primitive tier.
      *                      Last element denotes the most advanced tier. If not all tiers are available at definition
