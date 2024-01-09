@@ -38,6 +38,7 @@ import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
+
 import cpw.mods.fml.common.registry.GameRegistry;
 
 /**
