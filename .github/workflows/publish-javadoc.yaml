@@ -60,7 +60,7 @@ jobs:
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git commit -m "Deploy javadoc from ref $TARGET_FOLDER"
           git push
-          echo "::set-output name=hash::$(git rev-parse HEAD)"
+          echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         env:
           TARGET_FOLDER: ${{ github.ref_name }}
           COMMIT_AUTHOR: ${{ github.pusher.name }}
