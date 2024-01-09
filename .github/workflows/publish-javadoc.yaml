@@ -7,6 +7,7 @@ on:
       - feature/doc
     tags:
       - '*'
+  delete:
 
 permissions:
   contents: write
@@ -14,7 +15,38 @@ permissions:
   id-token: write
 
 jobs:
+  prune:
+    if: github.event_name == 'delete'
+    concurrency: javadoc-publish
+    runs-on: ubuntu-latest
+    outputs:
+      result_hash: ${{ steps.deploy.outputs.hash }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: gh-pages
+    
+      - name: Deploy 🚀
+        id: deploy
+        shell: bash
+        run: |
+          if git rm -r $TARGET_FOLDER ; then
+            echo Nothing to clean up
+          fi
+          
+          find . -name javadoc -type d -print | sed 's#^\./\(.*\)/javadoc$#\1#' | sort --version-sort --reverse > index.txt
+          git add index.txt
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR_ID}-${GITHUB_ACTOR}@users.noreply.github.com"
+          git commit -m "Clean up javadoc after ref $TARGET_FOLDER is deleted"
+          git push
+          echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT            
+        env:
+          TARGET_FOLDER: ${{ github.ref_name }}
+          
   javadoc:
+    if: github.event_name == 'push'
     concurrency: javadoc-publish
     runs-on: ubuntu-latest
     outputs:
@@ -57,11 +89,9 @@ jobs:
           find . -name javadoc -type d -print | sed 's#^\./\(.*\)/javadoc$#\1#' | sort --version-sort --reverse > index.txt
           git add index.txt
           git config user.name "${GITHUB_ACTOR}"
-          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git config user.email "${GITHUB_ACTOR_ID}-${GITHUB_ACTOR}@users.noreply.github.com"
           git commit -m "Deploy javadoc from ref $TARGET_FOLDER"
           git push
           echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         env:
           TARGET_FOLDER: ${{ github.ref_name }}
-          COMMIT_AUTHOR: ${{ github.pusher.name }}
-          COMMIT_EMAIL: ${{ github.pusher.email }}
