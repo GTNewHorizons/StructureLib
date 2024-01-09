@@ -4,6 +4,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
+
 import cpw.mods.fml.common.eventhandler.Event;
 
 /**

@@ -15,6 +15,7 @@ import net.minecraft.world.World;
 
 import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
 import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
+
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
 public class CommonProxy {
