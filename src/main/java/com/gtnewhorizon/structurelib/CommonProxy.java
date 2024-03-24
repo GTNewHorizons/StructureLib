@@ -15,7 +15,7 @@ import net.minecraft.world.World;
 
 import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
 import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
-
+import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
 public class CommonProxy {
@@ -68,6 +68,10 @@ public class CommonProxy {
         } else {
             return false;
         }
+    }
+
+    public void loadComplete(FMLLoadCompleteEvent e) {
+        ConfigurationHandler.INSTANCE.loadRegistryOrder();
     }
 
     private final Map<EntityPlayerMP, Map<Object, Long>> throttleMap = new WeakHashMap<>();
