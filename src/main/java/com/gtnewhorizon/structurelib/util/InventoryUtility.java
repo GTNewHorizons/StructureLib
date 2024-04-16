@@ -253,6 +253,8 @@ public class InventoryUtility {
             }
             if (!recursive) continue;
             for (ItemStackExtractor f : stackExtractors) {
+                boolean end = f.isAPIImplemented(APIType.IS_VALID_SOURCE);
+                if (!f.isValidSource(stack, player)) continue;
                 if (filter != null && f.isAPIImplemented(APIType.EXTRACT_ONE_STACK)) {
                     copiedFilter.stackSize = count - found;
                     found += f.getItem(stack, copiedFilter, simulate, player);
@@ -260,6 +262,7 @@ public class InventoryUtility {
                     found += f.takeFromStack(predicate, simulate, count - found, store, stack, filter, player);
                 }
                 if (found >= count) return found;
+                if (end) break;
             }
         }
         return found;
@@ -294,9 +297,14 @@ public class InventoryUtility {
         enum APIType {
             MAIN,
             EXTRACT_ONE_STACK,
+            IS_VALID_SOURCE,
         }
 
         boolean isAPIImplemented(APIType type);
+
+        default boolean isValidSource(ItemStack is, EntityPlayerMP player) {
+            return true;
+        }
 
         /**
          * Extract a particular type of item. The extractor can choose to not return all items contained within this
