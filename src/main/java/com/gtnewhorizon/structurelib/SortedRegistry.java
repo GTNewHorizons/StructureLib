@@ -4,26 +4,32 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
-import org.apache.commons.lang3.tuple.Pair;
 
 public class SortedRegistry<V> implements Iterable<V> {
 
@@ -58,6 +64,37 @@ public class SortedRegistry<V> implements Iterable<V> {
             throw new IllegalArgumentException("duplicate name");
         }
         FMLCommonHandler.instance().bus().register(this);
+    }
+
+    public static Set<String> getRegistryNames() {
+        return ALL_REGISTRIES.keySet();
+    }
+
+    public static SortedRegistry<?> getRegistry(String name) {
+        WeakReference<SortedRegistry<?>> ref = ALL_REGISTRIES.get(name);
+        return ref != null ? ref.get() : null;
+    }
+
+    static void cleanup(MinecraftServer server) {
+        @SuppressWarnings("unchecked")
+        List<EntityPlayerMP> players = server.getConfigurationManager().playerEntityList;
+        Set<UUID> onlinePlayerIDs = players.stream().map(EntityPlayerMP::getUniqueID).collect(Collectors.toSet());
+        int removed = 0;
+        for (WeakReference<SortedRegistry<?>> ref : ALL_REGISTRIES.values()) {
+            SortedRegistry<?> registry = ref.get();
+            if (registry == null) continue;
+            for (Iterator<UUID> iterator = registry.playerOrdering.keySet().iterator(); iterator.hasNext();) {
+                UUID uuid = iterator.next();
+                if (!onlinePlayerIDs.contains(uuid)) {
+                    iterator.remove();
+                    registry.playerBaked.remove(uuid);
+                    removed++;
+                }
+            }
+        }
+        if (removed > 0) {
+            StructureLib.LOGGER.debug("Removed {} registry record for logged out players", removed);
+        }
     }
 
     @SubscribeEvent
@@ -128,6 +165,17 @@ public class SortedRegistry<V> implements Iterable<V> {
         List<V> playerPreference = playerBaked.get(player.getUniqueID());
         if (playerPreference == null) return baked;
         return playerPreference;
+    }
+
+    public Stream<String> getPlayerOrderingKeys(@Nullable EntityPlayerMP player) {
+        if (player == null) return store.keySet().stream();
+        List<V> playerOrder = playerBaked.get(player.getUniqueID());
+        if (playerOrder == null) return store.keySet().stream();
+
+        // rebuild the order from the baked map
+        Map<V, String> reverseMap = new IdentityHashMap<>();
+        store.forEach((k, v) -> reverseMap.put(v, k));
+        return playerOrder.stream().map(reverseMap::get);
     }
 
     Iterable<String> getCurrentOrdering() {

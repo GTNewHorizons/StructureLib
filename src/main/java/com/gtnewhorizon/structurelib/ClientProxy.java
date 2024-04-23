@@ -5,6 +5,7 @@ import static com.gtnewhorizon.structurelib.StructureLib.RANDOM;
 import java.lang.ref.WeakReference;
 import java.util.*;
 
+import cpw.mods.fml.client.config.GuiConfig;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
@@ -13,6 +14,7 @@ import net.minecraft.client.particle.EntityFX;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.culling.Frustrum;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -25,6 +27,7 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 
@@ -261,8 +264,10 @@ public class ClientProxy extends CommonProxy {
         FMLEventHandler.configSent = true;
         for (String s : SortedRegistry.ALL_REGISTRIES.keySet()) {
             Pair<List<String>, List<String>> registryOrder = ConfigurationHandler.INSTANCE.getRegistryOrder(s);
-            if (registryOrder == null || registryOrder.getKey().isEmpty() && registryOrder.getValue().isEmpty()) continue;
-            StructureLib.net.sendToServer(new RegistryOrderSyncMessage(s, registryOrder.getKey(), registryOrder.getValue()));
+            if (registryOrder == null || registryOrder.getKey().isEmpty() && registryOrder.getValue().isEmpty())
+                continue;
+            StructureLib.net
+                    .sendToServer(new RegistryOrderSyncMessage(s, registryOrder.getKey(), registryOrder.getValue()));
         }
     }
 
@@ -279,6 +284,12 @@ public class ClientProxy extends CommonProxy {
 
     public UUID getSPPlayerUUID() {
         return EntityPlayer.func_146094_a(Minecraft.getMinecraft().getSession().func_148256_e());
+    }
+
+    public void displayConfigGUI(String category) {
+        ConfigElement<Object> element = new ConfigElement<>(ConfigurationHandler.INSTANCE.getConfig().getCategory(category));
+        GuiConfig guiConfig = new GuiConfig(null, element.getChildElements(), StructureLibAPI.MOD_ID, null, false, false, I18n.format(element.getLanguageKey()));
+        Minecraft.getMinecraft().displayGuiScreen(guiConfig);
     }
 
     private static class HintGroup {

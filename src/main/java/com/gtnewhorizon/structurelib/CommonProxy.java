@@ -12,13 +12,22 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
 
 import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
 import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
+
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 
 public class CommonProxy {
+
+    public CommonProxy() {
+        super();
+        MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
+    }
 
     public void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {}
 
@@ -96,6 +105,25 @@ public class CommonProxy {
         if (old == null || now - old >= intervalRequired) {
             player.addChatComponentMessage(text);
             if (!forceUpdateLastSend) submap.put(throttleKey, now);
+        }
+    }
+
+    public void displayConfigGUI(String category) {
+    }
+
+    public static class ForgeEventHandler {
+
+        private int ticksSinceLastPurge;
+
+        @SubscribeEvent
+        public void onServerTickEnd(TickEvent.ServerTickEvent e) {
+            if (e.phase != TickEvent.Phase.END) return;
+            if (++ticksSinceLastPurge < 20 * 60 * 10) return;
+            ticksSinceLastPurge = 0;
+            MinecraftServer server = MinecraftServer.getServer();
+            // it's hard to tell why server could be null in a server tick handler, but who knows?
+            if (server == null) return;
+            SortedRegistry.cleanup(server);
         }
     }
 }

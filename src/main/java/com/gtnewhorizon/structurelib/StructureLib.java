@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.gtnewhorizon.structurelib.block.BlockHint;
 import com.gtnewhorizon.structurelib.command.CommandConfigureChannels;
+import com.gtnewhorizon.structurelib.command.CommandRegistryDebug;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
@@ -127,6 +128,7 @@ public class StructureLib {
     @Mod.EventHandler
     public void serverStarting(FMLServerStartingEvent e) {
         e.registerServerCommand(new CommandConfigureChannels());
+        e.registerServerCommand(new CommandRegistryDebug());
     }
 
     public static void addClientSideChatMessages(String... messages) {

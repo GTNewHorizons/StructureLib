@@ -12,13 +12,15 @@ import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import org.apache.commons.lang3.tuple.Pair;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
 
 public enum ConfigurationHandler {
 
@@ -102,13 +104,27 @@ public enum ConfigurationHandler {
     }
 
     void loadRegistryOrder() {
+        loadRegistryOrderImpl();
+        setLanguageKeys();
+        saveConfig();
+    }
+
+    private void loadRegistryOrderImpl() {
         registryOrders = new HashMap<>();
         for (Map.Entry<String, WeakReference<SortedRegistry<?>>> e : SortedRegistry.ALL_REGISTRIES.entrySet()) {
             SortedRegistry<?> r = e.getValue().get();
             if (r == null) continue;
-            Property pOrder = config
-                    .get("registries." + e.getKey(), "ordering", Iterables.toArray(r.getCurrentOrdering(), String.class), "stuff not in this list will be automatically available after all entries listed here in their natural order, unless explicitly disabled in disabled config below.");
-            Property pDisable = config.get("registries." +  e.getKey(), "disabled", new String[0], "stuff in this list will be disabled");
+            String category = "registries." + e.getKey();
+            if (FMLLaunchHandler.side().isClient()) {
+                // only meaningful on client, and would crash on server
+                config.setCategoryConfigEntryClass(category, RegistryOrderEntry.class);
+            }
+            Property pOrder = config.get(
+                    category,
+                    "ordering",
+                    Iterables.toArray(r.getCurrentOrdering(), String.class),
+                    "stuff not in this list will be automatically available after all entries listed here in their natural order, unless explicitly disabled in disabled config below.");
+            Property pDisable = config.get(category, "disabled", new String[0], "stuff in this list will be disabled");
             List<String> all = Lists.newArrayList(r.getCurrentOrdering());
             List<String> curVal = new ArrayList<>(Arrays.asList(pOrder.getStringList()));
             List<String> disabled = new ArrayList<>(Arrays.asList(pDisable.getStringList()));
@@ -164,7 +180,9 @@ public enum ConfigurationHandler {
         return registryOrders.get(name);
     }
 
+
     Configuration getConfig() {
         return config;
     }
+
 }

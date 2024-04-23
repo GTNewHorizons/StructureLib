@@ -172,3 +172,19 @@ structurelib.config.client.hologram.maxCoexisting=最多可以同时存在的全
 structurelib.config.client.hologram.maxCoexisting.tooltip=这决定最多可以同时存在多少台机器的全息投影。一般一次使用全息投影仪右键生成的所有机器结构细节被视为一个全息投影。当同时存在多个全息投影，并超过此数量时，再次使用全息投影仪会移除旧有的全息投影。
 structurelib.config.client.hologram.removeColliding=移除冲突的全息投影
 structurelib.config.client.hologram.removeColliding.tooltip=当新的全息投影与已存在的全息投影冲突时，开启此选项时会移除已存在的全息投影。
+
+structurelib.config.registries=注册表
+structurelib.config.registries.tooltip=StructureLib 使用注册表来管理其部分功能。每个注册表中的每一个元素都可以被单独排序、禁用。需要时，注册表的内容将被同步至服务端。
+structurelib.config.registries.stackextractors=物品提取器
+structurelib.config.registries.stackextractors.tooltip=该注册表控制在生存模式自动放置时，如何从物品（如林业背包）提取库存。
+structurelib.config.registries.inventoryproviders=物品栏定位
+structurelib.config.registries.inventoryproviders.tooltip=该注册表控制在生存模式自动放置时，可用的物品栏来源。
+
+structurelib.configgui.enabled=已启用
+structurelib.configgui.disabled=已禁用
+structurelib.configgui.drag.tooltip=拖动该按钮以重排。
+
+structurelib.sortedregistry.inventoryproviders.5000-main-inventory=玩家物品栏
+structurelib.sortedregistry.inventoryproviders.5000-main-inventory.tooltip=不包括护甲栏以外的36格。
+structurelib.sortedregistry.inventoryproviders.7000-ender-inventory=末影箱
+structurelib.sortedregistry.inventoryproviders.7000-ender-inventory.tooltip=当前玩家的末影箱。需要在主物品栏中存在类似于末影背包的东西才会实际生效。
