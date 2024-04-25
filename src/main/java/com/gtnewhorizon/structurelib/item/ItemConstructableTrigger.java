@@ -28,8 +28,13 @@ public class ItemConstructableTrigger extends Item {
 
     @Override
     public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
-        if (world.isRemote && getMovingObjectPositionFromPlayer(world, player, true) == null)
-            player.openGui(StructureLib.instance(), 0, world, player.inventory.currentItem, 0, 0);
+        if (world.isRemote && getMovingObjectPositionFromPlayer(world, player, true) == null) {
+            if (player.isSneaking()) {
+                StructureLib.instance().proxy().displayConfigGUI("registries");
+            } else {
+                player.openGui(StructureLib.instance(), 0, world, player.inventory.currentItem, 0, 0);
+            }
+        }
         return super.onItemRightClick(stack, world, player);
     }
 
