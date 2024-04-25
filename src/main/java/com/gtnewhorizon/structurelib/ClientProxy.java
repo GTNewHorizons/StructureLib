@@ -5,7 +5,6 @@ import static com.gtnewhorizon.structurelib.StructureLib.RANDOM;
 import java.lang.ref.WeakReference;
 import java.util.*;
 
-import cpw.mods.fml.client.config.GuiConfig;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
@@ -38,6 +37,7 @@ import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
 import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
 
+import cpw.mods.fml.client.config.GuiConfig;
 import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
@@ -287,8 +287,16 @@ public class ClientProxy extends CommonProxy {
     }
 
     public void displayConfigGUI(String category) {
-        ConfigElement<Object> element = new ConfigElement<>(ConfigurationHandler.INSTANCE.getConfig().getCategory(category));
-        GuiConfig guiConfig = new GuiConfig(null, element.getChildElements(), StructureLibAPI.MOD_ID, null, false, false, I18n.format(element.getLanguageKey()));
+        ConfigElement<Object> element = new ConfigElement<>(
+                ConfigurationHandler.INSTANCE.getConfig().getCategory(category));
+        GuiConfig guiConfig = new GuiConfig(
+                null,
+                element.getChildElements(),
+                StructureLibAPI.MOD_ID,
+                null,
+                false,
+                false,
+                I18n.format(element.getLanguageKey()));
         Minecraft.getMinecraft().displayGuiScreen(guiConfig);
     }
 

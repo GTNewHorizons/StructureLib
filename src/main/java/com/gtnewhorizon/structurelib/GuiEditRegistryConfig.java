@@ -129,7 +129,7 @@ public class GuiEditRegistryConfig extends GuiScreen {
             this.orderEntries = new EntriesList(
                     (width - MID_SECTION_WIDTH) / 2 - LIST_WINDOW_PADDING,
                     (width + MID_SECTION_WIDTH) / 2,
-                I18n.format("structurelib.configgui.enabled"));
+                    I18n.format("structurelib.configgui.enabled"));
             this.orderEntries.initEntries(Arrays.asList(orderElement.getList()));
         } else {
             this.orderEntries
@@ -361,14 +361,18 @@ public class GuiEditRegistryConfig extends GuiScreen {
         public void drawScreen(int p_148128_1_, int p_148128_2_, float p_148128_3_) {
             GL11.glEnable(GL11.GL_SCISSOR_TEST);
             ScaledResolution scaledresolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
-            GL11.glScissor((left - 4) * scaledresolution.getScaleFactor(), (int) ((scaledresolution.getScaledHeight_double() - (bottom + 4)) * scaledresolution.getScaleFactor()), (width + 8) * scaledresolution.getScaleFactor(), (height + 8) * scaledresolution.getScaleFactor());
+            GL11.glScissor(
+                    (left - 4) * scaledresolution.getScaleFactor(),
+                    (int) ((scaledresolution.getScaledHeight_double() - (bottom + 4))
+                            * scaledresolution.getScaleFactor()),
+                    (width + 8) * scaledresolution.getScaleFactor(),
+                    (height + 8) * scaledresolution.getScaleFactor());
             super.drawScreen(p_148128_1_, p_148128_2_, p_148128_3_);
             GL11.glDisable(GL11.GL_SCISSOR_TEST);
         }
 
         @Override
-        public void overlayBackground(int p_148136_1_, int p_148136_2_, int p_148136_3_, int p_148136_4_) {
-        }
+        public void overlayBackground(int p_148136_1_, int p_148136_2_, int p_148136_3_, int p_148136_4_) {}
 
         @Override
         protected void drawContainerBackground(Tessellator tessellator) {
@@ -397,7 +401,7 @@ public class GuiEditRegistryConfig extends GuiScreen {
             }
             FontRenderer fr = mc.fontRenderer;
             fr.drawString(
-                this.heading,
+                    this.heading,
                     p_148129_1_ + this.width / 2 - fr.getStringWidth(this.heading) / 2,
                     Math.min(this.top + 3, p_148129_2_),
                     0xffffff);

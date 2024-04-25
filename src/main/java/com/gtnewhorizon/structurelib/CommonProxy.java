@@ -108,8 +108,7 @@ public class CommonProxy {
         }
     }
 
-    public void displayConfigGUI(String category) {
-    }
+    public void displayConfigGUI(String category) {}
 
     public static class ForgeEventHandler {
 

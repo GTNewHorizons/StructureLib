@@ -49,8 +49,7 @@ public class SortedRegistry<V> implements Iterable<V> {
     /**
      * Construct an unsynchronized registry
      */
-    public SortedRegistry() {
-    }
+    public SortedRegistry() {}
 
     /**
      * Construct a synchronized registry whose ordering will be synced to the server

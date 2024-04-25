@@ -180,7 +180,6 @@ public enum ConfigurationHandler {
         return registryOrders.get(name);
     }
 
-
     Configuration getConfig() {
         return config;
     }
