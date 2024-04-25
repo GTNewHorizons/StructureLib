@@ -280,5 +280,13 @@ Their changes will be synced to server as well, should they be playing on a dedi
 Therefore, if your stack extractor can somehow correlate with aonther one, make sure it still works if the calling order is inverted.
 At the very least, inform the player about this ordering constraint.
 A future StructrueLib refactor to specify this dependency info is possible, but the chance is low.
+<h2>Localization</h2>
+Both of these would show up in config GUI of StructureLib. Structurelib uses the following localization keys in that GUI.
+<ul>
+    <li><code>structurelib.sortedregistry.inventoryproviders.&lt;registry_key&gt;</code>: This is the name shown on the button for inventory providers. If this is not provided, then registry_key will be used instead.</li>
+    <li><code>structurelib.sortedregistry.inventoryproviders.&lt;registry_key&gt;.tooltip</code>: This is the tooltip shown when user hover over the button for inventory providers. If this is not provided, then no explicit tooltip will be shown.</li>
+    <li><code>structurelib.sortedregistry.stackextractors.&lt;registry_key&gt;</code>: This is the name shown on the button for stack extractors. If this is not provided, then registry_key will be used instead.</li>
+    <li><code>structurelib.sortedregistry.stackextractors.&lt;registry_key&gt;.tooltip</code>: This is the tooltip shown when user hover over the button for stack extractors. If this is not provided, then no explicit tooltip will be shown.</li>
+</ul>
 </BODY>
 </HTML>
