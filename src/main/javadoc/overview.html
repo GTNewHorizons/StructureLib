@@ -251,5 +251,34 @@ The code for placeBlock() and spawnHint() will be left as an exercise for the re
 <p>
     Please refer to {@link com.gtnewhorizon.structurelib.StructureEvent} to see what events are available.
 </p>
+<h1>Extending Inventory Utility</h1>
+{@link com.gtnewhorizon.structurelib.util.InventoryUtility} is how structurelib survival autoplace pulls item for autoplacing.
+It has two key concepts: inventory providers and stack extractors.
+<p>
+    Inventory Providers are classes that retrieve an Iterable of ItemStacks for examination, given an EntityPlayerMP as identifier.
+    They are also responsible for marking the relevant item container as dirty, so changes can be commited to disk properly when world save happens.
+    Examples include: main player inventory, vanilla ender chest, baubles inventory. StructureLib comes with main player inventory and vanilla ender chest built in.
+</p>
+<p>
+    Stack Extractors are classes that retrieve items from another item.
+    Examples include: Forestry backpacks, ME network over ME Wireless Terminals.
+</p>
+<p>
+Both of these are managed internally by {@link com.gtnewhorizon.structurelib.SortedRegistry}.
+By default, elements registered will be sorted in lexicographical order in ascending order.
+However, facilities in StructureLib will allow an end user to tweak these registries as their wish.
+They can disable, reorder, reenable any element within the registry, either in game, at main menu or with the game stopped,
+Their changes will be synced to server as well, should they be playing on a dedicated server.
+</p>
+<p>
+    This has the following important implications
+</p>
+<ul>
+    <li>Not all inventory providers or stack extractors may be called during a survival autoplace session</li>
+    <li>One player could have stack extractor 001 ordered before 002, while the other having a completely reversed order</li>
+</ul>
+Therefore, if your stack extractor can somehow correlate with aonther one, make sure it still works if the calling order is inverted.
+At the very least, inform the player about this ordering constraint.
+A future StructrueLib refactor to specify this dependency info is possible, but the chance is low.
 </BODY>
 </HTML>
