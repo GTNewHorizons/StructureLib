@@ -251,7 +251,6 @@ public class ClientProxy extends CommonProxy {
     public void preInit(FMLPreInitializationEvent e) {
         FMLCommonHandler.instance().bus().register(new FMLEventHandler());
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
-        DebugHelper.addDebug();
     }
 
     static void markTextureUsed(IIcon icon) {
