@@ -1,6 +1,12 @@
 package com.gtnewhorizon.structurelib.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NavigableMap;
+import java.util.Spliterator;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 
 public class SortedRegistry<V> implements Iterable<V> {

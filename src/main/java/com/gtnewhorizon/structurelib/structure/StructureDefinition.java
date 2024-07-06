@@ -1,8 +1,15 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import static com.gtnewhorizon.structurelib.structure.StructureUtility.*;
+import static com.gtnewhorizon.structurelib.structure.StructureUtility.isAir;
+import static com.gtnewhorizon.structurelib.structure.StructureUtility.notAir;
+import static com.gtnewhorizon.structurelib.structure.StructureUtility.step;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
