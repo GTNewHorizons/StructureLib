@@ -4,9 +4,18 @@ import static com.gtnewhorizon.structurelib.alignment.IAlignment.FLIPS_COUNT;
 import static com.gtnewhorizon.structurelib.alignment.IAlignment.ROTATIONS_COUNT;
 import static java.lang.Math.abs;
 import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Random;
 
 import net.minecraft.util.StatCollector;
 import net.minecraft.util.Vec3;
