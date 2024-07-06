@@ -13,12 +13,9 @@ import cpw.mods.fml.relauncher.FMLLaunchHandler;
 
 public enum Mixins {
 
-    EMPTY(new Builder("Empty").setPhase(Phase.EARLY).addMixinClasses("com.gtnewhorizon.structurelib.mixins.EmptyMixin")
-            .addTargetedMod(TargetedMod.VANILLA).setSide(Side.BOTH).setApplyIf(() -> false));
-    // DISABLE_MODDED_CHUNK_POPULATION(new Builder("Disable all other mod chunk population (e.g. Natura clouds")
-    // .setPhase(Phase.EARLY).addMixinClasses("minecraft.MixinChunkProviderServer_DisableModGeneration")
-    // .addTargetedMod(TargetedMod.VANILLA).setSide(Side.BOTH)
-    // .setApplyIf(() -> TweaksConfig.disableModdedChunkPopulation));
+    BLOCK_CHANGE_NOTIFIER(new Builder("Block Change Notifier").setPhase(Phase.EARLY)
+            .addMixinClasses("blockChangeNotifier.MixinForgeHooks", "blockChangeNotifier.MixinWorld")
+            .addTargetedMod(TargetedMod.VANILLA).setSide(Side.BOTH).setApplyIf(() -> true));
 
     private final List<String> mixinClasses;
     private final List<TargetedMod> targetedMods;
