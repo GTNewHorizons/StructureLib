@@ -34,7 +34,7 @@ public class ItemFrontRotationTool extends Item {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void addInformation(ItemStack p_77624_1_, EntityPlayer p_77624_2_, List aList, boolean p_77624_4_) {
+    public void addInformation(ItemStack p_77624_1_, EntityPlayer p_77624_2_, List<String> aList, boolean p_77624_4_) {
         aList.add(translateToLocal("item.structurelib.frontRotationTool.desc.0")); // Triggers Front Rotation Interface
         aList.add(EnumChatFormatting.BLUE + translateToLocal("item.structurelib.frontRotationTool.desc.1")); // Rotates
                                                                                                              // only the
