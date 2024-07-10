@@ -28,7 +28,7 @@ public class CommandRegistryDebug extends CommandBase {
     }
 
     @Override
-    public List<?> addTabCompletionOptions(ICommandSender p_71516_1_, String[] p_71516_2_) {
+    public List<String> addTabCompletionOptions(ICommandSender p_71516_1_, String[] p_71516_2_) {
         if (p_71516_2_.length == 1) return getListOfStringsMatchingLastWord(
                 p_71516_2_,
                 SortedRegistry.getRegistryNames().toArray(new String[0]));
