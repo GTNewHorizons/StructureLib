@@ -27,6 +27,8 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 public class StructureLibAPI {
 
     public static final String MOD_ID = "structurelib";
+    public static final String MOD_NAME = "StructureLib";
+
     public static final int HINT_BLOCK_META_GENERIC_0 = 0;
     public static final int HINT_BLOCK_META_GENERIC_1 = 1;
     public static final int HINT_BLOCK_META_GENERIC_2 = 2;
