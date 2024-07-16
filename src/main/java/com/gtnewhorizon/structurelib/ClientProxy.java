@@ -32,10 +32,15 @@ import net.minecraftforge.event.world.WorldEvent;
 
 import org.lwjgl.opengl.GL11;
 
+import com.gtnewhorizon.structurelib.client.nei.IMCForNEI;
+import com.gtnewhorizon.structurelib.client.nei.InputHandler;
 import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
 
+import codechicken.nei.guihook.GuiContainerManager;
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
@@ -242,8 +247,23 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void preInit(FMLPreInitializationEvent e) {
+        super.preInit(e);
         FMLCommonHandler.instance().bus().register(new FMLEventHandler());
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
+        GuiContainerManager.addInputHandler(new InputHandler());
+        GuiContainerManager.addTooltipHandler(new InputHandler());
+    }
+
+    @Override
+    public void init(FMLInitializationEvent e) {
+        super.init(e);
+        IMCForNEI.IMCSender();
+    }
+
+    @Override
+    public void postInit(FMLPostInitializationEvent e) {
+        super.postInit(e);
+        MinecraftForge.EVENT_BUS.register(new EventHandler());
     }
 
     static void markTextureUsed(IIcon icon) {

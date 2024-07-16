@@ -24,6 +24,8 @@ import com.gtnewhorizon.structurelib.util.XSTR;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
@@ -37,8 +39,8 @@ import cpw.mods.fml.relauncher.SideOnly;
  */
 @Mod(
         modid = StructureLibAPI.MOD_ID,
-        name = "StructureLib",
-        version = "GRADLETOKEN_VERSION",
+        version = Tags.VERSION,
+        name = StructureLibAPI.MOD_NAME,
         acceptableRemoteVersions = "*",
         guiFactory = "com.gtnewhorizon.structurelib.GuiFactory")
 public class StructureLib {
@@ -95,6 +97,9 @@ public class StructureLib {
         }
     };
 
+    public static boolean isGTLoaded;
+    public static boolean isNEELoaded;
+
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
         ConfigurationHandler.INSTANCE.init(e.getSuggestedConfigurationFile());
@@ -112,6 +117,20 @@ public class StructureLib {
         if (Loader.isModLoaded(STRUCTURECOMPAT_MODID)) {
             COMPAT = Loader.instance().getIndexedModList().get(STRUCTURECOMPAT_MODID).getMod();
         }
+
+        isGTLoaded = Loader.isModLoaded("gregtech");
+        isNEELoaded = Loader.isModLoaded("neenergistics");
+    }
+
+    @Mod.EventHandler
+    // load "Do your mod setup. Build whatever data structures you care about. Register recipes."
+    public void init(FMLInitializationEvent event) {
+        proxy.init(event);
+    }
+
+    @Mod.EventHandler
+    public void postInit(FMLPostInitializationEvent event) {
+        proxy.postInit(event);
     }
 
     @Mod.EventHandler
