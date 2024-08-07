@@ -2,20 +2,24 @@ package com.gtnewhorizon.structurelib;
 
 import static com.gtnewhorizon.structurelib.StructureLib.RANDOM;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.particle.EntityFX;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.culling.Frustrum;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -28,18 +32,27 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.ConfigElement;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
 import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
+import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
 
+import cpw.mods.fml.client.config.GuiConfig;
+import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
+import cpw.mods.fml.common.network.FMLNetworkEvent;
 
 public class ClientProxy extends CommonProxy {
 
@@ -251,6 +264,47 @@ public class ClientProxy extends CommonProxy {
             ((IStructureCompat) StructureLib.COMPAT).markTextureUsed(icon);
     }
 
+    static void sendRegistryOrderToServer() {
+        if (FMLEventHandler.configSent) return;
+        FMLEventHandler.configSent = true;
+        for (String s : SortedRegistry.ALL_REGISTRIES.keySet()) {
+            Pair<List<String>, List<String>> registryOrder = ConfigurationHandler.INSTANCE.getRegistryOrder(s);
+            if (registryOrder == null || registryOrder.getKey().isEmpty() && registryOrder.getValue().isEmpty())
+                continue;
+            StructureLib.net
+                    .sendToServer(new RegistryOrderSyncMessage(s, registryOrder.getKey(), registryOrder.getValue()));
+        }
+    }
+
+    @Override
+    public void loadComplete(FMLLoadCompleteEvent evt) {
+        super.loadComplete(evt);
+        for (Map.Entry<String, WeakReference<SortedRegistry<?>>> e : SortedRegistry.ALL_REGISTRIES.entrySet()) {
+            SortedRegistry<?> r = e.getValue().get();
+            if (r == null) continue;
+            Pair<List<String>, List<String>> p = ConfigurationHandler.INSTANCE.getRegistryOrder(e.getKey());
+            r.registerOrdering(getSPPlayerUUID(), p.getKey(), p.getValue());
+        }
+    }
+
+    public UUID getSPPlayerUUID() {
+        return EntityPlayer.func_146094_a(Minecraft.getMinecraft().getSession().func_148256_e());
+    }
+
+    public void displayConfigGUI(String category) {
+        ConfigElement<Object> element = new ConfigElement<>(
+                ConfigurationHandler.INSTANCE.getConfig().getCategory(category));
+        GuiConfig guiConfig = new GuiConfig(
+                null,
+                element.getChildElements(),
+                StructureLibAPI.MOD_ID,
+                null,
+                false,
+                false,
+                I18n.format(element.getLanguageKey()));
+        Minecraft.getMinecraft().displayGuiScreen(guiConfig);
+    }
+
     private static class HintGroup {
 
         private final List<HintParticleInfo> hints = new LinkedList<>();
@@ -439,10 +493,32 @@ public class ClientProxy extends CommonProxy {
 
     public static class FMLEventHandler {
 
+        static boolean connected = false;
+        static boolean configSent = false;
+
         private void resetPlayerLocation() {
             lastPlayerPos.xCoord = Minecraft.getMinecraft().thePlayer.posX;
             lastPlayerPos.yCoord = Minecraft.getMinecraft().thePlayer.posY;
             lastPlayerPos.zCoord = Minecraft.getMinecraft().thePlayer.posZ;
+        }
+
+        @SubscribeEvent
+        public void onPlayerLogIn(FMLNetworkEvent.ClientConnectedToServerEvent e) {
+            connected = true;
+            configSent = false;
+        }
+
+        @SubscribeEvent
+        public void onPlayerLogOut(FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
+            connected = false;
+        }
+
+        @SubscribeEvent(priority = EventPriority.LOWEST)
+        public void onConfigChange(ConfigChangedEvent.PostConfigChangedEvent e) {
+            if (connected && e.modID.equals(StructureLibAPI.MOD_ID)) {
+                configSent = false;
+                sendRegistryOrderToServer();
+            }
         }
 
         @SubscribeEvent
@@ -487,6 +563,13 @@ public class ClientProxy extends CommonProxy {
     }
 
     public static class ForgeEventHandler {
+
+        @SubscribeEvent
+        public void onEntityJoinWorld(EntityJoinWorldEvent e) {
+            if (e.world.isRemote && e.entity instanceof EntityClientPlayerMP) {
+                sendRegistryOrderToServer();
+            }
+        }
 
         @SubscribeEvent
         public void onWorldLoad(WorldEvent.Load e) {

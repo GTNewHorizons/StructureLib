@@ -594,6 +594,9 @@ public class StructureUtility {
      * Implementation wise, this allows a block only when we don't yet have a tier, or the block at that location has
      * the same tier as we already have.
      * <p>
+     * Notice that if your tier extractor function returns null on any (Block, meta) pair, then it means this block is
+     * rejected, since null can never be a valid tier.
+     * <p>
      * There is yet no TileEntity counterpart of this utility. Feel free to submit a PR to add it.
      * <p>
      * For most typical use cases, you will NOT want to return notSet from your tierExtractor. If you do so, we will
@@ -637,7 +640,8 @@ public class StructureUtility {
      * </pre>
      *
      * @param tierExtractor a function to extract tier info from a block. This function can return null and will never
-     *                      be passed a null block or an invalid block meta.
+     *                      be passed a null block or an invalid block meta. If this function returns null, then the
+     *                      block would be considered invalid.
      * @param allKnownTiers A list of all known tiers as of calling. Can be empty or null. No hint will be spawned if
      *                      empty or null. Cannot have null elements. First element denotes the most primitive tier.
      *                      Last element denotes the most advanced tier. If not all tiers are available at definition

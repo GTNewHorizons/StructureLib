@@ -33,6 +33,7 @@ import net.minecraft.inventory.InventoryEnderChest;
 import net.minecraft.item.ItemStack;
 
 import com.gtnewhorizon.gtnhlib.util.map.ItemStackMap;
+import com.gtnewhorizon.structurelib.SortedRegistry;
 import com.gtnewhorizon.structurelib.util.InventoryUtility.ItemStackExtractor.APIType;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 
@@ -41,12 +42,13 @@ import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
  */
 public class InventoryUtility {
 
-    private static final SortedRegistry<ItemStackExtractor> stackExtractors = new SortedRegistry<>();
+    private static final SortedRegistry<ItemStackExtractor> stackExtractors = new SortedRegistry<>("stackExtractors");
     private static final List<Predicate<? super EntityPlayerMP>> enableEnder = new CopyOnWriteArrayList<>();
     /**
      * The remove() of the Iterable returned must be implemented!
      */
-    private static final SortedRegistry<InventoryProvider<?>> inventoryProviders = new SortedRegistry<>();
+    private static final SortedRegistry<InventoryProvider<?>> inventoryProviders = new SortedRegistry<>(
+            "inventoryProviders");
 
     static {
         inventoryProviders.register("5000-main-inventory", new InventoryProvider<InventoryIterable<InventoryPlayer>>() {
@@ -105,8 +107,8 @@ public class InventoryUtility {
         registerInventoryProvider(key, newInventoryProvider(extractor));
     }
 
-    public static Iterator<? extends ItemStackExtractor> getStackExtractors() {
-        return stackExtractors.iterator();
+    public static Iterator<? extends ItemStackExtractor> getStackExtractors(EntityPlayerMP player) {
+        return stackExtractors.getPlayerOrdering(player).iterator();
     }
 
     public static <Inv extends IInventory> InventoryProvider<InventoryIterable<Inv>> newInventoryProvider(
@@ -168,7 +170,7 @@ public class InventoryUtility {
             boolean simulate, int count) {
         ItemStackCounterImpl store = new ItemStackCounterImpl();
         int sum = 0;
-        for (InventoryProvider<?> provider : inventoryProviders) {
+        for (InventoryProvider<?> provider : inventoryProviders.getPlayerOrdering(player)) {
             sum += takeFromPlayer(player, predicate, simulate, count - sum, store, provider, null);
             if (sum >= count) return store.getStore();
         }
@@ -189,7 +191,7 @@ public class InventoryUtility {
         int count = filter.stackSize;
         ItemStackPredicate predicate = ItemStackPredicate.from(filter, NBTMode.EXACT);
         ItemStackCounterImpl store = new ItemStackCounterImpl();
-        for (InventoryProvider<?> provider : inventoryProviders) {
+        for (InventoryProvider<?> provider : inventoryProviders.getPlayerOrdering(player)) {
             sum += takeFromPlayer(player, predicate, simulate, count - sum, store, provider, filter);
             if (sum >= count) return sum;
         }
@@ -215,7 +217,7 @@ public class InventoryUtility {
      * @param predicate item stack filter
      * @param simulate  whether to do removal
      * @param count     let's hope int size is enough...
-     * @param recursive do recursive lookup using {@link #getStackExtractors() stack extractors}
+     * @param recursive do recursive lookup using {@link #getStackExtractors(EntityPlayerMP) stack extractors}
      * @return amount taken. never negative nor bigger than count...
      */
     public static Map<ItemStack, Integer> takeFromInventory(Iterable<ItemStack> inv, Predicate<ItemStack> predicate,
@@ -255,7 +257,7 @@ public class InventoryUtility {
                 if (found == count) return count;
             }
             if (!recursive) continue;
-            for (ItemStackExtractor f : stackExtractors) {
+            for (ItemStackExtractor f : stackExtractors.getPlayerOrdering(player)) {
                 boolean end = f.isAPIImplemented(APIType.IS_VALID_SOURCE);
                 if (!f.isValidSource(stack, player)) continue;
                 if (filter != null && f.isAPIImplemented(APIType.EXTRACT_ONE_STACK)) {
@@ -269,6 +271,10 @@ public class InventoryUtility {
             }
         }
         return found;
+    }
+
+    public static void init() {
+        // dummy method to init static final fields
     }
 
     public interface OptimizedExtractor {
