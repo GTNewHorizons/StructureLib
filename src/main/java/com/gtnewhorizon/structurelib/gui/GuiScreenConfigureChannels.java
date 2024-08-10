@@ -152,7 +152,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
                 I18n.format("item.structurelib.constructableTrigger.gui.wipe")));
         addButton(
             new GuiButton(
-                2,
+                3,
                 guiLeft + 130,
                 guiTop + 157,
                 35,
@@ -286,6 +286,9 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
                 break;
             case 2:
                 ChannelDataAccessor.wipeChannelData(trigger);
+                break;
+            case 3:
+                ChannelDataAccessor.hasHatchPlacing(trigger);
                 break;
         }
         super.actionPerformed(btn);

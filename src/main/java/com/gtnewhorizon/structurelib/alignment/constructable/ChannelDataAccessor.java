@@ -25,6 +25,7 @@ import com.gtnewhorizon.structurelib.StructureLibAPI;
 public class ChannelDataAccessor {
 
     private static final String SECONDARY_HINT_TAG = "channels";
+    private static boolean hasHatch = false;
 
     private ChannelDataAccessor() {}
 
@@ -60,7 +61,7 @@ public class ChannelDataAccessor {
 
     /**
      * Check if given trigger item contains any subchannel
-     * 
+     *
      * @param masterStack trigger stack to check
      * @return true if contains any subchannel
      */
@@ -71,7 +72,7 @@ public class ChannelDataAccessor {
 
     /**
      * Check if given trigger item contains specified subchannel
-     * 
+     *
      * @param masterStack trigger stack to check
      * @param channel     channel identifier. Note: all channel identifiers are supposed to be lower case and not empty.
      * @return true if contains specified subchannel
@@ -87,7 +88,7 @@ public class ChannelDataAccessor {
 
     /**
      * Get the subchannel data from given trigger item. Will use master channel instead if not present.
-     * 
+     *
      * @param masterStack trigger stack to query from
      * @param channel     channel identifier. Note: all channel identifiers are supposed to be lower case and not empty.
      * @return channel data
@@ -104,7 +105,7 @@ public class ChannelDataAccessor {
 
     /**
      * Set the subchannel data on given trigger item
-     * 
+     *
      * @param masterStack trigger stack to check
      * @param channel     channel identifier. Note: all channel identifiers are supposed to be lower case and not empty.
      * @param data        subchannel data. should always be a positive value
@@ -122,7 +123,7 @@ public class ChannelDataAccessor {
 
     /**
      * Clear the given subchannel from given trigger item, if it exists
-     * 
+     *
      * @param masterStack trigger stack to unset
      * @param channel     channel identifier. Note: all channel identifiers are supposed to be lower case and not empty.
      */
@@ -141,7 +142,7 @@ public class ChannelDataAccessor {
 
     /**
      * Wipe all subchannel data on given trigger item
-     * 
+     *
      * @param masterStack trigger stack to wipe
      */
     public static void wipeChannelData(ItemStack masterStack) {
@@ -151,7 +152,7 @@ public class ChannelDataAccessor {
 
     /**
      * Iterate over all subchannel data on trigger stack. Does not include master channel!!
-     * 
+     *
      * @param masterStack trigger stack to check
      * @return A java8 stream of pairs. Key is channel identifier and value is channel data. Pairs do not support
      *         mutation nor removal. Can still cause {@link java.util.ConcurrentModificationException} if underlying
@@ -165,7 +166,7 @@ public class ChannelDataAccessor {
 
     /**
      * Get the number of subchannels present on given trigger item. Does not include master channel.
-     * 
+     *
      * @param masterStack trigger stack to query from
      * @return subchannel count
      */
@@ -173,5 +174,22 @@ public class ChannelDataAccessor {
         if (!hasSubChannel(masterStack)) return 0;
         NBTTagCompound tag = masterStack.stackTagCompound.getCompoundTag(SECONDARY_HINT_TAG);
         return tag.func_150296_c().size();
+    }
+
+    public static boolean hasHatchPlacing(ItemStack masterStack) {
+        if (masterStack.stackTagCompound == null) masterStack.stackTagCompound = new NBTTagCompound();
+        NBTTagCompound main = masterStack.stackTagCompound;
+        if (!main.hasKey(SECONDARY_HINT_TAG, TAG_COMPOUND)) main.setTag(SECONDARY_HINT_TAG, new NBTTagCompound());
+        NBTTagCompound tag = main.getCompoundTag(SECONDARY_HINT_TAG);
+
+        if (tag.getTag("hatch") == null) hasHatch = true;
+
+        if (hasHatch) {
+            tag.setInteger("hatch", 1);
+        } else tag.removeTag("hatch");
+
+        hasHatch = !hasHatch;
+
+        return tag.getTag("hatch") != null;
     }
 }
