@@ -7,9 +7,12 @@ import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraftforge.common.util.Constants.NBT;
 
 import org.apache.commons.lang3.StringUtils;
@@ -177,6 +180,8 @@ public class ChannelDataAccessor {
     }
 
     public static boolean hasHatchPlacing(ItemStack masterStack) {
+        EntityPlayerSP playerSP = Minecraft.getMinecraft().thePlayer;
+
         if (masterStack.stackTagCompound == null) masterStack.stackTagCompound = new NBTTagCompound();
         NBTTagCompound main = masterStack.stackTagCompound;
         if (!main.hasKey(SECONDARY_HINT_TAG, TAG_COMPOUND)) main.setTag(SECONDARY_HINT_TAG, new NBTTagCompound());
@@ -186,7 +191,12 @@ public class ChannelDataAccessor {
 
         if (hasHatch) {
             tag.setInteger("hatch", 1);
-        } else tag.removeTag("hatch");
+            playerSP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.warning.hatch_disable"));
+
+        } else {
+            tag.removeTag("hatch");
+            playerSP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.warning.hatch_enable"));
+        }
 
         hasHatch = !hasHatch;
 
