@@ -127,29 +127,37 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
         list.onGuiInit(this);
 
         addButton(
-                new GuiButton(
-                        0,
-                        guiLeft + 12,
-                        guiTop + 157,
-                        47,
-                        20,
-                        I18n.format("item.structurelib.constructableTrigger.gui.add")));
+            new GuiButton(
+                0,
+                guiLeft + 10,
+                guiTop + 157,
+                35,
+                20,
+                I18n.format("item.structurelib.constructableTrigger.gui.add")));
         addButton(
-                new GuiButton(
-                        1,
-                        guiLeft + 65,
-                        guiTop + 157,
-                        47,
-                        20,
-                        I18n.format("item.structurelib.constructableTrigger.gui.unset")));
+            new GuiButton(
+                1,
+                guiLeft + 50,
+                guiTop + 157,
+                35,
+                20,
+                I18n.format("item.structurelib.constructableTrigger.gui.unset")));
         addButton(
-                new GuiButton(
-                        2,
-                        guiLeft + 118,
-                        guiTop + 157,
-                        47,
-                        20,
-                        I18n.format("item.structurelib.constructableTrigger.gui.wipe")));
+            new GuiButton(
+                2,
+                guiLeft + 90,
+                guiTop + 157,
+                35,
+                20,
+                I18n.format("item.structurelib.constructableTrigger.gui.wipe")));
+        addButton(
+            new GuiButton(
+                2,
+                guiLeft + 130,
+                guiTop + 157,
+                35,
+                20,
+                I18n.format("item.structurelib.constructableTrigger.gui.no_hatch")));
 
         updateButtons();
     }
