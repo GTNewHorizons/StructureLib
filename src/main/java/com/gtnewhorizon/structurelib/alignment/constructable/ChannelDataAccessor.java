@@ -179,27 +179,37 @@ public class ChannelDataAccessor {
         return tag.func_150296_c().size();
     }
 
-    public static boolean hasHatchPlacing(ItemStack masterStack) {
+    public static void HatchPlacing(ItemStack masterStack) {
         EntityPlayerSP playerSP = Minecraft.getMinecraft().thePlayer;
 
-        if (masterStack.stackTagCompound == null) masterStack.stackTagCompound = new NBTTagCompound();
-        NBTTagCompound main = masterStack.stackTagCompound;
-        if (!main.hasKey(SECONDARY_HINT_TAG, TAG_COMPOUND)) main.setTag(SECONDARY_HINT_TAG, new NBTTagCompound());
-        NBTTagCompound tag = main.getCompoundTag(SECONDARY_HINT_TAG);
+        NBTTagCompound tag = getSecondaryHintTag(masterStack);
 
         if (tag.getTag("hatch") == null) hasHatch = true;
 
         if (hasHatch) {
             tag.setInteger("hatch", 1);
-            playerSP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.warning.hatch_disable"));
+            playerSP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.warning.hatch_enable"));
 
         } else {
             tag.removeTag("hatch");
-            playerSP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.warning.hatch_enable"));
+            playerSP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.warning.hatch_disable"));
         }
 
         hasHatch = !hasHatch;
 
+    }
+
+    public static boolean getHasHatchPlacing(ItemStack masterStack) {
+        NBTTagCompound tag = getSecondaryHintTag(masterStack);
+
         return tag.getTag("hatch") != null;
+    }
+
+    private static NBTTagCompound getSecondaryHintTag(ItemStack masterStack) {
+        if (masterStack == null) throw new IllegalArgumentException();
+        if (masterStack.stackTagCompound == null) masterStack.stackTagCompound = new NBTTagCompound();
+        NBTTagCompound main = masterStack.stackTagCompound;
+        if (!main.hasKey(SECONDARY_HINT_TAG, TAG_COMPOUND)) main.setTag(SECONDARY_HINT_TAG, new NBTTagCompound());
+        return main.getCompoundTag(SECONDARY_HINT_TAG);
     }
 }

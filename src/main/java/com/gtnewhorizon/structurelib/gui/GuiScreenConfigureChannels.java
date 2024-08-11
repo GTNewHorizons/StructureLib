@@ -288,7 +288,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
                 ChannelDataAccessor.wipeChannelData(trigger);
                 break;
             case 3:
-                ChannelDataAccessor.hasHatchPlacing(trigger);
+                ChannelDataAccessor.HatchPlacing(trigger);
                 break;
         }
         super.actionPerformed(btn);
