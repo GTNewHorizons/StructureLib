@@ -11,6 +11,7 @@ import java.util.Map;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.particle.EntityFX;
 import net.minecraft.client.renderer.Tessellator;
@@ -24,16 +25,20 @@ import net.minecraft.profiler.Profiler;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.world.WorldEvent;
 
 import org.lwjgl.opengl.GL11;
 
 import com.gtnewhorizon.structurelib.client.nei.IMCForNEI;
 import com.gtnewhorizon.structurelib.client.nei.InputHandler;
+import com.gtnewhorizon.structurelib.client.renderer.RenderStructureGlobal;
+import com.gtnewhorizon.structurelib.client.world.StructureWorld;
 import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
 
@@ -48,9 +53,17 @@ import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 
 public class ClientProxy extends CommonProxy {
 
+    // Structure Renderer
+    private static final Minecraft minecraft = Minecraft.getMinecraft();
+    private static StructureWorld structureWorld = null;
+    private static final ThreadLocal<RenderStructureGlobal> renderStructureGlobal = ThreadLocal
+            .withInitial(RenderStructureGlobal::new);
+
+    // End Structure Renderer
     private static final short[] RGBA_NO_TINT = { 255, 255, 255, 255 };
     private static final short[] RGBA_RED_TINT = { 255, 128, 128, 0 };
     private static final Map<HintParticleInfo, HintGroup> allHints = new HashMap<>();
+
     /**
      * All batches of hints.
      */
@@ -85,6 +98,14 @@ public class ClientProxy extends CommonProxy {
      * A throttle map for local player. Integrated server will use the throttle map in super class instead.
      */
     private static final Map<Object, Long> localThrottleMap = new HashMap<>();
+
+    public static StructureWorld getStructureWorld() {
+        return structureWorld;
+    }
+
+    public static void setStructureWorld(StructureWorld structureWorld) {
+        ClientProxy.structureWorld = structureWorld;
+    }
 
     @Override
     public void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {
@@ -264,6 +285,27 @@ public class ClientProxy extends CommonProxy {
     public void postInit(FMLPostInitializationEvent e) {
         super.postInit(e);
         MinecraftForge.EVENT_BUS.register(new EventHandler());
+    }
+
+    private static ForgeDirection getOrientation(EntityPlayer player) {
+        if (player.rotationPitch > 45) {
+            return ForgeDirection.DOWN;
+        } else if (player.rotationPitch < -45) {
+            return ForgeDirection.UP;
+        } else {
+            switch (MathHelper.floor_double(player.rotationYaw / 90.0 + 0.5) & 3) {
+                case 0:
+                    return ForgeDirection.SOUTH;
+                case 1:
+                    return ForgeDirection.WEST;
+                case 2:
+                    return ForgeDirection.NORTH;
+                case 3:
+                    return ForgeDirection.EAST;
+            }
+        }
+
+        return ForgeDirection.UNKNOWN;
     }
 
     static void markTextureUsed(IIcon icon) {
@@ -523,6 +565,29 @@ public class ClientProxy extends CommonProxy {
 
         @SubscribeEvent
         public void onRenderWorldLast(RenderWorldLastEvent e) {
+            renderParticlePreview(e);
+            renderNewPreview(e);
+        }
+
+        private void renderNewPreview(RenderWorldLastEvent e) {
+            EntityPlayerSP player = minecraft.thePlayer;
+            if (player == null || structureWorld == null || !structureWorld.isRendering()) return;
+
+            final RenderStructureGlobal renderStructureGlobal = ClientProxy.renderStructureGlobal.get();
+            renderStructureGlobal.setPlayerPosition(
+                    player.lastTickPosX + (player.posX - player.lastTickPosX) * e.partialTicks,
+                    player.lastTickPosY + (player.posY - player.lastTickPosY) * e.partialTicks,
+                    player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * e.partialTicks);
+            renderStructureGlobal.setOrientation(getOrientation(player));
+            renderStructureGlobal.setRotationRender(MathHelper.floor_double(player.rotationYaw / 90) & 3);
+
+            minecraft.mcProfiler.startSection("structlibRenderPreview");
+            renderStructureGlobal.render(structureWorld);
+
+            minecraft.mcProfiler.endSection();
+        }
+
+        private void renderParticlePreview(RenderWorldLastEvent e) {
             if (allHintsForRender.isEmpty()) return;
 
             // seriously, I'm not a OpenGL expert, so I'm probably doing a lot of very stupid stuff here.
@@ -591,4 +656,5 @@ public class ClientProxy extends CommonProxy {
             p.endSection();
         }
     }
+
 }

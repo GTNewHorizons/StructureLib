@@ -1,6 +1,8 @@
 package com.gtnewhorizon.structurelib.client.world;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import net.minecraft.block.Block;
@@ -42,6 +44,7 @@ public class StructureWorld extends World {
     // Static variables
     public static final Vector3i PLACE_POSITION = new Vector3i(0, 64, 0);
     public static final int MAX_PLACE_ROUNDS = 2000;
+    public final Vector3i renderPosition = new Vector3i(0, 0, 0);
 
     private static final ISaveHandler STRUCTURE_SAVE_HANDLER = new StructureSaveHandler();
     private static final WorldSettings WORLD_SETTINGS = new WorldSettings(
@@ -52,7 +55,9 @@ public class StructureWorld extends World {
             WorldType.FLAT);
 
     // Instance variables
-    private StructureFakePlayer fakeMultiblockBuilder;
+    private boolean rendering = false;
+    private final StructureFakePlayer fakeMultiblockBuilder;
+    private final Vector3i renderLocation = new Vector3i();
     public final LongSet placedBlocks = new LongOpenHashSet();
 
     private final Vector3f minPos = new Vector3f(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
@@ -60,13 +65,50 @@ public class StructureWorld extends World {
 
     private final Vector3f size = new Vector3f();
 
+    public boolean isRendering() {
+        return rendering;
+    }
+
+    public void setRendering(boolean rendering) {
+        rendering = rendering;
+    }
+
     public StructureFakePlayer getFakeMultiblockBuilder() {
         return fakeMultiblockBuilder;
+    }
+
+    public List<TileEntity> getTileEntities() {
+        // TODO: Replace this with something less stupid
+        return new ArrayList<>();
     }
 
     private void updateSize() {
         size.set(maxPos.x - minPos.x + 1, maxPos.y - minPos.y + 1, maxPos.z - minPos.z + 1);
 
+    }
+
+    public int getWidth() {
+        return (int) size.x;
+    }
+
+    public int getHeight() {
+        return (int) size.y;
+    }
+
+    public int getLength() {
+        return (int) size.z;
+    }
+
+    public Vector3i getRenderLocation() {
+        return renderLocation;
+    }
+
+    public void setRenderLocation(Vector3i renderLocation) {
+        this.renderLocation.set(renderLocation);
+    }
+
+    public void setRenderLocation(int x, int y, int z) {
+        this.renderLocation.set(x, y, z);
     }
 
     public Vector3f getSize() {

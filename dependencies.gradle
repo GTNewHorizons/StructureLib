@@ -1,9 +1,9 @@
 // Add your dependencies here
 
 dependencies {
-    api("com.github.GTNewHorizons:GTNHLib:0.3.2:dev")
+    api("com.github.GTNewHorizons:GTNHLib:0.4.0:dev")
     // Now a hard dep for the NEI Handlers
-    api("com.github.GTNewHorizons:NotEnoughItems:2.6.14-GTNH:dev")
+    api("com.github.GTNewHorizons:NotEnoughItems:2.6.22-GTNH:dev")
     compileOnly("com.github.GTNewHorizons:NotEnoughEnergistics:1.6.0:dev")
 
     testImplementation(platform('org.junit:junit-bom:5.9.2'))
@@ -11,10 +11,16 @@ dependencies {
 
 
     // Temporary
-    api("com.github.GTNewHorizons:GT5-Unofficial:5.09.48.64:dev") {
+    api("com.github.GTNewHorizons:GT5-Unofficial:5.09.48.150:dev") {
         exclude group:"com.github.GTNewHorizons", module:"StructureLib"
     }
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:StructureCompat:0.6.3:dev") {
         exclude group:"com.github.GTNewHorizons", module:"StructureLib"
     }
+
+    compileOnly('org.jetbrains:annotations:24.0.1')
+    compileOnly("org.projectlombok:lombok:1.18.22") {transitive = false }
+    annotationProcessor("org.projectlombok:lombok:1.18.22")
+
+    runtimeOnlyNonPublishable(rfg.deobf("CoreTweaks:CoreTweaks:0.3.3.2"))
 }
