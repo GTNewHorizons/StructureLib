@@ -32,6 +32,14 @@ public interface IStructureElement<T> {
 
     boolean check(T t, World world, int x, int y, int z);
 
+    /**
+     * Stateless and side effect free way to check if the current block is potentially valid. If we can't be sure it is
+     * not valid, we assume it can be.
+     */
+    default boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+        return true;
+    }
+
     boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger);
 
     boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger);
@@ -183,6 +191,11 @@ public interface IStructureElement<T> {
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
                 return IStructureElement.this.check(t, world, x, y, z);
+            }
+
+            @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return IStructureElement.this.couldBeValid(t, world, x, y, z, trigger);
             }
 
             @Override

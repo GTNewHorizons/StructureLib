@@ -156,6 +156,11 @@ public class StructureUtility {
         }
 
         @Override
+        public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
+            return check(t, world, x, y, z);
+        }
+
+        @Override
         public boolean spawnHint(Object o, World world, int x, int y, int z, ItemStack trigger) {
             StructureLibAPI.hintParticle(world, x, y, z, StructureLibAPI.getBlockHint(), 13);
             return true;
@@ -184,6 +189,11 @@ public class StructureUtility {
         @Override
         public boolean check(Object t, World world, int x, int y, int z) {
             return !world.isAirBlock(x, y, z);
+        }
+
+        @Override
+        public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
+            return check(t, world, x, y, z);
         }
 
         @Override
@@ -223,6 +233,11 @@ public class StructureUtility {
         @Override
         public boolean check(Object t, World world, int x, int y, int z) {
             return false;
+        }
+
+        @Override
+        public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
+            return check(t, world, x, y, z);
         }
 
         @Override
@@ -480,6 +495,11 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return check(t, world, x, y, z);
+            }
+
+            @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 StructureLibAPI.hintParticle(world, x, y, z, StructureLibAPI.getBlockHint(), meta);
                 return false;
@@ -500,6 +520,11 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return check(t, world, x, y, z);
+            }
+
+            @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 StructureLibAPI.hintParticle(world, x, y, z, icons.get());
                 return false;
@@ -517,6 +542,11 @@ public class StructureUtility {
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
                 return true;
+            }
+
+            @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return check(t, world, x, y, z);
             }
 
             @Override
@@ -667,7 +697,21 @@ public class StructureUtility {
             }
 
             private Pair<Block, Integer> getHint(ItemStack trigger) {
+                if (hints.isEmpty()) return null;
                 return hints.get(Math.min(Math.max(trigger.stackSize, 1), hints.size()) - 1);
+            }
+
+            @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                Pair<Block, Integer> hint = getHint(trigger);
+                if (hint == null) return true;
+                TIER hintTier = tierExtractor.convert(hint.getKey(), hint.getValue());
+                Block block = world.getBlock(x, y, z);
+                int meta = world.getBlockMetadata(x, y, z);
+                TIER worldTier = tierExtractor.convert(block, meta);
+
+                // if the block is in the same tier as the hint block, this could be valid
+                return Objects.equals(hintTier, worldTier);
             }
 
             @Override
@@ -768,6 +812,11 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return check(t, world, x, y, z);
+            }
+
+            @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 if (getBlock() == null) return error().spawnHint(t, world, x, y, z, trigger);
                 StructureLibAPI.hintParticle(world, x, y, z, getBlock(), meta);
@@ -841,8 +890,14 @@ public class StructureUtility {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
-                if (init()) return world.getBlock(x, y, z) != block && world.getBlockMetadata(x, y, z) == meta;
+                if (init()) return world.getBlock(x, y, z) == block && world.getBlockMetadata(x, y, z) == meta;
                 else return fallback.check(t, world, x, y, z);
+            }
+
+            @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                if (init()) return world.getBlock(x, y, z) == block && world.getBlockMetadata(x, y, z) == meta;
+                else return fallback.couldBeValid(t, world, x, y, z, trigger);
             }
 
             @Override
@@ -922,6 +977,11 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return check(t, world, x, y, z);
+            }
+
+            @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 StructureLibAPI.hintParticle(world, x, y, z, hintBlock, hintMeta);
                 return true;
@@ -959,6 +1019,11 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return check(t, world, x, y, z);
+            }
+
+            @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 StructureLibAPI.hintParticle(world, x, y, z, hintBlock, hintMeta);
                 return true;
@@ -980,6 +1045,11 @@ public class StructureUtility {
             public boolean check(T t, World world, int x, int y, int z) {
                 Block worldBlock = world.getBlock(x, y, z);
                 return block == worldBlock && meta == worldBlock.getDamageValue(world, x, y, z);
+            }
+
+            @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return check(t, world, x, y, z);
             }
 
             @Override
@@ -1017,6 +1087,13 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                // calling iBlockAdder can potentially modify external state
+                // therefore we assume this can always be valid.
+                return true;
+            }
+
+            @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 StructureLibAPI.hintParticle(world, x, y, z, hintBlock, hintMeta);
                 return true;
@@ -1047,6 +1124,11 @@ public class StructureUtility {
                 public boolean check(T t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
                     return blocsMap.getOrDefault(worldBlock, MIN_VALUE) == worldBlock.getDamageValue(world, x, y, z);
+                }
+
+                @Override
+                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                    return check(t, world, x, y, z);
                 }
 
                 @Override
@@ -1091,6 +1173,11 @@ public class StructureUtility {
                 public boolean check(T t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
                     return blocsMap.getOrDefault(worldBlock, MIN_VALUE) == worldBlock.getDamageValue(world, x, y, z);
+                }
+
+                @Override
+                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                    return check(t, world, x, y, z);
                 }
 
                 @Override
@@ -1159,6 +1246,11 @@ public class StructureUtility {
                 }
 
                 @Override
+                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                    return check(t, world, x, y, z);
+                }
+
+                @Override
                 public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                     ((ICustomBlockSetting) defaultBlock).setBlock(world, x, y, z, defaultMeta);
                     return true;
@@ -1201,6 +1293,11 @@ public class StructureUtility {
                     Block worldBlock = world.getBlock(x, y, z);
                     return blocsMap.getOrDefault(worldBlock, Collections.emptySet())
                             .contains(worldBlock.getDamageValue(world, x, y, z));
+                }
+
+                @Override
+                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                    return check(t, world, x, y, z);
                 }
 
                 @Override
@@ -1261,6 +1358,11 @@ public class StructureUtility {
                 }
 
                 @Override
+                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                    return check(t, world, x, y, z);
+                }
+
+                @Override
                 public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                     ((ICustomBlockSetting) defaultBlock).setBlock(world, x, y, z, defaultMeta);
                     return true;
@@ -1285,6 +1387,11 @@ public class StructureUtility {
                 public boolean check(T t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
                     return block == worldBlock && meta == worldBlock.getDamageValue(world, x, y, z);
+                }
+
+                @Override
+                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                    return check(t, world, x, y, z);
                 }
 
                 @Override
@@ -1324,6 +1431,11 @@ public class StructureUtility {
                 }
 
                 @Override
+                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                    return check(t, world, x, y, z);
+                }
+
+                @Override
                 public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                     ((ICustomBlockSetting) defaultBlock).setBlock(world, x, y, z, defaultMeta);
                     return true;
@@ -1348,6 +1460,11 @@ public class StructureUtility {
                 @Override
                 public boolean check(T t, World world, int x, int y, int z) {
                     return block == world.getBlock(x, y, z);
+                }
+
+                @Override
+                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                    return check(t, world, x, y, z);
                 }
 
                 @Override
@@ -1417,6 +1534,13 @@ public class StructureUtility {
                 }
 
                 @Override
+                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                    // calling iBlockAdder can potentially modify external state
+                    // therefore we assume this can always be valid.
+                    return true;
+                }
+
+                @Override
                 public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                     ((ICustomBlockSetting) defaultBlock).setBlock(world, x, y, z, defaultMeta);
                     return true;
@@ -1453,6 +1577,13 @@ public class StructureUtility {
                 public boolean check(T t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
                     return iBlockAdder.apply(t, worldBlock, worldBlock.getDamageValue(world, x, y, z));
+                }
+
+                @Override
+                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                    // calling iBlockAdder can potentially modify external state
+                    // therefore we assume this can always be valid.
+                    return true;
                 }
 
                 @Override
@@ -1511,6 +1642,13 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                // calling iTileAdder can potentially modify external state
+                // therefore we assume this can always be valid.
+                return true;
+            }
+
+            @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 StructureLibAPI.hintParticle(world, x, y, z, hintBlock, hintMeta);
                 return true;
@@ -1534,6 +1672,13 @@ public class StructureUtility {
                 TileEntity tileEntity = world.getTileEntity(x, y, z);
                 // This used to check if it's a GT tile. Since this is now an standalone mod we no longer do this
                 return tileClass.isInstance(tileEntity) && iTileAdder.test(t, tileClass.cast(tileEntity));
+            }
+
+            @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                // calling iTileAdder can potentially modify external state
+                // therefore we assume this can always be valid.
+                return true;
             }
 
             @Override
@@ -1567,6 +1712,11 @@ public class StructureUtility {
                     onCheckPass.accept(t);
                 }
                 return check;
+            }
+
+            @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return element.check(t, world, x, y, z);
             }
 
             @Override
@@ -1618,6 +1768,11 @@ public class StructureUtility {
                     onFail.accept(t);
                 }
                 return check;
+            }
+
+            @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return element.check(t, world, x, y, z);
             }
 
             @Override
@@ -1676,6 +1831,13 @@ public class StructureUtility {
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
                 return predicate.test(t) && downstream.check(t, world, x, y, z);
+            }
+
+            @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                // this COULD potentially impact external state
+                // but predicate really should not have side effects
+                return check(t, world, x, y, z);
             }
 
             @Override
@@ -1775,6 +1937,11 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return elem.couldBeValid(t.getCurrentContext(), world, x, y, z, trigger);
+            }
+
+            @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return elem.spawnHint(t.getCurrentContext(), world, x, y, z, trigger);
             }
@@ -1862,6 +2029,11 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return to.get().couldBeValid(t, world, x, y, z, trigger);
+            }
+
+            @Override
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return to.get().placeBlock(t, world, x, y, z, trigger);
             }
@@ -1912,6 +2084,11 @@ public class StructureUtility {
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
                 return to.apply(t).check(t, world, x, y, z);
+            }
+
+            @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return to.apply(t).couldBeValid(t, world, x, y, z, trigger);
             }
 
             @Override
@@ -2127,6 +2304,11 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return to.apply(t, trigger).couldBeValid(t, world, x, y, z, trigger);
+            }
+
+            @Override
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return to.apply(t, trigger).placeBlock(t, world, x, y, z, trigger);
             }
@@ -2316,6 +2498,11 @@ public class StructureUtility {
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
                 return toCheck.apply(t).check(t, world, x, y, z);
+            }
+
+            @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return to.apply(t, trigger).couldBeValid(t, world, x, y, z, trigger);
             }
 
             @Override
@@ -2560,6 +2747,11 @@ public class StructureUtility {
 
             public boolean check(T t, World world, int x, int y, int z) {
                 return backing.check(t, world, x, y, z);
+            }
+
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                ItemStack newTrigger = ChannelDataAccessor.withChannel(trigger, channel);
+                return backing.couldBeValid(t, world, x, y, z, newTrigger);
             }
 
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {

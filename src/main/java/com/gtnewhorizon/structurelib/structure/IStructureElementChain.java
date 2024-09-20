@@ -32,6 +32,16 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
     }
 
     @Override
+    default boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+        for (IStructureElement<T> fallback : fallbacks()) {
+            if (fallback.couldBeValid(t, world, x, y, z, trigger)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     default boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
         for (IStructureElement<T> fallback : fallbacks()) {
             if (fallback.spawnHint(t, world, x, y, z, trigger)) {
