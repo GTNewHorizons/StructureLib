@@ -394,7 +394,8 @@ public interface IStructureDefinition<T> {
                         basePositionC,
                         ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
                             e.spawnHint(object, world, x, y, z, trigger);
-                            if(!e.check(object, world, x, y, z) && !StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, StructureLib.getCurrentPlayer())){
+                            if (!e.check(object, world, x, y, z) && !StructureLibAPI
+                                    .isBlockTriviallyReplaceable(world, x, y, z, StructureLib.getCurrentPlayer())) {
                                 StructureLibAPI.markHintParticleError(StructureLib.getCurrentPlayer(), world, x, y, z);
                             }
                             return true;
