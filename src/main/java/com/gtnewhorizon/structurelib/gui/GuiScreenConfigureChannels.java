@@ -25,6 +25,15 @@ import com.gtnewhorizon.structurelib.gui.GuiScrollableList.IGuiScreen;
 
 public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen {
 
+    private static final int ADD_BTN = 0;
+    private static final int UNSET_BTN = 1;
+    private static final int WIPE_BTN = 2;
+    private static final int SHOW_ERROR_BTN = 3;
+    private static final int GT_NO_HATCH_BTN = 4;
+
+    private static final String SHOW_ERROR_CHANNEL = "show_error";
+    private static final String GT_NO_HATCH_CHANNEL = "gt_no_hatch";
+
     private static final int KEY_MAX_WIDTH = 50;
     private final ItemStack trigger;
     private final GuiChannelsList list;
@@ -128,7 +137,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
 
         addButton(
                 new GuiButton(
-                        0,
+                        ADD_BTN,
                         guiLeft + 12,
                         guiTop + 157,
                         47,
@@ -136,7 +145,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
                         I18n.format("item.structurelib.constructableTrigger.gui.add")));
         addButton(
                 new GuiButton(
-                        1,
+                        UNSET_BTN,
                         guiLeft + 65,
                         guiTop + 157,
                         47,
@@ -144,12 +153,26 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
                         I18n.format("item.structurelib.constructableTrigger.gui.unset")));
         addButton(
                 new GuiButton(
-                        2,
+                        WIPE_BTN,
                         guiLeft + 118,
                         guiTop + 157,
                         47,
                         20,
                         I18n.format("item.structurelib.constructableTrigger.gui.wipe")));
+
+        addButton(
+                new GuiButton(
+                        SHOW_ERROR_BTN,
+                        StructureLib.isGTLoaded ? guiLeft + 12 : guiLeft + 52,
+                        guiTop + 180,
+                        73,
+                        20,
+                        ""));
+
+        // only show GT hatch button if GT is loaded
+        if (StructureLib.isGTLoaded) {
+            addButton(new GuiButton(GT_NO_HATCH_BTN, guiLeft + 92, guiTop + 180, 73, 20, ""));
+        }
 
         updateButtons();
     }
@@ -171,7 +194,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
 
     @Override
     public int getYSize() {
-        return 188;
+        return 211;
     }
 
     @Override
@@ -250,10 +273,27 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
         // STACKOVERFLOW!
         String keyText = key.getText();
         boolean existing = !StringUtils.isEmpty(keyText) && ChannelDataAccessor.hasSubChannel(trigger, keyText);
-        getButtonList().get(0).displayString = existing ? I18n.format("item.structurelib.constructableTrigger.gui.set")
+        getButtonList().get(ADD_BTN).displayString = existing
+                ? I18n.format("item.structurelib.constructableTrigger.gui.set")
                 : I18n.format("item.structurelib.constructableTrigger.gui.add");
-        getButtonList().get(0).enabled = !StringUtils.isBlank(value.getText());
-        getButtonList().get(1).enabled = existing && !StringUtils.isBlank(value.getText());
+        getButtonList().get(ADD_BTN).enabled = !StringUtils.isBlank(value.getText());
+        getButtonList().get(UNSET_BTN).enabled = existing && !StringUtils.isBlank(value.getText());
+
+        if (ChannelDataAccessor.hasSubChannel(trigger, SHOW_ERROR_CHANNEL)) {
+            getButtonList().get(SHOW_ERROR_BTN).displayString = "Hide Errors";
+        } else {
+            getButtonList().get(SHOW_ERROR_BTN).displayString = "Show Errors";
+        }
+
+        // this button only exists if GT is loaded.
+        if (StructureLib.isGTLoaded) {
+            if (ChannelDataAccessor.hasSubChannel(trigger, GT_NO_HATCH_CHANNEL)) {
+                getButtonList().get(GT_NO_HATCH_BTN).displayString = "Hatches";
+            } else {
+                getButtonList().get(GT_NO_HATCH_BTN).displayString = "No Hatch";
+            }
+        }
+
     }
 
     private int getValue() {
@@ -268,18 +308,35 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
     protected void actionPerformed(GuiButton btn) {
         if (btn == null) return;
         switch (btn.id) {
-            case 0:
+            case ADD_BTN:
                 int value = getValue();
                 if (value <= 0) return;
                 ChannelDataAccessor.setChannelData(trigger, key.getText(), value);
                 break;
-            case 1:
+            case UNSET_BTN:
                 ChannelDataAccessor.unsetChannelData(trigger, key.getText());
                 break;
-            case 2:
+            case WIPE_BTN:
                 ChannelDataAccessor.wipeChannelData(trigger);
                 break;
+            case SHOW_ERROR_BTN:
+                if (ChannelDataAccessor.hasSubChannel(trigger, SHOW_ERROR_CHANNEL)) {
+                    ChannelDataAccessor.unsetChannelData(trigger, SHOW_ERROR_CHANNEL);
+                } else {
+                    ChannelDataAccessor.setChannelData(trigger, SHOW_ERROR_CHANNEL, 1);
+                }
+                break;
+            case GT_NO_HATCH_BTN:
+                if (ChannelDataAccessor.hasSubChannel(trigger, GT_NO_HATCH_CHANNEL)) {
+                    ChannelDataAccessor.unsetChannelData(trigger, GT_NO_HATCH_CHANNEL);
+                } else {
+                    ChannelDataAccessor.setChannelData(trigger, GT_NO_HATCH_CHANNEL, 1);
+                }
+                break;
         }
+
+        updateButtons();
+
         super.actionPerformed(btn);
     }
 
@@ -350,6 +407,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
                 Entry<String, Integer> e = getElementAt(elementIndex);
                 if (e != null) {
                     ChannelDataAccessor.unsetChannelData(trigger, e.getKey());
+                    updateButtons();
                     return false;
                 }
             }

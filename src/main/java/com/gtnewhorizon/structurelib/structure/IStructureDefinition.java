@@ -12,6 +12,7 @@ import net.minecraft.world.World;
 
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 
@@ -394,8 +395,8 @@ public interface IStructureDefinition<T> {
                         basePositionC,
                         ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
                             e.spawnHint(object, world, x, y, z, trigger);
-                            if (!e.couldBeValid(object, world, x, y, z, trigger) && !StructureLibAPI
-                                    .isBlockTriviallyReplaceable(world, x, y, z, StructureLib.getCurrentPlayer())) {
+                            if (ChannelDataAccessor.hasSubChannel(trigger, "show_error")
+                                    && !e.couldBeValid(object, world, x, y, z, trigger)) {
                                 StructureLibAPI.markHintParticleError(StructureLib.getCurrentPlayer(), world, x, y, z);
                             }
                             return true;

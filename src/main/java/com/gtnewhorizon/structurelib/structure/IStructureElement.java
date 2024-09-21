@@ -33,8 +33,10 @@ public interface IStructureElement<T> {
     boolean check(T t, World world, int x, int y, int z);
 
     /**
-     * Stateless and side effect free way to check if the current block is potentially valid. If we can't be sure it is
-     * not valid, we assume it can be.
+     * Pure (stateless and side effect free) function to test if current block could be valid.
+     * Used to give user hints about incorrectly placed blocks given a controller and trigger item.
+     * If couldBeValid(...) == false for a set of channels, with those same tiers, check(...) == false.
+     * Not required, defaults to true which is always safe but won't give the user error hints.
      */
     default boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
         return true;
