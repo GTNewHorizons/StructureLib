@@ -1837,7 +1837,7 @@ public class StructureUtility {
             public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
                 // this COULD potentially impact external state
                 // but predicate really should not have side effects
-                return check(t, world, x, y, z);
+                return predicate.test(t) && downstream.couldBeValid(t, world, x, y, z, trigger);
             }
 
             @Override
