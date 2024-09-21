@@ -2811,8 +2811,6 @@ public class StructureUtility {
     }
     // endregion
 
-    // region pureCheck
-
     /**
      * Used internally, to generate skips for structure definitions
      */
