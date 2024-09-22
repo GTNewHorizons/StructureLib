@@ -1716,7 +1716,7 @@ public class StructureUtility {
 
             @Override
             public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return element.check(t, world, x, y, z);
+                return element.couldBeValid(t, world, x, y, z, trigger);
             }
 
             @Override
@@ -1772,7 +1772,7 @@ public class StructureUtility {
 
             @Override
             public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
-                return element.check(t, world, x, y, z);
+                return element.couldBeValid(t, world, x, y, z, trigger);
             }
 
             @Override
