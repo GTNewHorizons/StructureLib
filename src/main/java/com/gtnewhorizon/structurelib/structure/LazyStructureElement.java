@@ -33,6 +33,11 @@ class LazyStructureElement<T> implements IStructureElementDeferred<T> {
     }
 
     @Override
+    public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+        return get(t).couldBeValid(t, world, x, y, z, trigger);
+    }
+
+    @Override
     public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
         return get(t).placeBlock(t, world, x, y, z, trigger);
     }
