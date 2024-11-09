@@ -72,7 +72,8 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
             if (e == null) continue;
             if (predicate == null) predicate = e.getPredicate();
             else predicate = predicate.or(e.getPredicate());
-            is.add(e.getStacks());
+            Iterable<ItemStack> stacks = e.getStacks();
+            if (stacks != null) is.add(stacks);
         }
         if (predicate == null) return null;
         return new BlocksToPlace(predicate, Iterables.concat(is));

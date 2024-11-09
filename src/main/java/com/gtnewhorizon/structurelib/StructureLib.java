@@ -42,7 +42,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 @Mod(
         modid = StructureLibAPI.MOD_ID,
         name = "StructureLib",
-        version = "GRADLETOKEN_VERSION",
+        version = Tags.VERSION,
         acceptableRemoteVersions = "*",
         guiFactory = "com.gtnewhorizon.structurelib.GuiFactory")
 public class StructureLib {
