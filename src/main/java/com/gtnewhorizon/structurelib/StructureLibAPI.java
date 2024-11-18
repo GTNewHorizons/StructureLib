@@ -72,7 +72,7 @@ public class StructureLibAPI {
      */
     public static void enableInstrument(Object identifier) {
         if (isInstrumentEnabled()) throw new IllegalStateException();
-        instrument.set(instrument);
+        instrument.set(identifier);
     }
 
     /**
