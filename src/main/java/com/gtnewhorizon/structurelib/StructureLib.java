@@ -100,6 +100,8 @@ public class StructureLib {
         }
     };
 
+    public static boolean isGTLoaded;
+
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
         ConfigurationHandler.INSTANCE.init(e.getSuggestedConfigurationFile());
@@ -118,6 +120,8 @@ public class StructureLib {
         if (Loader.isModLoaded(STRUCTURECOMPAT_MODID)) {
             COMPAT = Loader.instance().getIndexedModList().get(STRUCTURECOMPAT_MODID).getMod();
         }
+
+        isGTLoaded = Loader.isModLoaded("gregtech");
     }
 
     @Mod.EventHandler
