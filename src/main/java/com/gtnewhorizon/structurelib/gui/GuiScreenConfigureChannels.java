@@ -276,7 +276,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
         getButtonList().get(ADD_BTN).displayString = existing
                 ? I18n.format("item.structurelib.constructableTrigger.gui.set")
                 : I18n.format("item.structurelib.constructableTrigger.gui.add");
-        getButtonList().get(ADD_BTN).enabled = !StringUtils.isBlank(value.getText());
+        getButtonList().get(ADD_BTN).enabled = !StringUtils.isBlank(value.getText()) && Integer.parseInt(value.getText()) > 0;
         getButtonList().get(UNSET_BTN).enabled = existing && !StringUtils.isBlank(value.getText());
 
         if (ChannelDataAccessor.hasSubChannel(trigger, SHOW_ERROR_CHANNEL)) {
@@ -293,7 +293,6 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
                 getButtonList().get(GT_NO_HATCH_BTN).displayString = "No Hatch";
             }
         }
-
     }
 
     private int getValue() {
