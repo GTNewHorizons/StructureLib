@@ -252,7 +252,7 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
         boolean existing = !StringUtils.isEmpty(keyText) && ChannelDataAccessor.hasSubChannel(trigger, keyText);
         getButtonList().get(0).displayString = existing ? I18n.format("item.structurelib.constructableTrigger.gui.set")
                 : I18n.format("item.structurelib.constructableTrigger.gui.add");
-        getButtonList().get(0).enabled = !StringUtils.isBlank(value.getText());
+        getButtonList().get(0).enabled = !StringUtils.isBlank(value.getText()) && Integer.valueOf(value.getText()) > 0;
         getButtonList().get(1).enabled = existing && !StringUtils.isBlank(value.getText());
     }
 
