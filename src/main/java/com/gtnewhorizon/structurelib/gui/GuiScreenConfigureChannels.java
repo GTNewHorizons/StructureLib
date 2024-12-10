@@ -222,10 +222,27 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
         return buttonList;
     }
 
+    private boolean isMouseOverValue() {
+        int mx  = Mouse.getEventX() * this.width / this.mc.displayWidth;
+        int my = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
+        return mx >= value.xPosition && mx < value.xPosition + value.width && my >= value.yPosition && my < value.yPosition + value.height;
+
+    }
+
     @Override
     public void handleMouseInput() {
         int delta = Mouse.getEventDWheel();
-        if (delta != 0) list.handleDWheel(delta);
+        if (delta != 0) {
+            if (isMouseOverValue()) {
+                if (delta > 0) {
+                    value.setText(String.valueOf(getValue() + 1));
+                } else {
+                    value.setText(String.valueOf(Math.max(getValue() - 1, 1)));
+                }
+            } else {
+                list.handleDWheel(delta);
+            }
+        }
         super.handleMouseInput();
     }
 
