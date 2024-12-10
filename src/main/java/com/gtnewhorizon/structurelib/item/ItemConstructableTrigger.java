@@ -7,6 +7,8 @@ import static net.minecraft.util.StatCollector.translateToLocalFormatted;
 
 import java.util.List;
 
+import com.gtnewhorizon.structurelib.gui.GuiScreenConfigureChannels;
+import cpw.mods.fml.common.FMLCommonHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -32,7 +34,7 @@ public class ItemConstructableTrigger extends Item {
             if (player.isSneaking()) {
                 StructureLib.instance().proxy().displayConfigGUI("registries");
             } else {
-                player.openGui(StructureLib.instance(), 0, world, player.inventory.currentItem, 0, 0);
+                FMLCommonHandler.instance().showGuiScreen(new GuiScreenConfigureChannels(stack));
             }
         }
         return super.onItemRightClick(stack, world, player);
