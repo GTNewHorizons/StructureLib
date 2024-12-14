@@ -7,8 +7,6 @@ import static net.minecraft.util.StatCollector.translateToLocalFormatted;
 
 import java.util.List;
 
-import com.gtnewhorizon.structurelib.gui.GuiScreenConfigureChannels;
-import cpw.mods.fml.common.FMLCommonHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -19,6 +17,9 @@ import org.lwjgl.input.Keyboard;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
+import com.gtnewhorizon.structurelib.gui.GuiScreenConfigureChannels;
+
+import cpw.mods.fml.common.FMLCommonHandler;
 
 public class ItemConstructableTrigger extends Item {
 

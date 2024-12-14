@@ -25,6 +25,8 @@ import com.gtnewhorizon.structurelib.gui.GuiScrollableList.IGuiScreen;
 
 public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen {
 
+    private static final String I18N_PREFIX = "item.structurelib.constructableTrigger.gui.";
+
     private static final int ADD_BTN = 0;
     private static final int UNSET_BTN = 1;
     private static final int WIPE_BTN = 2;
@@ -223,9 +225,11 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
     }
 
     private boolean isMouseOverValue() {
-        int mx  = Mouse.getEventX() * this.width / this.mc.displayWidth;
+        int mx = Mouse.getEventX() * this.width / this.mc.displayWidth;
         int my = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
-        return mx >= value.xPosition && mx < value.xPosition + value.width && my >= value.yPosition && my < value.yPosition + value.height;
+        return mx >= value.xPosition && mx < value.xPosition + value.width
+                && my >= value.yPosition
+                && my < value.yPosition + value.height;
 
     }
 
@@ -290,24 +294,24 @@ public class GuiScreenConfigureChannels extends GuiScreen implements IGuiScreen 
         // STACKOVERFLOW!
         String keyText = key.getText();
         boolean existing = !StringUtils.isEmpty(keyText) && ChannelDataAccessor.hasSubChannel(trigger, keyText);
-        getButtonList().get(ADD_BTN).displayString = existing
-                ? I18n.format("item.structurelib.constructableTrigger.gui.set")
-                : I18n.format("item.structurelib.constructableTrigger.gui.add");
-        getButtonList().get(ADD_BTN).enabled = !StringUtils.isBlank(value.getText()) && Integer.parseInt(value.getText()) > 0;
+        getButtonList().get(ADD_BTN).displayString = existing ? I18n.format(I18N_PREFIX + "set")
+                : I18n.format(I18N_PREFIX + "add");
+        getButtonList().get(ADD_BTN).enabled = !StringUtils.isBlank(value.getText())
+                && Integer.parseInt(value.getText()) > 0;
         getButtonList().get(UNSET_BTN).enabled = existing && !StringUtils.isBlank(value.getText());
 
         if (ChannelDataAccessor.hasSubChannel(trigger, SHOW_ERROR_CHANNEL)) {
-            getButtonList().get(SHOW_ERROR_BTN).displayString = "Hide Errors";
+            getButtonList().get(SHOW_ERROR_BTN).displayString = I18n.format(I18N_PREFIX + "error.hide");
         } else {
-            getButtonList().get(SHOW_ERROR_BTN).displayString = "Show Errors";
+            getButtonList().get(SHOW_ERROR_BTN).displayString = I18n.format(I18N_PREFIX + "error.show");
         }
 
         // this button only exists if GT is loaded.
         if (StructureLib.isGTLoaded) {
             if (ChannelDataAccessor.hasSubChannel(trigger, GT_NO_HATCH_CHANNEL)) {
-                getButtonList().get(GT_NO_HATCH_BTN).displayString = "Hatches";
+                getButtonList().get(GT_NO_HATCH_BTN).displayString = I18n.format(I18N_PREFIX + "gt_no_hatch.disable");
             } else {
-                getButtonList().get(GT_NO_HATCH_BTN).displayString = "No Hatch";
+                getButtonList().get(GT_NO_HATCH_BTN).displayString = I18n.format(I18N_PREFIX + "gt_no_hatch.enable");
             }
         }
     }
