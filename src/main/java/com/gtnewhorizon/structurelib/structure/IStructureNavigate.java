@@ -18,6 +18,11 @@ interface IStructureNavigate<T> extends IStructureElement<T> {
     }
 
     @Override
+    default boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+        return true;
+    }
+
+    @Override
     default boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
         return true;
     }

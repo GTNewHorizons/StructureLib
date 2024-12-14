@@ -12,6 +12,7 @@ import net.minecraft.world.World;
 
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 
@@ -50,7 +51,7 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
  * itself.</li>
  * <li>The "C" position would be the number of blocks between you and controller, not counting controller itself.</li>
  * </ul>
- * 
+ *
  * @param <T> Type of the context object. Usually this will be the multiblock controller.
  */
 public interface IStructureDefinition<T> {
@@ -72,7 +73,7 @@ public interface IStructureDefinition<T> {
 
     /**
      * Run a structure check.
-     * 
+     *
      * @param object              context object. usually multiblock controller.
      * @param piece               the structure piece's string identifier.
      * @param world               the world object this check takes place in.
@@ -107,7 +108,7 @@ public interface IStructureDefinition<T> {
 
     /**
      * Spawn hint particles. Should not be called on server side.
-     * 
+     *
      * @param object         context object. usually multiblock controller.
      * @param piece          the structure piece's string identifier.
      * @param world          the world object this check takes place in.
@@ -320,7 +321,7 @@ public interface IStructureDefinition<T> {
 
     /**
      * Low level utility.
-     * 
+     *
      * @param object                                  context object. usually multiblock controller.
      * @param trigger                                 The trigger item that contains channel data.
      * @param elements                                the structure piece
@@ -394,6 +395,10 @@ public interface IStructureDefinition<T> {
                         basePositionC,
                         ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
                             e.spawnHint(object, world, x, y, z, trigger);
+                            if (ChannelDataAccessor.hasSubChannel(trigger, "show_error")
+                                    && !e.couldBeValid(object, world, x, y, z, trigger)) {
+                                StructureLibAPI.markHintParticleError(StructureLib.getCurrentPlayer(), world, x, y, z);
+                            }
                             return true;
                         }),
                         "spawnHint");
@@ -420,7 +425,7 @@ public interface IStructureDefinition<T> {
 
     /**
      * Create a new instance of builder.
-     * 
+     *
      * @param <T> type of context object
      */
     static <T> StructureDefinition.Builder<T> builder() {
