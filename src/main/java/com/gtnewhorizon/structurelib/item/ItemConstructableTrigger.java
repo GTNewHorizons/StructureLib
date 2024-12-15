@@ -17,6 +17,9 @@ import org.lwjgl.input.Keyboard;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
+import com.gtnewhorizon.structurelib.gui.GuiScreenConfigureChannels;
+
+import cpw.mods.fml.common.FMLCommonHandler;
 
 public class ItemConstructableTrigger extends Item {
 
@@ -32,7 +35,7 @@ public class ItemConstructableTrigger extends Item {
             if (player.isSneaking()) {
                 StructureLib.instance().proxy().displayConfigGUI("registries");
             } else {
-                player.openGui(StructureLib.instance(), 0, world, player.inventory.currentItem, 0, 0);
+                FMLCommonHandler.instance().showGuiScreen(new GuiScreenConfigureChannels(stack));
             }
         }
         return super.onItemRightClick(stack, world, player);
