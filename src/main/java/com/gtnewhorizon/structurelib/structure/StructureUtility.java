@@ -341,7 +341,8 @@ public class StructureUtility {
                             stack.func_151000_E()));
             return PlaceResult.REJECT;
         }
-        if (block instanceof ICustomBlockSetting blockCustom) {
+        if (block instanceof ICustomBlockSetting) {
+            ICustomBlockSetting blockCustom = (ICustomBlockSetting) block;
             blockCustom.setBlock(world, x, y, z, meta);
         } else if (!stack.copy()
                 .tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f)) {
