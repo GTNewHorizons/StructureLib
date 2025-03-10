@@ -335,18 +335,24 @@ public class StructureUtility {
         int itemMeta = itemBlock instanceof ISpecialItemBlock
                 ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta)
                 : meta;
-        if (!s.takeOne(new ItemStack(itemBlock, 1, itemMeta), false)) {
+        ItemStack stack = new ItemStack(itemBlock, 1, itemMeta);
+        if (!s.takeOne(stack, true)) {
             if (chatter != null) chatter.accept(
                     new ChatComponentTranslation(
                             "structurelib.autoplace.error.no_simple_block",
-                            new ItemStack(itemBlock, 1, itemMeta).func_151000_E()));
+                            stack.func_151000_E()));
             return PlaceResult.REJECT;
         }
         if (block instanceof ICustomBlockSetting) {
-            ICustomBlockSetting block2 = (ICustomBlockSetting) block;
-            block2.setBlock(world, x, y, z, meta);
-        } else {
-            world.setBlock(x, y, z, block, meta, 2);
+            ICustomBlockSetting blockCustom = (ICustomBlockSetting) block;
+            blockCustom.setBlock(world, x, y, z, meta);
+        } else if (!stack.copy()
+                .tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f)) {
+                    return PlaceResult.REJECT;
+                }
+        if (!s.takeOne(stack, false)) {
+            // rollback
+            world.setBlockToAir(x, y, z);
         }
         return PlaceResult.ACCEPT;
     }
