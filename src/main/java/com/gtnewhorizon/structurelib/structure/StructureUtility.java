@@ -1,5 +1,7 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
+import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 import static java.lang.Integer.MIN_VALUE;
 
 import java.util.Arrays;
@@ -592,7 +594,7 @@ public class StructureUtility {
             TIER current = getter.apply(t);
             if (Objects.equals(notSet, current)) {
                 if (Objects.equals(notSet, tier)) {
-                    if (StructureLib.PANIC_MODE) {
+                    if (PANIC_MODE) {
                         throw new AssertionError("tierExtractor should never return notSet: " + notSet);
                     } else {
                         StructureLib.LOGGER.error("#########################################");
@@ -1353,6 +1355,14 @@ public class StructureUtility {
     public static <T> IStructureElement<T> ofBlock(Block block, int meta, Block defaultBlock, int defaultMeta) {
         if (block == null || defaultBlock == null) {
             throw new IllegalArgumentException();
+        }
+        if (block == Blocks.air) {
+            if (PANIC_MODE) {
+                throw new IllegalArgumentException("ofBlock() does not accept air. use isAir() instead");
+            } else {
+                LOGGER.warn("ofBlock() does not accept air. use isAir() instead");
+                return isAir();
+            }
         }
         if (block instanceof ICustomBlockSetting) {
             return new IStructureElement<T>() {
