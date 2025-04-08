@@ -2,7 +2,6 @@ package com.gtnewhorizon.structurelib;
 
 import static com.gtnewhorizon.structurelib.StructureLib.proxy;
 
-import com.gtnewhorizon.gtnhlib.util.AnimatedTooltipHandler;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -13,6 +12,7 @@ import net.minecraft.util.IIcon;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
+import com.gtnewhorizon.gtnhlib.util.AnimatedTooltipHandler;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
@@ -379,6 +379,9 @@ public class StructureLibAPI {
     public static void registerChannelItem(final String channel, final String modid, final int channelValue,
             final ItemStack stack) {
         ChannelDescription.item(channel, channelValue, stack);
-        AnimatedTooltipHandler.addItemTooltip(stack, () -> StatCollector.translateToLocalFormatted("structurelib.tooltip.channelvalue", channelValue, channel));
+        AnimatedTooltipHandler.addItemTooltip(
+                stack,
+                () -> StatCollector
+                        .translateToLocalFormatted("structurelib.tooltip.channelvalue", channelValue, channel));
     }
 }
