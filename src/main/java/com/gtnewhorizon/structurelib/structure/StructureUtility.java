@@ -636,7 +636,7 @@ public class StructureUtility {
      * tier or if existing tier is unset (i.e. value of third argument). If there are multiple (block, tier) tuple for a
      * given tier, then player will be allowed to use multiple kinds of blocks, but their tier is guaranteed to be the
      * same.
-     * <hr />
+     * <p>
      * <b>Example Implementation:</b>
      * <p>
      * Assume you have 16 tier, each map to one particular block's 16 different meta. You will usually want something
@@ -672,7 +672,7 @@ public class StructureUtility {
      * {@link IStructureDefinition#check(Object, String, World, ExtendedFacing, int, int, int, int, int, int, boolean)}</li>
      * <li>notSet is never a tier returned by ITierConverter.</li>
      * </ul>
-     * <hr />
+     * <p>
      * <p>
      * <b>You SHOULD NOT return notSet from your tierExtractor.</b> If you do so, we will have this chain of events:
      * <ul>
