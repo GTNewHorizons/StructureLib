@@ -340,9 +340,6 @@ public class StructureUtility {
      */
     public static PlaceResult survivalPlaceBlock(Block block, int meta, World world, int x, int y, int z, IItemSource s,
             EntityPlayer actor, Consumer<IChatComponent> chatter) {
-        if (x == -176 && y == 62 && z == -74) {
-            new Throwable().printStackTrace();
-        }
         if (block == null) throw new NullPointerException();
         int mode = 0;
         if (actor.getHeldItem() != null && actor.getHeldItem().getItem() instanceof ItemConstructableTrigger) {
@@ -351,6 +348,11 @@ public class StructureUtility {
             mode = ItemConstructableTrigger.getMode(actor.getHeldItem());
         }
         if (mode == 0 && !StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
+        if (mode == 1 && world.getTileEntity(x, y, z) instanceof TileEntity) {
+            // We're in updating mode and the block we're looking at might be important, so let's just leave it alone
+            // since it's probably not something we want to replace with something else
+            return PlaceResult.SKIP;
+        }
         Item itemBlock = Item.getItemFromBlock(block);
         int itemMeta = itemBlock instanceof ISpecialItemBlock
                 ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta)
@@ -496,10 +498,6 @@ public class StructureUtility {
     public static PlaceResult survivalPlaceBlock(ItemStack stack, NBTMode nbtMode, NBTTagCompound tag,
             boolean assumeStackPresent, World world, int x, int y, int z, IItemSource s, EntityPlayer actor,
             @Nullable Consumer<IChatComponent> chatter) {
-        if (x == -176 && y == 62 && z == -74) {
-            System.out.println("At this fucking coordinate");
-            new Throwable().printStackTrace();
-        }
         if (stack == null) throw new NullPointerException();
         if (stack.stackSize != 1) throw new IllegalArgumentException();
         if (!(stack.getItem() instanceof ItemBlock)) throw new IllegalArgumentException();
@@ -510,6 +508,12 @@ public class StructureUtility {
             mode = ItemConstructableTrigger.getMode(actor.getHeldItem());
         }
         if (mode == 1 && !world.isAirBlock(x, y, z)) {
+            if (world.getTileEntity(x, y, z) instanceof TileEntity) {
+                // We're in updating mode and the block we're looking at might be important, so let's just leave it
+                // alone
+                // since it's probably not something we want to replace with something else
+                return PlaceResult.SKIP;
+            }
             Block blockInWorld = world.getBlock(x, y, z);
             ItemStack blockInWorldItem = new ItemStack(blockInWorld);
             blockInWorldItem.setItemDamage(blockInWorld.getDamageValue(world, x, y, z));
