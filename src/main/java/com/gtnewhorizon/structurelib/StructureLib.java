@@ -1,11 +1,18 @@
 package com.gtnewhorizon.structurelib;
 
+import static com.gtnewhorizon.structurelib.StructureLibAPI.CHANNEL_SHOW_ERROR;
+import static com.gtnewhorizon.structurelib.StructureLibAPI.MOD_ID;
+
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.launchwrapper.Launch;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,9 +31,9 @@ import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
 import com.gtnewhorizon.structurelib.util.InventoryUtility;
 import com.gtnewhorizon.structurelib.util.XSTR;
 
-import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.event.FMLInterModComms;
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
@@ -40,7 +47,7 @@ import cpw.mods.fml.relauncher.SideOnly;
  * This class does not contain a stable API. Refrain from using this class.
  */
 @Mod(
-        modid = StructureLibAPI.MOD_ID,
+        modid = MOD_ID,
         name = "StructureLib",
         version = Tags.VERSION,
         acceptableRemoteVersions = "*",
@@ -57,7 +64,7 @@ public class StructureLib {
             clientSide = "com.gtnewhorizon.structurelib.ClientProxy")
     static CommonProxy proxy;
 
-    static final SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel(StructureLibAPI.MOD_ID);
+    static final SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel(MOD_ID);
 
     static {
         net.registerMessage(
@@ -84,7 +91,7 @@ public class StructureLib {
 
     @Mod.Instance
     static StructureLib INSTANCE;
-
+    @Mod.Instance(STRUCTURECOMPAT_MODID)
     static Object COMPAT;
 
     static Block blockHint;
@@ -99,8 +106,6 @@ public class StructureLib {
             return StructureLibAPI.getItemBlockHint();
         }
     };
-
-    public static boolean isGTLoaded;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
@@ -117,11 +122,10 @@ public class StructureLib {
         NetworkRegistry.INSTANCE.registerGuiHandler(instance(), new GuiHandler());
 
         InventoryUtility.init();
-        if (Loader.isModLoaded(STRUCTURECOMPAT_MODID)) {
-            COMPAT = Loader.instance().getIndexedModList().get(STRUCTURECOMPAT_MODID).getMod();
-        }
 
-        isGTLoaded = Loader.isModLoaded("gregtech");
+        ChannelDescription.set(CHANNEL_SHOW_ERROR, MOD_ID, "channels.structurelib.show_errors");
+
+        DevelopHelper.onPreInit();
     }
 
     @Mod.EventHandler
@@ -133,6 +137,48 @@ public class StructureLib {
     public void serverStarting(FMLServerStartingEvent e) {
         e.registerServerCommand(new CommandConfigureChannels());
         e.registerServerCommand(new CommandRegistryDebug());
+    }
+
+    @Mod.EventHandler
+    public void handleIMC(FMLInterModComms.IMCEvent event) {
+        for (FMLInterModComms.IMCMessage message : event.getMessages()) {
+            switch (message.key) {
+                case "register_channel":
+                    processRegisterChannel(message);
+                    break;
+                case "register_channel_item":
+                    processRegisterChannelItem(message);
+                    break;
+            }
+        }
+    }
+
+    private void processRegisterChannel(FMLInterModComms.IMCMessage message) {
+        NBTTagList tags = message.getNBTValue().getTagList("Channels", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < tags.tagCount(); i++) {
+            NBTTagCompound tag = tags.getCompoundTagAt(i);
+            StructureLibAPI.registerChannelDescription(
+                    tag.getString("Channel"),
+                    message.getSender(),
+                    tag.getString("Description"));
+        }
+    }
+
+    private void processRegisterChannelItem(FMLInterModComms.IMCMessage message) {
+        NBTTagList items = message.getNBTValue().getTagList("Items", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < items.tagCount(); i++) {
+            NBTTagCompound itemTag = items.getCompoundTagAt(i);
+            ItemStack item = ItemStack.loadItemStackFromNBT(itemTag.getCompoundTag("Item"));
+            NBTTagList tags = itemTag.getTagList("Channels", Constants.NBT.TAG_COMPOUND);
+            for (int j = 0; j < tags.tagCount(); j++) {
+                NBTTagCompound tag = tags.getCompoundTagAt(j);
+                StructureLibAPI.registerChannelItem(
+                        tag.getString("Channel"),
+                        message.getSender(),
+                        tag.getInteger("Value"),
+                        item);
+            }
+        }
     }
 
     public static void addClientSideChatMessages(String... messages) {

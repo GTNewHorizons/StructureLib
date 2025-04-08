@@ -2,6 +2,7 @@ package com.gtnewhorizon.structurelib;
 
 import static com.gtnewhorizon.structurelib.StructureLib.proxy;
 
+import com.gtnewhorizon.gtnhlib.util.AnimatedTooltipHandler;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -9,6 +10,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
@@ -43,6 +45,7 @@ public class StructureLibAPI {
     public static final int HINT_BLOCK_META_AIR = 13;
     public static final int HINT_BLOCK_META_NOT_AIR = 14;
     public static final int HINT_BLOCK_META_ERROR = 15;
+    public static final String CHANNEL_SHOW_ERROR = "show_error";
     static final ThreadLocal<Object> instrument = new ThreadLocal<>();
 
     /**
@@ -349,5 +352,33 @@ public class StructureLibAPI {
     public static void addThrottledChat(Object throttleKey, EntityPlayer player, IChatComponent text,
             short intervalRequired, boolean forceUpdateLastSend) {
         proxy.addThrottledChat(throttleKey, player, text, intervalRequired, forceUpdateLastSend);
+    }
+
+    /**
+     * Register a channel description here. The description should describe how a channel will be used inside your mod.
+     *
+     * @param channel     channel key
+     * @param modid       your modid
+     * @param description localization key for your description
+     */
+    public static void registerChannelDescription(final String channel, final String modid, final String description) {
+        ChannelDescription.set(channel, modid, description);
+    }
+
+    /**
+     * Register an item stack as an indicator for a (channel, value) pair.
+     *
+     * @param channel      channel key
+     * @param modid        your modid
+     * @param channelValue value
+     * @param stack        item stack. having a metadata of
+     *                     {@link net.minecraftforge.oredict.OreDictionary#WILDCARD_VALUE} will match without comparing
+     *                     NBT or metadata value. having a tag with {@code tag.getBoolean("*") == true} will match
+     *                     without comparing NBT.
+     */
+    public static void registerChannelItem(final String channel, final String modid, final int channelValue,
+            final ItemStack stack) {
+        ChannelDescription.item(channel, channelValue, stack);
+        AnimatedTooltipHandler.addItemTooltip(stack, () -> StatCollector.translateToLocalFormatted("structurelib.tooltip.channelvalue", channelValue, channel));
     }
 }

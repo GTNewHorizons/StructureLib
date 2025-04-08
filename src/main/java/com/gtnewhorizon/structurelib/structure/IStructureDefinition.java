@@ -395,7 +395,7 @@ public interface IStructureDefinition<T> {
                         basePositionC,
                         ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
                             e.spawnHint(object, world, x, y, z, trigger);
-                            if (ChannelDataAccessor.hasSubChannel(trigger, "show_error")
+                            if (ChannelDataAccessor.hasSubChannel(trigger, StructureLibAPI.CHANNEL_SHOW_ERROR)
                                     && !e.couldBeValid(object, world, x, y, z, trigger)) {
                                 StructureLibAPI.markHintParticleError(StructureLib.getCurrentPlayer(), world, x, y, z);
                             }

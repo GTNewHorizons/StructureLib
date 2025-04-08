@@ -36,10 +36,11 @@ item.structurelib.constructableTrigger.gui.add=添加
 item.structurelib.constructableTrigger.gui.set=替换
 item.structurelib.constructableTrigger.gui.unset=删除
 item.structurelib.constructableTrigger.gui.wipe=§4全部清空
-item.structurelib.constructableTrigger.gui.error.show=显示结构错误
-item.structurelib.constructableTrigger.gui.error.hide=隐藏结构错误
-item.structurelib.constructableTrigger.gui.gt_no_hatch.enable=跳过舱室
-item.structurelib.constructableTrigger.gui.gt_no_hatch.disable=放置舱室
+item.structurelib.constructableTrigger.gui.channels.from=§r模组: §9§o%s
+
+channels.structurelib.show_errors=添加后，在投影时会高亮标出必然错误的部分
+
+structurelib.tooltip.channelvalue=§7表示子信道 §6%2$s§r§7 为 §6%d§r
 
 structurelib.autoplace.built_stat=已放置 %s 个方块
 structurelib.autoplace.complete=§a这个多方块结构已经完成自动搭建！
