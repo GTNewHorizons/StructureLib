@@ -7,9 +7,14 @@ import static net.minecraft.util.StatCollector.translateToLocalFormatted;
 
 import java.util.List;
 
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagInt;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
 import org.lwjgl.input.Keyboard;
@@ -23,10 +28,71 @@ import cpw.mods.fml.common.FMLCommonHandler;
 
 public class ItemConstructableTrigger extends Item {
 
+    private static final String TAG_MODE = "mode";
+
+    private static final IIcon[] textures = new IIcon[3];
+
     public ItemConstructableTrigger() {
         setUnlocalizedName("structurelib.constructableTrigger");
-        setTextureName(MOD_ID + ":itemConstructableTrigger");
         setCreativeTab(StructureLib.creativeTab);
+    }
+
+    public static void cycleMode(ItemStack held) {
+        if (held.getTagCompound() == null) held.setTagCompound(new NBTTagCompound());
+        if (!held.getTagCompound().hasKey(TAG_MODE)) held.getTagCompound().setTag(TAG_MODE, new NBTTagInt(0));
+        held.getTagCompound().setInteger(TAG_MODE, (held.getTagCompound().getInteger(TAG_MODE) + 1) % 3);
+    }
+
+    @Override
+    public void registerIcons(IIconRegister register) {
+        textures[0] = register.registerIcon(MOD_ID + ":constructableTrigger/BUILDING");
+        textures[1] = register.registerIcon(MOD_ID + ":constructableTrigger/UPDATING");
+        textures[2] = register.registerIcon(MOD_ID + ":constructableTrigger/REMOVING");
+    }
+
+    @Override
+    public IIcon getIcon(ItemStack stack, int renderPass, EntityPlayer player, ItemStack usingItem, int useRemaining) {
+        return getIcon(stack, renderPass);
+    }
+
+    @Override
+    public IIcon getIcon(ItemStack stack, int pass) {
+        if (!stack.hasTagCompound() || !stack.getTagCompound().hasKey(TAG_MODE)) {
+            return textures[0];
+        }
+        return textures[stack.getTagCompound().getInteger(TAG_MODE)];
+    }
+
+    @Override
+    public String getItemStackDisplayName(ItemStack stack) {
+        if (!stack.hasTagCompound() || !stack.getTagCompound().hasKey(TAG_MODE)) {
+            return getDisplayName(0);
+        }
+        return getDisplayName(stack.getTagCompound().getInteger(TAG_MODE));
+    }
+
+    @Override
+    public IIcon getIconIndex(ItemStack stack) {
+        return getIcon(stack, 0);
+    }
+
+    @Override
+    public IIcon getIconFromDamage(int damage) {
+        return textures[damage];
+    }
+
+    private String getDisplayName(int mode) {
+        return StatCollector.translateToLocal("item.structurelib.constructableTrigger.name") + " - "
+                + StatCollector.translateToLocal("item.structurelib.constructableTrigger.modes." + mode);
+    }
+
+    public static int getMode(ItemStack held) {
+        if (held == null || !held.hasTagCompound() || !held.getTagCompound().hasKey(TAG_MODE)) {
+            // default behavior
+            return 0;
+        }
+        // get user-defined mode
+        return held.getTagCompound().getInteger(TAG_MODE);
     }
 
     @Override

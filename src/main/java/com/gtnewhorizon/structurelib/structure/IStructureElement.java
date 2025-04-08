@@ -21,6 +21,7 @@ import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
 import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 
@@ -137,12 +138,13 @@ public interface IStructureElement<T> {
      */
     default PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
             AutoPlaceEnvironment env) {
+        int mode = ItemConstructableTrigger.getMode(trigger);
         BlocksToPlace e = getBlocksToPlace(t, world, x, y, z, trigger, env);
         IItemSource source = env.getSource();
         EntityPlayer actor = env.getActor();
         Consumer<IChatComponent> chatter = env.getChatter();
         if (e != null) {
-            if (check(t, world, x, y, z)) return PlaceResult.SKIP;
+            if (mode < 2 && check(t, world, x, y, z)) return PlaceResult.SKIP;
             if (e.getStacks() == null) {
                 ItemStack taken = source.takeOne(e.getPredicate(), true);
                 return StructureUtility.survivalPlaceBlock(
@@ -159,7 +161,7 @@ public interface IStructureElement<T> {
                         chatter);
             }
             for (ItemStack stack : e.getStacks()) {
-                if (!source.takeOne(stack, true)) continue;
+                if (mode < 2 && !source.takeOne(stack, true)) continue;
                 return StructureUtility.survivalPlaceBlock(
                         stack,
                         NBTMode.EXACT,

@@ -348,77 +348,47 @@ public interface IStructureDefinition<T> {
         }
 
         if (checkBlocksIfNotNullForceCheckAllIfTrue != null) {
-            boolean success;
-            if (checkBlocksIfNotNullForceCheckAllIfTrue) {
-                success = StructureUtility.iterateV2(
-                        elements,
-                        world,
-                        extendedFacing,
-                        basePositionX,
-                        basePositionY,
-                        basePositionZ,
-                        basePositionA,
-                        basePositionB,
-                        basePositionC,
-                        (e, w, x, y, z, a, b, c) -> e.check(object, w, x, y, z),
-                        "check");
-            } else {
-                success = StructureUtility.iterateV2(
-                        elements,
-                        world,
-                        extendedFacing,
-                        basePositionX,
-                        basePositionY,
-                        basePositionZ,
-                        basePositionA,
-                        basePositionB,
-                        basePositionC,
-                        skipBlockUnloaded((e, w, x, y, z, a, b, c) -> e.check(object, w, x, y, z)),
-                        "check force");
-            }
+            boolean success = StructureUtility.iterateV2(
+                    elements,
+                    world,
+                    extendedFacing,
+                    basePositionX,
+                    basePositionY,
+                    basePositionZ,
+                    basePositionA,
+                    basePositionB,
+                    basePositionC,
+                    checkBlocksIfNotNullForceCheckAllIfTrue ? (e, w, x, y, z, a, b, c) -> e.check(object, w, x, y, z)
+                            : skipBlockUnloaded((e, w, x, y, z, a, b, c) -> e.check(object, w, x, y, z)),
+                    checkBlocksIfNotNullForceCheckAllIfTrue ? "check" : "check force");
             if (StructureLibAPI.isDebugEnabled() && success) {
                 StructureLib.LOGGER
                         .info("Multi [" + basePositionX + ", " + basePositionY + ", " + basePositionZ + "] pass");
             }
             return success;
         } else {
-            if (hintsOnly) {
-                StructureUtility.iterateV2(
-                        elements,
-                        world,
-                        extendedFacing,
-                        basePositionX,
-                        basePositionY,
-                        basePositionZ,
-                        basePositionA,
-                        basePositionB,
-                        basePositionC,
-                        ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
-                            e.spawnHint(object, world, x, y, z, trigger);
-                            if (ChannelDataAccessor.hasSubChannel(trigger, "show_error")
-                                    && !e.couldBeValid(object, world, x, y, z, trigger)) {
-                                StructureLibAPI.markHintParticleError(StructureLib.getCurrentPlayer(), world, x, y, z);
-                            }
-                            return true;
-                        }),
-                        "spawnHint");
-            } else {
-                StructureUtility.iterateV2(
-                        elements,
-                        world,
-                        extendedFacing,
-                        basePositionX,
-                        basePositionY,
-                        basePositionZ,
-                        basePositionA,
-                        basePositionB,
-                        basePositionC,
-                        ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
-                            e.placeBlock(object, world, x, y, z, trigger);
-                            return true;
-                        }),
-                        "placeBlock");
-            }
+            StructureUtility.iterateV2(
+                    elements,
+                    world,
+                    extendedFacing,
+                    basePositionX,
+                    basePositionY,
+                    basePositionZ,
+                    basePositionA,
+                    basePositionB,
+                    basePositionC,
+                    hintsOnly ? ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
+                        e.spawnHint(object, world, x, y, z, trigger);
+                        if (ChannelDataAccessor.hasSubChannel(trigger, "show_error")
+                                && !e.couldBeValid(object, world, x, y, z, trigger)) {
+                            StructureLibAPI.markHintParticleError(StructureLib.getCurrentPlayer(), world, x, y, z);
+                        }
+                        return true;
+                    }) : ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
+                        e.placeBlock(object, world, x, y, z, trigger);
+                        return true;
+                    }),
+                    hintsOnly ? "spawnHint" : "placeBlock");
         }
         return true;
     }
