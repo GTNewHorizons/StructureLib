@@ -367,29 +367,29 @@ public interface IStructureDefinition<T> {
             }
             return success;
         } else {
-                StructureUtility.iterateV2(
-                        elements,
-                        world,
-                        extendedFacing,
-                        basePositionX,
-                        basePositionY,
-                        basePositionZ,
-                        basePositionA,
-                        basePositionB,
-                        basePositionC,
-                        ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
-                            e.spawnHint(object, world, x, y, z, trigger);
-                            if (ChannelDataAccessor.hasSubChannel(trigger, StructureLibAPI.CHANNEL_SHOW_ERROR)
-                                    && !e.couldBeValid(object, world, x, y, z, trigger)) {
-                                StructureLibAPI.markHintParticleError(StructureLib.getCurrentPlayer(), world, x, y, z);
-                            }
-                            return true;
-                        }) : ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
-                            e.placeBlock(object, world, x, y, z, trigger);
-                            return true;
-                        }),
+            StructureUtility.iterateV2(
+                    elements,
+                    world,
+                    extendedFacing,
+                    basePositionX,
+                    basePositionY,
+                    basePositionZ,
+                    basePositionA,
+                    basePositionB,
+                    basePositionC,
+                    hintsOnly ? ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
+                        e.spawnHint(object, world, x, y, z, trigger);
+                        if (ChannelDataAccessor.hasSubChannel(trigger, StructureLibAPI.CHANNEL_SHOW_ERROR)
+                                && !e.couldBeValid(object, world, x, y, z, trigger)) {
+                            StructureLibAPI.markHintParticleError(StructureLib.getCurrentPlayer(), world, x, y, z);
+                        }
+                        return true;
+                    }) : ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
+                        e.placeBlock(object, world, x, y, z, trigger);
+                        return true;
+                    }),
                     hintsOnly ? "spawnHint" : "placeBlock");
-            }
+        }
         return true;
     }
 
