@@ -178,6 +178,80 @@ StructureLib API documentation.
 
 Just give me a better name and I'd do the renaming.
 
+<h3>Channel Descriptions</h3>
+<p>
+    Each channel can have one description associated with it per mod.
+    Channel description should briefly describe how a specific channel is used for inside a specific mod.
+    They will be displayed to player in channel editor GUI that comes with StructureLib.
+    The registration process can be done either via direct method call to {@link com.gtnewhorizon.structurelib.StructureLibAPI#registerChannelDescription(String, String, String)},
+    or by sending an IMC message.
+    After registration, the channel will also show up as autocomplete options when players are editing channels.
+</p>
+
+<p>
+    Here is an example of sending an IMC message to register two channels and their description.
+    In this example, we assume your modid is <code>my_mod</code> and your mod will ship with localization entries for
+    localization key <code>channels.my_mod.channel_1</code> and <code>channels.my_mod.channel_2</code>
+</p>
+
+<pre>
+        NBTTagCompound command = new NBTTagCompound();
+        NBTTagList tags = new NBTTagList();
+        String[] channels = {"channel_1", "channel_2"};
+        for (String channel : channels) {
+            NBTTagCompound tag = new NBTTagCompound();
+            tag.setString("Channel", channel);
+            tag.setString("Description", "channels.my_mod." + channel);
+            tags.appendTag(tag);
+        }
+        command.setTag("Channels", tags);
+        FMLInterModComms.sendMessage("structurelib", "register_channel", command);
+</pre>
+
+<p>
+    There is no strict rules over whether you should do direct API method call or send IMC messages.
+    You can choose whichever you prefer.
+</p>
+
+<h3>Channel Indicator Items</h3>
+<p>
+    You can associate an ItemStack with a given (channel, value) pair.
+    It is usually (but not required to be) the ItemBlock for the blocks to be placed by this (channel, value) pair.
+    Player will be able to drag and drop this item to the builtin channel configuration GUI.
+    The registration process can be done either via direct method call to {@link com.gtnewhorizon.structurelib.StructureLibAPI#registerChannelItem(String, String, int, net.minecraft.item.ItemStack)},
+    or by sending an IMC message.
+    After registration, the channel will also show up as autocomplete options when players are editing channels.
+</p>
+
+<p>
+    Here is an example of sending an IMC message to register 3 vanilla sandstone as different indicator for channel "sandstone", with block metadata plus 1 as channel value.
+    In this example, we assume your modid is <code>my_mod</code>.
+</p>
+
+<pre>
+        NBTTagCompound command = new NBTTagCompound();
+        NBTTagList items = new NBTTagList();
+        int[] metas = {0, 1, 2};
+        for (int meta : metas) {
+            NBTTagCompound tag = new NBTTagCompound();
+            tag.setTag("Item", new ItemStack(Blocks.sandstone, 1, meta).writeToNBT(new NBTTagCompound()));
+            NBTTagList channels = new NBTTagList();
+            NBTTagCompound channel = new NBTTagCompound();
+            channel.setString("Channel", "sandstone");
+            channel.setInteger("Value", meta + 1);
+            channels.appendTag(channel);
+            tag.setTag("Channels", channels);
+            items.appendTag(tag);
+        }
+        command.setTag("Items", items);
+        FMLInterModComms.sendMessage("structurelib", "register_channel_item", command);
+</pre>
+
+<p>
+    There is no strict rules over whether you should do direct API method call or send IMC messages.
+    You can choose whichever you prefer.
+</p>
+
 <h3>Examples</h3>
 
 <h4>For Structure Definition Author</h4>
