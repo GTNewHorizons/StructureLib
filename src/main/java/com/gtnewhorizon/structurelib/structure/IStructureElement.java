@@ -1,16 +1,9 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
-import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -20,10 +13,16 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
-import com.gtnewhorizon.structurelib.StructureLibAPI;
-import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
-import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
-import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
+import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
+import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
+import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.REMOVING;
 
 /**
  * Use StructureUtility to instantiate. These are the building blocks for your {@link IStructureDefinition}. It
@@ -138,13 +137,13 @@ public interface IStructureElement<T> {
      */
     default PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
             AutoPlaceEnvironment env) {
-        int mode = ItemConstructableTrigger.getMode(trigger);
+        ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
         BlocksToPlace e = getBlocksToPlace(t, world, x, y, z, trigger, env);
         IItemSource source = env.getSource();
         EntityPlayer actor = env.getActor();
         Consumer<IChatComponent> chatter = env.getChatter();
         if (e != null) {
-            if (mode < 2 && check(t, world, x, y, z)) return PlaceResult.SKIP;
+            if (mode != REMOVING && check(t, world, x, y, z)) return PlaceResult.SKIP;
             if (e.getStacks() == null) {
                 ItemStack taken = source.takeOne(e.getPredicate(), true);
                 return StructureUtility.survivalPlaceBlock(
@@ -161,7 +160,7 @@ public interface IStructureElement<T> {
                         chatter);
             }
             for (ItemStack stack : e.getStacks()) {
-                if (mode < 2 && !source.takeOne(stack, true)) continue;
+                if (mode != REMOVING && !source.takeOne(stack, true)) continue;
                 return StructureUtility.survivalPlaceBlock(
                         stack,
                         NBTMode.EXACT,

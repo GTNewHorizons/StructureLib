@@ -1,9 +1,40 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
-import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
-import static java.lang.Integer.MIN_VALUE;
+import com.google.common.collect.ImmutableList;
+import com.gtnewhorizon.structurelib.StructureEvent.StructureElementVisitedEvent;
+import com.gtnewhorizon.structurelib.StructureLib;
+import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
+import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
+import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
+import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
+import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
+import com.gtnewhorizon.structurelib.util.Vec3Impl;
+import com.gtnewhorizon.structurelib.xmod.ServerUtilitiesCompat;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.block.Block;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.IIcon;
+import net.minecraft.world.World;
+import net.minecraftforge.common.util.ForgeDirection;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,42 +56,12 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import javax.annotation.Nullable;
-
-import net.minecraft.block.Block;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ChatComponentTranslation;
-import net.minecraft.util.IChatComponent;
-import net.minecraft.util.IIcon;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-
-import com.google.common.collect.ImmutableList;
-import com.gtnewhorizon.structurelib.StructureEvent.StructureElementVisitedEvent;
-import com.gtnewhorizon.structurelib.StructureLib;
-import com.gtnewhorizon.structurelib.StructureLibAPI;
-import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
-import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
-import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
-import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
-import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
-import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
-import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
-import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
-import com.gtnewhorizon.structurelib.util.Vec3Impl;
-
-import cpw.mods.fml.common.registry.GameRegistry;
+import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
+import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
+import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.BUILDING;
+import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.REMOVING;
+import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.UPDATING;
+import static java.lang.Integer.MIN_VALUE;
 
 /**
  * A brief index of everything contained
@@ -148,6 +149,8 @@ public class StructureUtility {
 
     private static final String NICE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz=|!@#$%&()[]{};:<>/?_,.*^'`";
 
+    private static final boolean isSULoaded = Loader.isModLoaded("serverutilities");
+
     @SuppressWarnings("rawtypes")
     private static final Map<Vec3Impl, IStructureNavigate> STEP = new HashMap<>();
 
@@ -225,8 +228,8 @@ public class StructureUtility {
         @Override
         public PlaceResult survivalPlaceBlock(Object o, World world, int x, int y, int z, ItemStack trigger,
                 AutoPlaceEnvironment env) {
-            int mode = ItemConstructableTrigger.getMode(trigger);
-            if (mode < 2 && check(o, world, x, y, z)) return PlaceResult.SKIP;
+            ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
+            if (mode != REMOVING && check(o, world, x, y, z)) return PlaceResult.SKIP;
             // user should place anything here.
             // maybe make this configurable, but for now we try to take some cobble from user
             if (env.getSource().takeOne(new ItemStack(Blocks.cobblestone), false)) {
@@ -341,43 +344,45 @@ public class StructureUtility {
     public static PlaceResult survivalPlaceBlock(Block block, int meta, World world, int x, int y, int z, IItemSource s,
             EntityPlayer actor, Consumer<IChatComponent> chatter) {
         if (block == null) throw new NullPointerException();
-        int mode = 0;
+        ItemConstructableTrigger.TriggerMode mode = BUILDING;
         if (actor.getHeldItem() != null && actor.getHeldItem().getItem() instanceof ItemConstructableTrigger) {
             // best effort lookup if the item in the player's hand is a trigger, and if it is, get the mode from the
             // ...trigger instead of assuming default behavior
             mode = ItemConstructableTrigger.getMode(actor.getHeldItem());
         }
-        if (mode == 0 && !StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
-        if (mode == 1 && world.getTileEntity(x, y, z) instanceof TileEntity) {
-            // We're in updating mode and the block we're looking at might be important, so let's just leave it alone
-            // since it's probably not something we want to replace with something else
-            return PlaceResult.SKIP;
+        if (mode == BUILDING && !StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
+        if (mode == UPDATING) {
+            if (!world.isAirBlock(x, y, z)) {
+                if (world.getTileEntity(x, y, z) instanceof TileEntity) {
+                    // We're in updating mode and the block we're looking at might be important, so let's just leave it alone
+                    // since it's probably not something we want to replace with something else
+                    return PlaceResult.SKIP;
+                }
+                Block blockInWorld = world.getBlock(x, y, z);
+                if (blockInWorld.isAssociatedBlock(block) && blockInWorld.getDamageValue(world, x, y, z) == meta) {
+                    // This is the block we are looking for, move along
+                    return PlaceResult.SKIP;
+                }
+            }
         }
         Item itemBlock = Item.getItemFromBlock(block);
         int itemMeta = itemBlock instanceof ISpecialItemBlock
-                ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta)
-                : meta;
+            ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta)
+            : meta;
         ItemStack stack = new ItemStack(itemBlock, 1, itemMeta);
-        if (mode == 1 && !world.isAirBlock(x, y, z)) {
-            Block blockInWorld = world.getBlock(x, y, z);
-            if (blockInWorld.isAssociatedBlock(block) && blockInWorld.getDamageValue(world, x, y, z) == meta) {
-                // This is the block we are looking for, move along
-                return PlaceResult.SKIP;
-            }
-        }
-        if (mode < 2 && !s.takeOne(stack, true)) {
-            if (chatter != null) chatter.accept(
+        if (mode != REMOVING) {
+            if (!s.takeOne(stack, true)) {
+                if (chatter != null) chatter.accept(
                     new ChatComponentTranslation(
-                            "structurelib.autoplace.error.no_simple_block",
-                            stack.func_151000_E()));
-            return PlaceResult.REJECT;
-        }
-        if (mode < 2) {
+                        "structurelib.autoplace.error.no_simple_block",
+                        stack.func_151000_E()));
+                return PlaceResult.REJECT;
+            }
             if (block instanceof ICustomBlockSetting) {
                 ICustomBlockSetting blockCustom = (ICustomBlockSetting) block;
                 blockCustom.setBlock(world, x, y, z, meta);
             } else {
-                if (mode == 1 && !world.isAirBlock(x, y, z)) {
+                if (mode == UPDATING && !world.isAirBlock(x, y, z) && checkPermission(world, actor, x, y, z)) {
                     // We're in updating mode and there's a block in our way (grr), so let's remove whatever is there
                     // ...and drop it to the player
                     ItemStack toGive = new ItemStack(world.getBlock(x, y, z));
@@ -393,21 +398,24 @@ public class StructureUtility {
                     }
                 }
                 if (!stack.copy()
-                        .tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f)) {
+                    .tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f)) {
                     return PlaceResult.REJECT;
                 }
             }
         }
-        if (mode == 2 && world.isAirBlock(x, y, z)) {
-            return PlaceResult.SKIP;
-        }
-        if (mode == 2 || !s.takeOne(stack, false)) {
-            // If the user didn't have the item in their inventory, or we're in removing mode, we set it to air
+        if (mode == REMOVING || !s.takeOne(stack, true)) {
+            // If we're in removing mode, or if the user didn't have the block in their inventory, and we're in some other mode, let's check some stuff
+            if(world.isAirBlock(x, y, z)) {
+                return PlaceResult.SKIP;
+            }
             ItemStack toGive = new ItemStack(world.getBlock(x, y, z));
             toGive.setItemDamage(world.getBlock(x, y, z).getDamageValue(world, x, y, z));
+            if(mode == REMOVING && !checkPermission(world, actor, x, y, z)) {
+                return PlaceResult.REJECT;
+            }
             world.setBlockToAir(x, y, z);
-            if (mode == 2 && !tryGiveOrDropItem(world, actor, toGive)) {
-                // Something went wrong while trying to give the player the block we removed, let's just fail for now
+            if (mode == REMOVING && !tryGiveOrDropItem(world, actor, toGive)) {
+                // We're in removing mode and something went wrong while trying to give the player the block we removed, let's just fail for now
                 return PlaceResult.REJECT;
             }
         }
@@ -501,35 +509,38 @@ public class StructureUtility {
         if (stack == null) throw new NullPointerException();
         if (stack.stackSize != 1) throw new IllegalArgumentException();
         if (!(stack.getItem() instanceof ItemBlock)) throw new IllegalArgumentException();
-        int mode = 0;
+        ItemConstructableTrigger.TriggerMode mode = BUILDING;
         if (actor.getHeldItem() != null && actor.getHeldItem().getItem() instanceof ItemConstructableTrigger) {
             // best effort lookup if the item in the player's hand is a trigger, and if it is, get the mode from the
             // ...trigger instead of assuming default behavior
             mode = ItemConstructableTrigger.getMode(actor.getHeldItem());
         }
-        if (mode == 1 && !world.isAirBlock(x, y, z)) {
-            if (world.getTileEntity(x, y, z) instanceof TileEntity) {
-                // We're in updating mode and the block we're looking at might be important, so let's just leave it
-                // alone
-                // since it's probably not something we want to replace with something else
-                return PlaceResult.SKIP;
+        if (mode != REMOVING) {
+            if (mode == BUILDING) {
+                if(!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) {
+                    return PlaceResult.SKIP;
+                }
             }
-            Block blockInWorld = world.getBlock(x, y, z);
-            ItemStack blockInWorldItem = new ItemStack(blockInWorld);
-            blockInWorldItem.setItemDamage(blockInWorld.getDamageValue(world, x, y, z));
-            if (blockInWorldItem.isItemEqual(stack)) {
-                // This is the block we are looking for, move along
-                return PlaceResult.SKIP;
+            if (mode == UPDATING) {
+                if (!world.isAirBlock(x, y, z)) {
+                    if (world.getTileEntity(x, y, z) instanceof TileEntity) {
+                        return PlaceResult.SKIP;
+                    }
+                    Block blockInWorld = world.getBlock(x, y, z);
+                    ItemStack blockInWorldItem = new ItemStack(blockInWorld);
+                    blockInWorldItem.setItemDamage(blockInWorld.getDamageValue(world, x, y, z));
+                    if (blockInWorldItem.isItemEqual(stack)) {
+                        // This is the block we are looking for, move along
+                        return PlaceResult.SKIP;
+                    }
+                }
             }
-        }
-        if (mode == 0 && !StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
-        if (mode < 2 && !assumeStackPresent && !s.takeOne(stack, true)) {
-            if (chatter != null) chatter.accept(
+            if (!assumeStackPresent && !s.takeOne(stack, true)) {
+                if (chatter != null) chatter.accept(
                     new ChatComponentTranslation("structurelib.autoplace.error.no_item_stack", stack.func_151000_E()));
-            return PlaceResult.REJECT;
-        }
-        if (mode < 2) {
-            if (mode == 1 && !world.isAirBlock(x, y, z)) {
+                return PlaceResult.REJECT;
+            }
+            if (mode == UPDATING && !world.isAirBlock(x, y, z) && checkPermission(world, actor, x, y, z)) {
                 // We're in updating mode and there's a block in our way (grr), so let's remove whatever is there
                 // ...and drop it to the player
                 ItemStack toGive = new ItemStack(world.getBlock(x, y, z));
@@ -544,19 +555,22 @@ public class StructureUtility {
                 }
             }
             if (!stack.copy()
-                    .tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f)) {
+                .tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f)) {
                 return PlaceResult.REJECT;
             }
         }
-        if (mode == 2 && world.isAirBlock(x, y, z)) {
-            return PlaceResult.SKIP;
-        }
-        if (mode == 2 || !s.takeOne(stack, false)) {
+        if (mode == REMOVING || !s.takeOne(stack, false)) {
+            if (world.isAirBlock(x, y, z)) {
+                return PlaceResult.SKIP;
+            }
             // If the user didn't have the item in their inventory, or we're in removing mode, we set it to air
             ItemStack toGive = new ItemStack(world.getBlock(x, y, z));
             toGive.setItemDamage(world.getBlock(x, y, z).getDamageValue(world, x, y, z));
+            if(mode == REMOVING && !checkPermission(world, actor, x, y, z)) {
+                return PlaceResult.REJECT;
+            }
             world.setBlockToAir(x, y, z);
-            if (mode == 2 && !tryGiveOrDropItem(world, actor, toGive)) {
+            if (mode == REMOVING && !tryGiveOrDropItem(world, actor, toGive)) {
                 // We were in removing mode and something went wrong while trying to give the player the block we
                 // ...removed, let's just fail for now
                 return PlaceResult.REJECT;
@@ -861,13 +875,13 @@ public class StructureUtility {
             @Override
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
-                int mode = ItemConstructableTrigger.getMode(trigger);
+                ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
                 Pair<Block, Integer> hint = getHint(trigger);
                 if (hint == null) return PlaceResult.REJECT; // TODO or SKIP?
                 Block block = world.getBlock(x, y, z);
                 int meta = world.getBlockMetadata(x, y, z);
                 TIER tier = tierExtractor.convert(block, meta);
-                if (mode < 2 && Objects.equals(tier, tierExtractor.convert(hint.getKey(), hint.getValue())))
+                if (mode != REMOVING && Objects.equals(tier, tierExtractor.convert(hint.getKey(), hint.getValue())))
                     return PlaceResult.SKIP;
                 return StructureUtility.survivalPlaceBlock(
                         hint.getKey(),
@@ -957,8 +971,8 @@ public class StructureUtility {
             @Override
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
-                int mode = ItemConstructableTrigger.getMode(trigger);
-                if (mode < 2 && check(t, world, x, y, z)) return PlaceResult.SKIP;
+                ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
+                if (mode != REMOVING && check(t, world, x, y, z)) return PlaceResult.SKIP;
                 if (getBlock() == null) return PlaceResult.REJECT;
                 return StructureUtility.survivalPlaceBlock(
                         getBlock(),
@@ -1045,8 +1059,8 @@ public class StructureUtility {
             @Deprecated
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
-                int mode = ItemConstructableTrigger.getMode(trigger);
-                if (mode < 2 && check(t, world, x, y, z)) return PlaceResult.SKIP;
+                ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
+                if (mode != REMOVING && check(t, world, x, y, z)) return PlaceResult.SKIP;
                 if (init()) return StructureUtility.survivalPlaceBlock(block, meta, world, x, y, z, s, actor, chatter);
                 return fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
@@ -1054,8 +1068,8 @@ public class StructureUtility {
             @Override
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
-                int mode = ItemConstructableTrigger.getMode(trigger);
-                if (mode < 2 && check(t, world, x, y, z)) return PlaceResult.SKIP;
+                ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
+                if (mode != REMOVING && check(t, world, x, y, z)) return PlaceResult.SKIP;
                 if (init()) return StructureUtility.survivalPlaceBlock(
                         block,
                         meta,
@@ -1683,8 +1697,8 @@ public class StructureUtility {
                 @Deprecated
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
-                    int mode = ItemConstructableTrigger.getMode(trigger);
-                    if (mode < 2 && world.getBlock(x, y, z) == defaultBlock
+                    ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
+                    if (mode != REMOVING && world.getBlock(x, y, z) == defaultBlock
                             && world.getBlockMetadata(x, y, z) == defaultMeta)
                         return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
@@ -1731,8 +1745,8 @@ public class StructureUtility {
                 @Deprecated
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
-                    int mode = ItemConstructableTrigger.getMode(trigger);
-                    if (mode < 2 && world.getBlock(x, y, z) == defaultBlock
+                    ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
+                    if (mode != REMOVING && world.getBlock(x, y, z) == defaultBlock
                             && world.getBlockMetadata(x, y, z) == defaultMeta)
                         return PlaceResult.SKIP;
                     return StructureUtility.survivalPlaceBlock(
@@ -1993,8 +2007,8 @@ public class StructureUtility {
             @Deprecated
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
-                int mode = ItemConstructableTrigger.getMode(trigger);
-                if (mode == 2 || predicate.test(t))
+                ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
+                if (mode == REMOVING || predicate.test(t))
                     return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
                 return placeResultWhenDisabled;
             }
@@ -2002,8 +2016,8 @@ public class StructureUtility {
             @Override
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
-                int mode = ItemConstructableTrigger.getMode(trigger);
-                if (mode == 2 || predicate.test(t))
+                ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
+                if (mode == REMOVING || predicate.test(t))
                     return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, env);
                 return placeResultWhenDisabled;
             }
@@ -3381,15 +3395,15 @@ public class StructureUtility {
      * @param onRemove Operation to be performed when the mode of the trigger is set to removing mode
      */
     public static void placeRemoveOrUpdate(ItemStack trigger, Runnable onCreate, Runnable onUpdate, Runnable onRemove) {
-        int mode = ItemConstructableTrigger.getMode(trigger);
+        ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
         switch (mode) {
-            case 0:
+            case BUILDING:
                 onCreate.run();
                 break;
-            case 1:
+            case UPDATING:
                 onUpdate.run();
                 break;
-            case 2:
+            case REMOVING:
                 onRemove.run();
                 break;
         }
@@ -3400,6 +3414,21 @@ public class StructureUtility {
             actor.inventoryContainer.detectAndSendChanges();
             return true;
         }
-        return world.spawnEntityInWorld(new EntityItem(world, actor.posX, actor.posY, actor.posZ, stack));
+        EntityItem toSpawn = new EntityItem(world, actor.posX, actor.posY, actor.posZ, stack);
+        // For some reason these things sometimes spawn with the velocity of an F1 car, so let's prevent that
+        toSpawn.motionX = 0;
+        toSpawn.motionY = 0;
+        toSpawn.motionZ = 0;
+        return world.spawnEntityInWorld(toSpawn);
+    }
+
+    public static boolean checkPermission(World world, EntityPlayer actor, int x, int y, int z) {
+        boolean res = true;
+        if(isSULoaded) {
+            res = ServerUtilitiesCompat.checkPermission(world, actor, x, z);
+        }
+        res = res && !world.getBlock(x, y, z).isAssociatedBlock(Blocks.bedrock);
+        // maybe check mining level who knows :shrug:
+        return res;
     }
 }
