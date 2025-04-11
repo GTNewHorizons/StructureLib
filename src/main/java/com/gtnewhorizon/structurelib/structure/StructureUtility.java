@@ -403,7 +403,7 @@ public class StructureUtility {
                 }
             }
         }
-        if (mode == REMOVING || !s.takeOne(stack, true)) {
+        if (mode == REMOVING || !s.takeOne(stack, false)) {
             // If we're in removing mode, or if the user didn't have the block in their inventory, and we're in some other mode, let's check some stuff
             if(world.isAirBlock(x, y, z)) {
                 return PlaceResult.SKIP;
@@ -843,6 +843,10 @@ public class StructureUtility {
                 return Objects.equals(hintTier, worldTier);
             }
 
+            private boolean isInAllKnownTiers(Block b) {
+                return allKnownTiers != null && allKnownTiers.stream().anyMatch(pair -> pair.getLeft().isAssociatedBlock(b));
+            }
+
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 Pair<Block, Integer> hint = getHint(trigger);
@@ -881,8 +885,11 @@ public class StructureUtility {
                 Block block = world.getBlock(x, y, z);
                 int meta = world.getBlockMetadata(x, y, z);
                 TIER tier = tierExtractor.convert(block, meta);
-                if (mode != REMOVING && Objects.equals(tier, tierExtractor.convert(hint.getKey(), hint.getValue())))
+                if (mode != REMOVING && (Objects.equals(tier, tierExtractor.convert(hint.getKey(), hint.getValue()))))
                     return PlaceResult.SKIP;
+                if (mode == REMOVING && (!isInAllKnownTiers(block) && !world.isAirBlock(x, y, z))) {
+                    return PlaceResult.REJECT;
+                }
                 return StructureUtility.survivalPlaceBlock(
                         hint.getKey(),
                         hint.getValue(),
@@ -972,7 +979,8 @@ public class StructureUtility {
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
                 ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
-                if (mode != REMOVING && check(t, world, x, y, z)) return PlaceResult.SKIP;
+                PlaceResult skipOrRejectBasedOnCheck = checkForRemoving(mode, check(t, world, x, y, z), world, x, y, z);
+                if (skipOrRejectBasedOnCheck != PlaceResult.ACCEPT) return skipOrRejectBasedOnCheck;
                 if (getBlock() == null) return PlaceResult.REJECT;
                 return StructureUtility.survivalPlaceBlock(
                         getBlock(),
@@ -1060,7 +1068,8 @@ public class StructureUtility {
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                 ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
-                if (mode != REMOVING && check(t, world, x, y, z)) return PlaceResult.SKIP;
+                PlaceResult skipOrRejectBasedOnCheck = checkForRemoving(mode, check(t, world, x, y, z), world, x, y, z);
+                if (skipOrRejectBasedOnCheck != PlaceResult.ACCEPT) return skipOrRejectBasedOnCheck;
                 if (init()) return StructureUtility.survivalPlaceBlock(block, meta, world, x, y, z, s, actor, chatter);
                 return fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
             }
@@ -1069,7 +1078,8 @@ public class StructureUtility {
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
                 ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
-                if (mode != REMOVING && check(t, world, x, y, z)) return PlaceResult.SKIP;
+                PlaceResult skipOrRejectBasedOnCheck = checkForRemoving(mode, check(t, world, x, y, z), world, x, y, z);
+                if (skipOrRejectBasedOnCheck != PlaceResult.ACCEPT) return skipOrRejectBasedOnCheck;
                 if (init()) return StructureUtility.survivalPlaceBlock(
                         block,
                         meta,
@@ -1698,9 +1708,9 @@ public class StructureUtility {
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
                     ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
-                    if (mode != REMOVING && world.getBlock(x, y, z) == defaultBlock
-                            && world.getBlockMetadata(x, y, z) == defaultMeta)
-                        return PlaceResult.SKIP;
+                    PlaceResult skipOrRejectBasedOnCheck = checkForRemoving(mode, world.getBlock(x, y, z) == defaultBlock
+                        && world.getBlockMetadata(x, y, z) == defaultMeta, world, x, y, z);
+                    if (skipOrRejectBasedOnCheck != PlaceResult.ACCEPT) return skipOrRejectBasedOnCheck;
                     return StructureUtility.survivalPlaceBlock(
                             defaultBlock,
                             defaultMeta,
@@ -1746,9 +1756,9 @@ public class StructureUtility {
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
                     ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
-                    if (mode != REMOVING && world.getBlock(x, y, z) == defaultBlock
-                            && world.getBlockMetadata(x, y, z) == defaultMeta)
-                        return PlaceResult.SKIP;
+                    PlaceResult skipOrRejectBasedOnCheck = checkForRemoving(mode, world.getBlock(x, y, z) == defaultBlock
+                        && world.getBlockMetadata(x, y, z) == defaultMeta, world, x, y, z);
+                    if (skipOrRejectBasedOnCheck != PlaceResult.ACCEPT) return skipOrRejectBasedOnCheck;
                     return StructureUtility.survivalPlaceBlock(
                             defaultBlock,
                             defaultMeta,
@@ -2008,7 +2018,7 @@ public class StructureUtility {
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
                 ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
-                if (mode == REMOVING || predicate.test(t))
+                if (predicate.test(t))
                     return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
                 return placeResultWhenDisabled;
             }
@@ -2017,7 +2027,7 @@ public class StructureUtility {
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
                 ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
-                if (mode == REMOVING || predicate.test(t))
+                if (predicate.test(t))
                     return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, env);
                 return placeResultWhenDisabled;
             }
@@ -3430,5 +3440,11 @@ public class StructureUtility {
         res = res && !world.getBlock(x, y, z).isAssociatedBlock(Blocks.bedrock);
         // maybe check mining level who knows :shrug:
         return res;
+    }
+
+    public static PlaceResult checkForRemoving(ItemConstructableTrigger.TriggerMode mode, boolean checkResult, World world, int x, int y, int z) {
+        if (mode != REMOVING && checkResult) return PlaceResult.SKIP;
+        else if (mode != BUILDING && !checkResult && !world.isAirBlock(x, y, z)) return PlaceResult.REJECT;
+        return PlaceResult.ACCEPT;
     }
 }

@@ -23,6 +23,7 @@ import java.util.function.Predicate;
 import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
 import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.REMOVING;
+import static com.gtnewhorizon.structurelib.structure.StructureUtility.checkForRemoving;
 
 /**
  * Use StructureUtility to instantiate. These are the building blocks for your {@link IStructureDefinition}. It
@@ -143,7 +144,8 @@ public interface IStructureElement<T> {
         EntityPlayer actor = env.getActor();
         Consumer<IChatComponent> chatter = env.getChatter();
         if (e != null) {
-            if (mode != REMOVING && check(t, world, x, y, z)) return PlaceResult.SKIP;
+            PlaceResult skipOrRejectBasedOnCheck = checkForRemoving(mode, check(t, world, x, y, z), world, x, y, z);
+            if (skipOrRejectBasedOnCheck != PlaceResult.ACCEPT) return skipOrRejectBasedOnCheck;
             if (e.getStacks() == null) {
                 ItemStack taken = source.takeOne(e.getPredicate(), true);
                 return StructureUtility.survivalPlaceBlock(
