@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.google.common.base.Splitter;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -32,6 +31,7 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import com.google.common.base.Splitter;
 import com.gtnewhorizon.structurelib.ChannelDescription;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
@@ -191,7 +191,14 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
 
         updateButtons();
         tooltipSplitCache.clear();
-        info = StreamSupport.stream(Splitter.on("\\n").split(StatCollector.translateToLocal("item.structurelib.constructableTrigger.gui.info")).spliterator(), false).flatMap(line -> fontRendererObj.listFormattedStringToWidth(line, width * 3 / 5).stream()).collect(Collectors.toList());
+        info = StreamSupport
+                .stream(
+                        Splitter.on("\\n").split(
+                                StatCollector.translateToLocal("item.structurelib.constructableTrigger.gui.info"))
+                                .spliterator(),
+                        false)
+                .flatMap(line -> fontRendererObj.listFormattedStringToWidth(line, width * 3 / 5).stream())
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -391,10 +398,10 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         drawTexturedModalRect(topLeftX, topLeftY, 0, 0, getXSize(), getYSize());
         list.drawScreen(mX, mY, partialTick);
         fontRendererObj.drawString(
-            I18n.format("item.structurelib.constructableTrigger.gui.title"),
-            guiLeft + 12,
-            guiTop + 9,
-            0);
+                I18n.format("item.structurelib.constructableTrigger.gui.title"),
+                guiLeft + 12,
+                guiTop + 9,
+                0);
         fontRendererObj.drawString(
                 I18n.format("item.structurelib.constructableTrigger.gui.key"),
                 guiLeft + 12,
@@ -429,7 +436,9 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         if (highlight != null) {
             drawChannelDescriptionTooltip(highlight);
         }
-        if (mouseX > xSize + guiLeft - INFO_BOX_SIZE - 12 && mouseX < xSize + guiLeft- 12  && mouseY > guiTop + 7 && mouseY < guiTop + INFO_BOX_SIZE + 7) {
+        if (mouseX > xSize + guiLeft - INFO_BOX_SIZE - 12 && mouseX < xSize + guiLeft - 12
+                && mouseY > guiTop + 7
+                && mouseY < guiTop + INFO_BOX_SIZE + 7) {
             drawHoveringText(info, mouseX, mouseY, fontRendererObj);
         }
     }
