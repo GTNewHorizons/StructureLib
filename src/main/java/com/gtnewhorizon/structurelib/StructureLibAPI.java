@@ -381,7 +381,9 @@ public class StructureLibAPI {
         ChannelDescription.item(channel, channelValue, stack);
         AnimatedTooltipHandler.addItemTooltip(
                 stack,
-                () -> StatCollector
-                        .translateToLocalFormatted("structurelib.tooltip.channelvalue", channelValue, channel));
+                AnimatedTooltipHandler.translatedText("structurelib.tooltip.channelvalue", channelValue, channel));
+        AnimatedTooltipHandler.addItemTooltip(
+                stack,
+                AnimatedTooltipHandler.translatedText("structurelib.tooltip.indicator_dnd", channelValue, channel));
     }
 }

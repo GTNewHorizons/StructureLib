@@ -30,6 +30,7 @@ item.structurelib.constructableTrigger.desc.4=此物品堆叠数量会影响显�
 item.structurelib.constructableTrigger.desc.5=按下 §l[左SHIFT]§r 以显示子信道
 item.structurelib.constructableTrigger.desc.lshift.0=包含 %d 个子信道
 item.structurelib.constructableTrigger.too_fast=请在下一次自动搭建前等待 %d 毫秒...
+item.structurelib.constructableTrigger.gui.title=子信道
 item.structurelib.constructableTrigger.gui.key=信道名:
 item.structurelib.constructableTrigger.gui.value=值:
 item.structurelib.constructableTrigger.gui.add=添加
@@ -37,10 +38,12 @@ item.structurelib.constructableTrigger.gui.set=替换
 item.structurelib.constructableTrigger.gui.unset=删除
 item.structurelib.constructableTrigger.gui.wipe=§4全部清空
 item.structurelib.constructableTrigger.gui.channels.from=§r模组: §9§o%s
+item.structurelib.constructableTrigger.gui.info=许多多方块的结构都是可变的，在自动放置时，可以使用子信道来向多方块指明该使用哪一个变体。\n子信道由一个字符串标识、并拥有一个正整数作为值。这个GUI中的信道名支持自动补全到绝大多数已知的子信道。\n你也可以将部分物品从NEI中拖拽至GUI内来设置子信道值为该物品表示的值。这些物品的物品说明中都带有§o表示子信道 X 为 Y§r。
 
 channels.structurelib.show_errors=添加后，在投影时会高亮标出必然错误的部分
 
 structurelib.tooltip.channelvalue=§7表示子信道 §6%2$s§r§7 为 §6%d§r
+structurelib.tooltip.indicator_dnd=拖入GUI中来选择该值
 
 structurelib.autoplace.built_stat=已放置 %s 个方块
 structurelib.autoplace.complete=§a这个多方块结构已经完成自动搭建！
