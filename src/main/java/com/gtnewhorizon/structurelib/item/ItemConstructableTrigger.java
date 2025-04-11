@@ -1,10 +1,12 @@
 package com.gtnewhorizon.structurelib.item;
 
-import com.gtnewhorizon.structurelib.StructureLib;
-import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
-import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
-import com.gtnewhorizon.structurelib.gui.GuiScreenConfigureChannels;
-import cpw.mods.fml.common.FMLCommonHandler;
+import static com.gtnewhorizon.structurelib.StructureLibAPI.MOD_ID;
+import static net.minecraft.util.EnumChatFormatting.BLUE;
+import static net.minecraft.util.StatCollector.translateToLocal;
+import static net.minecraft.util.StatCollector.translateToLocalFormatted;
+
+import java.util.List;
+
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -14,14 +16,15 @@ import net.minecraft.nbt.NBTTagInt;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
+
 import org.lwjgl.input.Keyboard;
 
-import java.util.List;
+import com.gtnewhorizon.structurelib.StructureLib;
+import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
+import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
+import com.gtnewhorizon.structurelib.gui.GuiScreenConfigureChannels;
 
-import static com.gtnewhorizon.structurelib.StructureLibAPI.MOD_ID;
-import static net.minecraft.util.EnumChatFormatting.BLUE;
-import static net.minecraft.util.StatCollector.translateToLocal;
-import static net.minecraft.util.StatCollector.translateToLocalFormatted;
+import cpw.mods.fml.common.FMLCommonHandler;
 
 public class ItemConstructableTrigger extends Item {
 

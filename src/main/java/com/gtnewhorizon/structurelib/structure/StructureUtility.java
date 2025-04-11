@@ -1,40 +1,12 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import com.google.common.collect.ImmutableList;
-import com.gtnewhorizon.structurelib.StructureEvent.StructureElementVisitedEvent;
-import com.gtnewhorizon.structurelib.StructureLib;
-import com.gtnewhorizon.structurelib.StructureLibAPI;
-import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
-import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
-import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
-import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
-import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
-import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
-import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
-import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
-import com.gtnewhorizon.structurelib.util.Vec3Impl;
-import com.gtnewhorizon.structurelib.xmod.ServerUtilitiesCompat;
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.registry.GameRegistry;
-import net.minecraft.block.Block;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ChatComponentTranslation;
-import net.minecraft.util.IChatComponent;
-import net.minecraft.util.IIcon;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
+import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
+import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
+import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.BUILDING;
+import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.REMOVING;
+import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.UPDATING;
+import static java.lang.Integer.MIN_VALUE;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -56,12 +28,44 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
-import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
-import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.BUILDING;
-import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.REMOVING;
-import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.UPDATING;
-import static java.lang.Integer.MIN_VALUE;
+import javax.annotation.Nullable;
+
+import net.minecraft.block.Block;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.IIcon;
+import net.minecraft.world.World;
+import net.minecraftforge.common.util.ForgeDirection;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
+import com.google.common.collect.ImmutableList;
+import com.gtnewhorizon.structurelib.StructureEvent.StructureElementVisitedEvent;
+import com.gtnewhorizon.structurelib.StructureLib;
+import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
+import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
+import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
+import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
+import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
+import com.gtnewhorizon.structurelib.util.Vec3Impl;
+import com.gtnewhorizon.structurelib.xmod.ServerUtilitiesCompat;
+
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.registry.GameRegistry;
 
 /**
  * A brief index of everything contained
@@ -350,11 +354,13 @@ public class StructureUtility {
             // ...trigger instead of assuming default behavior
             mode = ItemConstructableTrigger.getMode(actor.getHeldItem());
         }
-        if (mode == BUILDING && !StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
+        if (mode == BUILDING && !StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor))
+            return PlaceResult.REJECT;
         if (mode == UPDATING) {
             if (!world.isAirBlock(x, y, z)) {
                 if (world.getTileEntity(x, y, z) instanceof TileEntity) {
-                    // We're in updating mode and the block we're looking at might be important, so let's just leave it alone
+                    // We're in updating mode and the block we're looking at might be important, so let's just leave it
+                    // alone
                     // since it's probably not something we want to replace with something else
                     return PlaceResult.SKIP;
                 }
@@ -367,15 +373,15 @@ public class StructureUtility {
         }
         Item itemBlock = Item.getItemFromBlock(block);
         int itemMeta = itemBlock instanceof ISpecialItemBlock
-            ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta)
-            : meta;
+                ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta)
+                : meta;
         ItemStack stack = new ItemStack(itemBlock, 1, itemMeta);
         if (mode != REMOVING) {
             if (!s.takeOne(stack, true)) {
                 if (chatter != null) chatter.accept(
-                    new ChatComponentTranslation(
-                        "structurelib.autoplace.error.no_simple_block",
-                        stack.func_151000_E()));
+                        new ChatComponentTranslation(
+                                "structurelib.autoplace.error.no_simple_block",
+                                stack.func_151000_E()));
                 return PlaceResult.REJECT;
             }
             if (block instanceof ICustomBlockSetting) {
@@ -398,24 +404,26 @@ public class StructureUtility {
                     }
                 }
                 if (!stack.copy()
-                    .tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f)) {
+                        .tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f)) {
                     return PlaceResult.REJECT;
                 }
             }
         }
         if (mode == REMOVING || !s.takeOne(stack, false)) {
-            // If we're in removing mode, or if the user didn't have the block in their inventory, and we're in some other mode, let's check some stuff
-            if(world.isAirBlock(x, y, z)) {
+            // If we're in removing mode, or if the user didn't have the block in their inventory, and we're in some
+            // other mode, let's check some stuff
+            if (world.isAirBlock(x, y, z)) {
                 return PlaceResult.SKIP;
             }
             ItemStack toGive = new ItemStack(world.getBlock(x, y, z));
             toGive.setItemDamage(world.getBlock(x, y, z).getDamageValue(world, x, y, z));
-            if(mode == REMOVING && !checkPermission(world, actor, x, y, z)) {
+            if (mode == REMOVING && !checkPermission(world, actor, x, y, z)) {
                 return PlaceResult.REJECT;
             }
             world.setBlockToAir(x, y, z);
             if (mode == REMOVING && !tryGiveOrDropItem(world, actor, toGive)) {
-                // We're in removing mode and something went wrong while trying to give the player the block we removed, let's just fail for now
+                // We're in removing mode and something went wrong while trying to give the player the block we removed,
+                // let's just fail for now
                 return PlaceResult.REJECT;
             }
         }
@@ -517,7 +525,7 @@ public class StructureUtility {
         }
         if (mode != REMOVING) {
             if (mode == BUILDING) {
-                if(!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) {
+                if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) {
                     return PlaceResult.SKIP;
                 }
             }
@@ -537,7 +545,9 @@ public class StructureUtility {
             }
             if (!assumeStackPresent && !s.takeOne(stack, true)) {
                 if (chatter != null) chatter.accept(
-                    new ChatComponentTranslation("structurelib.autoplace.error.no_item_stack", stack.func_151000_E()));
+                        new ChatComponentTranslation(
+                                "structurelib.autoplace.error.no_item_stack",
+                                stack.func_151000_E()));
                 return PlaceResult.REJECT;
             }
             if (mode == UPDATING && !world.isAirBlock(x, y, z) && checkPermission(world, actor, x, y, z)) {
@@ -555,7 +565,7 @@ public class StructureUtility {
                 }
             }
             if (!stack.copy()
-                .tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f)) {
+                    .tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f)) {
                 return PlaceResult.REJECT;
             }
         }
@@ -566,7 +576,7 @@ public class StructureUtility {
             // If the user didn't have the item in their inventory, or we're in removing mode, we set it to air
             ItemStack toGive = new ItemStack(world.getBlock(x, y, z));
             toGive.setItemDamage(world.getBlock(x, y, z).getDamageValue(world, x, y, z));
-            if(mode == REMOVING && !checkPermission(world, actor, x, y, z)) {
+            if (mode == REMOVING && !checkPermission(world, actor, x, y, z)) {
                 return PlaceResult.REJECT;
             }
             world.setBlockToAir(x, y, z);
@@ -844,7 +854,8 @@ public class StructureUtility {
             }
 
             private boolean isInAllKnownTiers(Block b) {
-                return allKnownTiers != null && allKnownTiers.stream().anyMatch(pair -> pair.getLeft().isAssociatedBlock(b));
+                return allKnownTiers != null
+                        && allKnownTiers.stream().anyMatch(pair -> pair.getLeft().isAssociatedBlock(b));
             }
 
             @Override
@@ -1708,8 +1719,13 @@ public class StructureUtility {
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
                     ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
-                    PlaceResult skipOrRejectBasedOnCheck = checkForRemoving(mode, world.getBlock(x, y, z) == defaultBlock
-                        && world.getBlockMetadata(x, y, z) == defaultMeta, world, x, y, z);
+                    PlaceResult skipOrRejectBasedOnCheck = checkForRemoving(
+                            mode,
+                            world.getBlock(x, y, z) == defaultBlock && world.getBlockMetadata(x, y, z) == defaultMeta,
+                            world,
+                            x,
+                            y,
+                            z);
                     if (skipOrRejectBasedOnCheck != PlaceResult.ACCEPT) return skipOrRejectBasedOnCheck;
                     return StructureUtility.survivalPlaceBlock(
                             defaultBlock,
@@ -1756,8 +1772,13 @@ public class StructureUtility {
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
                     ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
-                    PlaceResult skipOrRejectBasedOnCheck = checkForRemoving(mode, world.getBlock(x, y, z) == defaultBlock
-                        && world.getBlockMetadata(x, y, z) == defaultMeta, world, x, y, z);
+                    PlaceResult skipOrRejectBasedOnCheck = checkForRemoving(
+                            mode,
+                            world.getBlock(x, y, z) == defaultBlock && world.getBlockMetadata(x, y, z) == defaultMeta,
+                            world,
+                            x,
+                            y,
+                            z);
                     if (skipOrRejectBasedOnCheck != PlaceResult.ACCEPT) return skipOrRejectBasedOnCheck;
                     return StructureUtility.survivalPlaceBlock(
                             defaultBlock,
@@ -2027,8 +2048,7 @@ public class StructureUtility {
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
                 ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
-                if (predicate.test(t))
-                    return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, env);
+                if (predicate.test(t)) return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, env);
                 return placeResultWhenDisabled;
             }
         };
@@ -3434,7 +3454,7 @@ public class StructureUtility {
 
     public static boolean checkPermission(World world, EntityPlayer actor, int x, int y, int z) {
         boolean res = true;
-        if(isSULoaded) {
+        if (isSULoaded) {
             res = ServerUtilitiesCompat.checkPermission(world, actor, x, z);
         }
         res = res && !world.getBlock(x, y, z).isAssociatedBlock(Blocks.bedrock);
@@ -3442,7 +3462,8 @@ public class StructureUtility {
         return res;
     }
 
-    public static PlaceResult checkForRemoving(ItemConstructableTrigger.TriggerMode mode, boolean checkResult, World world, int x, int y, int z) {
+    public static PlaceResult checkForRemoving(ItemConstructableTrigger.TriggerMode mode, boolean checkResult,
+            World world, int x, int y, int z) {
         if (mode != REMOVING && checkResult) return PlaceResult.SKIP;
         else if (mode != BUILDING && !checkResult && !world.isAirBlock(x, y, z)) return PlaceResult.REJECT;
         return PlaceResult.ACCEPT;
