@@ -57,12 +57,12 @@ public class ConstructableUtility {
         }
 
         IConstructable constructable = null;
-        if (tTileEntity instanceof IConstructableProvider)
-            constructable = ((IConstructableProvider) tTileEntity).getConstructable();
-        else if (tTileEntity instanceof IConstructable) {
-            constructable = (IConstructable) tTileEntity;
+        if (tTileEntity instanceof IConstructableProvider aConstructableProvider)
+            constructable = aConstructableProvider.getConstructable();
+        else if (tTileEntity instanceof IConstructable aConstructable) {
+            constructable = aConstructable;
         } else if (IMultiblockInfoContainer.contains(tTileEntity.getClass())) {
-            ExtendedFacing facing = tTileEntity instanceof IAlignment ? ((IAlignment) tTileEntity).getExtendedFacing()
+            ExtendedFacing facing = tTileEntity instanceof IAlignment alignment ? alignment.getExtendedFacing()
                     : ExtendedFacing.of(ForgeDirection.getOrientation(aSide));
             constructable = IMultiblockInfoContainer.<TileEntity>get(tTileEntity.getClass())
                     .toConstructable(tTileEntity, facing);
@@ -70,14 +70,13 @@ public class ConstructableUtility {
 
         if (constructable == null) return false;
 
-        if (aPlayer instanceof EntityPlayerMP) {
-            EntityPlayerMP playerMP = (EntityPlayerMP) aPlayer;
+        if (aPlayer instanceof EntityPlayerMP playerMP) {
             // server side and sneaking (already checked above)
             // do construct
             if (aPlayer.capabilities.isCreativeMode) {
                 constructable.construct(aStack, false);
-            } else if (constructable instanceof ISurvivalConstructable) {
-                int built = ((ISurvivalConstructable) constructable).survivalConstruct(
+            } else if (constructable instanceof ISurvivalConstructable aConstructable) {
+                int built = aConstructable.survivalConstruct(
                         aStack,
                         ConfigurationHandler.INSTANCE.getAutoPlaceBudget(),
                         ISurvivalBuildEnvironment.create(IItemSource.fromPlayer(playerMP), playerMP));

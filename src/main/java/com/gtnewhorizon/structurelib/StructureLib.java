@@ -27,6 +27,7 @@ import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
 import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
+import com.gtnewhorizon.structurelib.net.StructureProjectorCycleModeMessage;
 import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
 import com.gtnewhorizon.structurelib.util.InventoryUtility;
 import com.gtnewhorizon.structurelib.util.XSTR;
@@ -34,6 +35,7 @@ import com.gtnewhorizon.structurelib.util.XSTR;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInterModComms;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
@@ -77,6 +79,11 @@ public class StructureLib {
         net.registerMessage(SetChannelDataMessage.Handler.class, SetChannelDataMessage.class, 3, Side.SERVER);
         net.registerMessage(ErrorHintParticleMessage.Handler.class, ErrorHintParticleMessage.class, 4, Side.CLIENT);
         net.registerMessage(RegistryOrderSyncMessage.Handler.class, RegistryOrderSyncMessage.class, 5, Side.SERVER);
+        net.registerMessage(
+                StructureProjectorCycleModeMessage.Handler.class,
+                StructureProjectorCycleModeMessage.class,
+                6,
+                Side.SERVER);
 
         try {
             DEBUG_MODE = Boolean.parseBoolean(System.getProperty("structurelib.debug"));
@@ -126,6 +133,11 @@ public class StructureLib {
         ChannelDescription.set(CHANNEL_SHOW_ERROR, MOD_ID, "channels.structurelib.show_errors");
 
         DevelopHelper.onPreInit();
+    }
+
+    @Mod.EventHandler
+    public void init(FMLInitializationEvent e) {
+        proxy.init(e);
     }
 
     @Mod.EventHandler
