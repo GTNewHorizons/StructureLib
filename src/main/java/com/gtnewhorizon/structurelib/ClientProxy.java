@@ -1,16 +1,21 @@
 package com.gtnewhorizon.structurelib;
 
-import static com.gtnewhorizon.structurelib.StructureLib.RANDOM;
-
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
+import com.gtnewhorizon.gtnhlib.keybind.SyncedKeybind;
+import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
+import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
+import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
+import cpw.mods.fml.client.config.GuiConfig;
+import cpw.mods.fml.client.event.ConfigChangedEvent;
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.eventhandler.EventPriority;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.Phase;
+import cpw.mods.fml.common.network.FMLNetworkEvent;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
@@ -20,7 +25,6 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.culling.Frustrum;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -36,30 +40,19 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
-import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
-import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
-import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
-import com.gtnewhorizon.structurelib.net.StructureProjectorCycleModeMessage;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import cpw.mods.fml.client.config.GuiConfig;
-import cpw.mods.fml.client.event.ConfigChangedEvent;
-import cpw.mods.fml.client.registry.ClientRegistry;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.eventhandler.EventPriority;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.InputEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.Phase;
-import cpw.mods.fml.common.network.FMLNetworkEvent;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import static com.gtnewhorizon.structurelib.StructureLib.RANDOM;
 
 public class ClientProxy extends CommonProxy {
 
@@ -70,6 +63,15 @@ public class ClientProxy extends CommonProxy {
      * All batches of hints.
      */
     private static final List<HintGroup> allGroups = new ArrayList<>();
+
+    private static final SyncedKeybind MODE_SWAP_KEY = SyncedKeybind
+        .createConfigurable("item.structurelib.constructableTrigger.keys.cycleMode", "item.structurelib.constructableTrigger.keyCategory", 0)
+        .registerGlobalListener((entityPlayerMP, syncedKeybind) -> {
+            final ItemStack held = entityPlayerMP.getHeldItem();
+            if (held != null && held.getItem() instanceof ItemConstructableTrigger) {
+                ItemConstructableTrigger.cycleMode(held);
+            }
+        });
 
     /**
      * Current batch of hints. Belongs to the same logical multiblock.
@@ -269,8 +271,6 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent e) {
         super.init(e);
-
-        MinecraftForge.EVENT_BUS.register(new KeybindHandler());
     }
 
     static void markTextureUsed(IIcon icon) {
@@ -666,32 +666,6 @@ public class ClientProxy extends CommonProxy {
             GL11.glPopAttrib();
             GL11.glPopMatrix();
             p.endSection();
-        }
-    }
-
-    public static class KeybindHandler {
-
-        private static final KeyBinding CYCLE_PROJECTOR_MODE = new KeyBinding(
-                "item.structurelib.constructableTrigger.keys.cycleMode",
-                0,
-                "item.structurelib.constructableTrigger.keyCategory");
-
-        public KeybindHandler() {
-            FMLCommonHandler.instance().bus().register(this);
-            // If somebody wants to make a UI element for this, be my guest
-            ClientRegistry.registerKeyBinding(CYCLE_PROJECTOR_MODE);
-        }
-
-        @SideOnly(Side.CLIENT)
-        @SubscribeEvent
-        public void key(InputEvent.KeyInputEvent event) {
-            if (CYCLE_PROJECTOR_MODE.isPressed()) {
-                cycleProjectorMode();
-            }
-        }
-
-        private static void cycleProjectorMode() {
-            StructureLib.net.sendToServer(new StructureProjectorCycleModeMessage());
         }
     }
 }
