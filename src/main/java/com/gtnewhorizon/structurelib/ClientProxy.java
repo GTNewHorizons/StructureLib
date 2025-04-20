@@ -20,7 +20,6 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.culling.Frustrum;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -43,23 +42,18 @@ import org.lwjgl.opengl.GL11;
 import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
 import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
-import com.gtnewhorizon.structurelib.net.StructureProjectorCycleModeMessage;
 
 import cpw.mods.fml.client.config.GuiConfig;
 import cpw.mods.fml.client.event.ConfigChangedEvent;
-import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.InputEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class ClientProxy extends CommonProxy {
 
@@ -269,8 +263,6 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent e) {
         super.init(e);
-
-        MinecraftForge.EVENT_BUS.register(new KeybindHandler());
     }
 
     static void markTextureUsed(IIcon icon) {
@@ -666,32 +658,6 @@ public class ClientProxy extends CommonProxy {
             GL11.glPopAttrib();
             GL11.glPopMatrix();
             p.endSection();
-        }
-    }
-
-    public static class KeybindHandler {
-
-        private static final KeyBinding CYCLE_PROJECTOR_MODE = new KeyBinding(
-                "item.structurelib.constructableTrigger.keys.cycleMode",
-                0,
-                "item.structurelib.constructableTrigger.keyCategory");
-
-        public KeybindHandler() {
-            FMLCommonHandler.instance().bus().register(this);
-            // If somebody wants to make a UI element for this, be my guest
-            ClientRegistry.registerKeyBinding(CYCLE_PROJECTOR_MODE);
-        }
-
-        @SideOnly(Side.CLIENT)
-        @SubscribeEvent
-        public void key(InputEvent.KeyInputEvent event) {
-            if (CYCLE_PROJECTOR_MODE.isPressed()) {
-                cycleProjectorMode();
-            }
-        }
-
-        private static void cycleProjectorMode() {
-            StructureLib.net.sendToServer(new StructureProjectorCycleModeMessage());
         }
     }
 }
