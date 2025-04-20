@@ -39,9 +39,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
-import com.gtnewhorizon.gtnhlib.keybind.SyncedKeybind;
 import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
-import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
 
@@ -66,16 +64,6 @@ public class ClientProxy extends CommonProxy {
      * All batches of hints.
      */
     private static final List<HintGroup> allGroups = new ArrayList<>();
-
-    private static final SyncedKeybind MODE_SWAP_KEY = SyncedKeybind.createConfigurable(
-            "item.structurelib.constructableTrigger.keys.cycleMode",
-            "item.structurelib.constructableTrigger.keyCategory",
-            0).registerGlobalListener((entityPlayerMP, syncedKeybind) -> {
-                final ItemStack held = entityPlayerMP.getHeldItem();
-                if (held != null && held.getItem() instanceof ItemConstructableTrigger) {
-                    ItemConstructableTrigger.cycleMode(held);
-                }
-            });
 
     /**
      * Current batch of hints. Belongs to the same logical multiblock.

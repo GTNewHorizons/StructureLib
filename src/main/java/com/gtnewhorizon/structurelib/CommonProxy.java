@@ -14,6 +14,8 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 
+import com.gtnewhorizon.gtnhlib.keybind.SyncedKeybind;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
 import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
 
@@ -110,6 +112,16 @@ public class CommonProxy {
             if (!forceUpdateLastSend) submap.put(throttleKey, now);
         }
     }
+
+    private static final SyncedKeybind MODE_SWAP_KEY = SyncedKeybind.createConfigurable(
+            "item.structurelib.constructableTrigger.keys.cycleMode",
+            "item.structurelib.constructableTrigger.keyCategory",
+            0).registerGlobalListener((entityPlayerMP, syncedKeybind) -> {
+                final ItemStack held = entityPlayerMP.getHeldItem();
+                if (held != null && held.getItem() instanceof ItemConstructableTrigger) {
+                    ItemConstructableTrigger.cycleMode(held);
+                }
+            });
 
     public void displayConfigGUI(String category) {}
 
