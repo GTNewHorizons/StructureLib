@@ -1,21 +1,16 @@
 package com.gtnewhorizon.structurelib;
 
-import com.gtnewhorizon.gtnhlib.keybind.SyncedKeybind;
-import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
-import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
-import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
-import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
-import cpw.mods.fml.client.config.GuiConfig;
-import cpw.mods.fml.client.event.ConfigChangedEvent;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.eventhandler.EventPriority;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.Phase;
-import cpw.mods.fml.common.network.FMLNetworkEvent;
+import static com.gtnewhorizon.structurelib.StructureLib.RANDOM;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
@@ -40,19 +35,27 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import com.gtnewhorizon.gtnhlib.keybind.SyncedKeybind;
+import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
+import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
+import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
 
-import static com.gtnewhorizon.structurelib.StructureLib.RANDOM;
+import cpw.mods.fml.client.config.GuiConfig;
+import cpw.mods.fml.client.event.ConfigChangedEvent;
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.eventhandler.EventPriority;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.Phase;
+import cpw.mods.fml.common.network.FMLNetworkEvent;
 
 public class ClientProxy extends CommonProxy {
 
@@ -64,14 +67,15 @@ public class ClientProxy extends CommonProxy {
      */
     private static final List<HintGroup> allGroups = new ArrayList<>();
 
-    private static final SyncedKeybind MODE_SWAP_KEY = SyncedKeybind
-        .createConfigurable("item.structurelib.constructableTrigger.keys.cycleMode", "item.structurelib.constructableTrigger.keyCategory", 0)
-        .registerGlobalListener((entityPlayerMP, syncedKeybind) -> {
-            final ItemStack held = entityPlayerMP.getHeldItem();
-            if (held != null && held.getItem() instanceof ItemConstructableTrigger) {
-                ItemConstructableTrigger.cycleMode(held);
-            }
-        });
+    private static final SyncedKeybind MODE_SWAP_KEY = SyncedKeybind.createConfigurable(
+            "item.structurelib.constructableTrigger.keys.cycleMode",
+            "item.structurelib.constructableTrigger.keyCategory",
+            0).registerGlobalListener((entityPlayerMP, syncedKeybind) -> {
+                final ItemStack held = entityPlayerMP.getHeldItem();
+                if (held != null && held.getItem() instanceof ItemConstructableTrigger) {
+                    ItemConstructableTrigger.cycleMode(held);
+                }
+            });
 
     /**
      * Current batch of hints. Belongs to the same logical multiblock.
