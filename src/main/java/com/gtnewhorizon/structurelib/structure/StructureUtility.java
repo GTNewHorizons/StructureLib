@@ -637,7 +637,20 @@ public class StructureUtility {
      * given tier, then player will be allowed to use multiple kinds of blocks, but their tier is guaranteed to be the
      * same.
      * <p>
-     * <b>Example Implementation:</b>
+     * <h3>WARNING</h3> <b>You SHOULD NOT return notSet from your tierExtractor.</b> If you do so, we will have this
+     * chain of events:
+     * <ul>
+     * <li>at check start, tier is reset to notSet
+     * <li>the tier extractor returns notSet for first block, so since ofBlocksTiered finds your current tier is notSet,
+     * and the new block's tier is the same as that, so it's accepted
+     * <li>at 2nd, 3rd..., same thing in 2 happens
+     * <li>at last occurrence, player placed a valid block with a tier not notSet. ofBlocksTiered now sets your current
+     * tier to this tier, and accept the block
+     * <li>check got notified structure is sound, and tier is not notSet. it marks the structure as complete and start
+     * doing its business
+     * <li>Player enjoy a (probably) hilariously shaped multi and (probably) reduced build cost.
+     * </ul>
+     * <h3>Example Implementation</h3>
      * <p>
      * Assume you have 16 tier, each map to one particular block's 16 different meta. You will usually want something
      * like this
@@ -664,7 +677,7 @@ public class StructureUtility {
      * }
      * </pre>
      *
-     * Important bits:
+     * Important bits of this example implementation:
      * <ul>
      * <li>The supplied ITierConverter returns null for an invalid block</li>
      * <li>Possible tier returned by ITierConverter is Integer object 0 to 15.</li>
@@ -673,19 +686,8 @@ public class StructureUtility {
      * <li>notSet is never a tier returned by ITierConverter.</li>
      * </ul>
      * <p>
-     * <p>
-     * <b>You SHOULD NOT return notSet from your tierExtractor.</b> If you do so, we will have this chain of events:
-     * <ul>
-     * <li>at check start, tier is reset to notSet
-     * <li>the tier extractor returns notSet for first block, so since ofBlocksTiered finds your current tier is notSet,
-     * and the new block's tier is the same as that, so it's accepted
-     * <li>at 2nd, 3rd..., same thing in 2 happens
-     * <li>at last occurrence, player placed a valid block with a tier not notSet. ofBlocksTiered now sets your current
-     * tier to this tier, and accept the block
-     * <li>check got notified structure is sound, and tier is not notSet. it marks the structure as complete and start
-     * doing its business
-     * <li>Player enjoy a (probably) hilariously shaped multi and (probably) reduced build cost.
-     * </ul>
+     * As a friendly reminder, the above characteristics are only for this simply demo, not as a general restriction
+     * imposed by ofBlocksTiered.
      *
      * @param tierExtractor a function to extract tier info from a block. This function can return null and will never
      *                      be passed a null block or an invalid block meta. If this function returns null, then the
