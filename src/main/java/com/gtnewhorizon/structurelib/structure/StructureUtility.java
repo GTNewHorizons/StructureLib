@@ -781,7 +781,7 @@ public class StructureUtility {
      * doing its business
      * <li>Player enjoy a (probably) hilariously shaped multi and (probably) reduced build cost.
      * </ul>
-     * <h3>Example Implementation</h3>
+     * <h4>Example Implementation</h4>
      * <p>
      * Assume you have 16 tier, each map to one particular block's 16 different meta. You will usually want something
      * like this
