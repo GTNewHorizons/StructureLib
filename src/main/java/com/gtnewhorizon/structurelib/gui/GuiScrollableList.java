@@ -16,7 +16,7 @@ import org.lwjgl.opengl.GL11;
  * <p>
  * As the code has been released into public domain, it is now LGPL as part of this library as a whole. You can go to
  * EnderCore's repository to obtain a public domain copy though
- *
+ * <p>
  * Major edits
  * <ul>
  * <li>Separate dwheel handling to handleDWheel. The next event calls often cause the mouse click event to not fire on
@@ -167,10 +167,17 @@ public abstract class GuiScrollableList<T> {
         }
     }
 
+    protected void resetScroll() {
+        amountScrolled = 0;
+    }
+
     /**
      * draws the slot to the screen, pass in mouse's current x and y and partial ticks
      */
     public void drawScreen(int mX, int mY, float partialTick) {
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        GL11.glTranslatef(0.0F, 0.0F, -2000.0F);
         this.mouseX = mX;
         this.mouseY = mY;
 
@@ -199,13 +206,26 @@ public abstract class GuiScrollableList<T> {
         int contentYOffset = this.minY + margin - amountScrolled;
 
         boolean hoveringPrecondition = mX >= minX && mX <= maxX && mY >= minY && mY <= maxY;
+        int slotHeight = this.slotHeight - margin;
+
+        if (selectedIndex != -1) {
+            int elementY = contentYOffset + selectedIndex * this.slotHeight;
+            if (elementY + slotHeight > maxY) {
+                this.amountScrolled = (selectedIndex + 1) * this.slotHeight - this.height + margin;
+                amountScrolled = (int) this.amountScrolled;
+                contentYOffset = this.minY + margin - amountScrolled;
+            } else if (elementY < minY) {
+                this.amountScrolled = selectedIndex * this.slotHeight;
+                amountScrolled = (int) this.amountScrolled;
+                contentYOffset = this.minY + margin - amountScrolled;
+            }
+        }
 
         prepareDrawElements();
 
         for (int i = 0; i < getNumElements(); ++i) {
 
             int elementY = contentYOffset + i * this.slotHeight;
-            int slotHeight = this.slotHeight - margin;
 
             if (elementY <= maxY && elementY + slotHeight >= minY) {
 
@@ -264,6 +284,7 @@ public abstract class GuiScrollableList<T> {
         GL11.glShadeModel(GL11.GL_FLAT);
         GL11.glEnable(GL11.GL_ALPHA_TEST);
         GL11.glDisable(GL11.GL_BLEND);
+        GL11.glPopMatrix();
     }
 
     protected void prepareDrawElements() {}
@@ -412,7 +433,7 @@ public abstract class GuiScrollableList<T> {
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         tess.startDrawingQuads();
-        tess.setColorOpaque_I(2105376);
+        tess.setColorOpaque_I(0x202020);
         tess.addVertex(minX, maxY, 0.0D);
         tess.addVertex(maxX, maxY, 0.0D);
         tess.addVertex(maxX, minY, 0.0D);
