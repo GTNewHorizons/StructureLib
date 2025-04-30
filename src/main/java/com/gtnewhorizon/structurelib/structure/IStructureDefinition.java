@@ -389,7 +389,6 @@ public interface IStructureDefinition<T> {
                         return true;
                     }),
                     hintsOnly ? "spawnHint" : "placeBlock");
-
         }
         return true;
     }
