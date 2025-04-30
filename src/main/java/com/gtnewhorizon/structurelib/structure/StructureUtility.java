@@ -745,35 +745,35 @@ public class StructureUtility {
 
     /**
      * Element representing a component with different tiers. Your multi will accept any of them (as long as player does
-     * not mix them (*)), but would like to know which is used. Player can use more blueprint to get hints denoting more
+     * not mix tier (*)), but would like to know which is used. Player can use more blueprint to get hints denoting more
      * advanced components.
      * <p>
-     * (*): Implementation wise, this structure element will only accept a block if its tier is the same as existing
-     * tier or if existing tier is unset (i.e. value of third argument)
-     * <p>
-     * Above all else, you need to decide what tier you are going to use. For simpler cases, Integer is a good choice.
-     * You can also use an existing Enum. Tier can never be null though. It can also be a String or a
+     * Above all else, you need to decide what type of tier you are going to use. For simpler cases, Integer is a good
+     * choice. You can also use an existing Enum. It can also be a String or a
      * {@link net.minecraft.util.ResourceLocation}, or basically anything. It doesn't even have to implement
      * {@link Comparable}.
      * <p>
-     * This assumes you will reset the backing storage, and on the first occurrence getter would return notSet. You can
-     * also make getter to return other value to forcefully select a certain tier, but you're probably better off using
-     * block adders or {@link #ofBlock(Block, int, Block, int)} and its overloads
+     * If your tier extractor function returns null on any (Block, meta) pair, then it means this block is rejected.
+     * This also implies null can never be a valid tier.
      * <p>
-     * Implementation wise, this allows a block only when we don't yet have a tier, or the block at that location has
-     * the same tier as we already have.
-     * <p>
-     * Notice that if your tier extractor function returns null on any (Block, meta) pair, then it means this block is
-     * rejected, since null can never be a valid tier.
+     * This structure element require you will reset the backing storage of getter in your own code, such that in every
+     * round of structure checking, the first call to getter would always return notSet. You can also make getter to
+     * return other value on that occasion to forcefully select a certain tier, but then you'd probably be better off
+     * using block adders or {@link #ofBlock(Block, int, Block, int)} and its overloads
      * <p>
      * There is yet no TileEntity counterpart of this utility. Feel free to submit a PR to add it.
      * <p>
-     * For most typical use cases, you will NOT want to return notSet from your tierExtractor. If you do so, we will
-     * have this kind of chain of events:
+     * (*): Implementation wise, this structure element will only accept a block if its tier is the same as existing
+     * tier or if existing tier is unset (i.e. value of third argument). If there are multiple (block, tier) tuple for a
+     * given tier, then player will be allowed to use multiple kinds of blocks, but their tier is guaranteed to be the
+     * same.
+     * <p>
+     * <h3>WARNING</h3> <b>You SHOULD NOT return notSet from your tierExtractor.</b> If you do so, we will have this
+     * chain of events:
      * <ul>
      * <li>at check start, tier is reset to notSet
-     * <li>at first occurrence, ofBlocksTiered finds your current tier is notSet, and the block's tier is notSet, so
-     * it's accepted
+     * <li>the tier extractor returns notSet for first block, so since ofBlocksTiered finds your current tier is notSet,
+     * and the new block's tier is the same as that, so it's accepted
      * <li>at 2nd, 3rd..., same thing in 2 happens
      * <li>at last occurrence, player placed a valid block with a tier not notSet. ofBlocksTiered now sets your current
      * tier to this tier, and accept the block
@@ -781,10 +781,10 @@ public class StructureUtility {
      * doing its business
      * <li>Player enjoy a (probably) hilariously shaped multi and (probably) reduced build cost.
      * </ul>
+     * <h3>Example Implementation</h3>
      * <p>
-     * <b>Example:</b>
-     * <p>
-     * Assume you have 16 tier, each map to one block's 16 different meta. You will usually want something like this
+     * Assume you have 16 tier, each map to one particular block's 16 different meta. You will usually want something
+     * like this
      *
      * <pre>
      * public class Tile extends TileEntity {
@@ -808,6 +808,18 @@ public class StructureUtility {
      * }
      * </pre>
      *
+     * Important bits of this example implementation:
+     * <ul>
+     * <li>The supplied ITierConverter returns null for an invalid block</li>
+     * <li>Possible tier returned by ITierConverter is Integer object 0 to 15.</li>
+     * <li>notSet is set to -1. tier got reset to this value by caller before calling into
+     * {@link IStructureDefinition#check(Object, String, World, ExtendedFacing, int, int, int, int, int, int, boolean)}</li>
+     * <li>notSet is never a tier returned by ITierConverter.</li>
+     * </ul>
+     * <p>
+     * As a friendly reminder, the above characteristics are only for this simply demo, not as a general restriction
+     * imposed by ofBlocksTiered.
+     *
      * @param tierExtractor a function to extract tier info from a block. This function can return null and will never
      *                      be passed a null block or an invalid block meta. If this function returns null, then the
      *                      block would be considered invalid.
@@ -817,8 +829,8 @@ public class StructureUtility {
      *                      construction time, use {@link #lazy(Supplier)} or its overloads to delay a bit. This list is
      *                      only for hint particle spawning and survival build. The hint/autoplace code will choose 1st
      *                      pair to spawn/place if trigger item has master channel data of 1, 2nd pair if 2, and so on.
-     * @param notSet        The value returned from {@code getter} when there were no tier info found in T yet. Can be
-     *                      null.
+     * @param notSet        The value returned from {@code getter} when there were no tier info found in T yet. Cannot
+     *                      be null.
      * @param getter        a function to retrieve the current tier from context object
      * @param setter        a function to set the current tier into context object
      */
