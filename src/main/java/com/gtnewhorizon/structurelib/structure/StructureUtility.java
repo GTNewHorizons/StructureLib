@@ -768,7 +768,7 @@ public class StructureUtility {
      * given tier, then player will be allowed to use multiple kinds of blocks, but their tier is guaranteed to be the
      * same.
      * <p>
-     * <h3>WARNING</h3> <b>You SHOULD NOT return notSet from your tierExtractor.</b> If you do so, we will have this
+     * <h4>WARNING</h4> <b>You SHOULD NOT return notSet from your tierExtractor.</b> If you do so, we will have this
      * chain of events:
      * <ul>
      * <li>at check start, tier is reset to notSet
