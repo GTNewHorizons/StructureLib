@@ -409,23 +409,31 @@ public class StructureUtility {
                 }
             }
         }
-        if (mode == REMOVING || !s.takeOne(stack, false)) {
-            // If we're in removing mode, or if the user didn't have the block in their inventory, and we're in some
+        if (mode == REMOVING) {
+            // We're in removing mode, so let's check some stuff
+            if (world.isAirBlock(x, y, z)) {
+                return PlaceResult.SKIP;
+            }
+            ItemStack toGive = new ItemStack(world.getBlock(x, y, z));
+            toGive.setItemDamage(world.getBlock(x, y, z).getDamageValue(world, x, y, z));
+            if (!checkPermission(world, actor, x, y, z)) {
+                return PlaceResult.REJECT;
+            }
+            world.setBlockToAir(x, y, z);
+            if (!tryGiveOrDropItem(world, actor, toGive)) {
+                // We're in removing mode and something went wrong while trying to give the player the block we removed,
+                // let's just fail for now
+                return PlaceResult.REJECT;
+            }
+        } else if (!s.takeOne(stack, false)) {
+            // If the user didn't have the block in their inventory, and we're in some
             // other mode, let's check some stuff
             if (world.isAirBlock(x, y, z)) {
                 return PlaceResult.SKIP;
             }
             ItemStack toGive = new ItemStack(world.getBlock(x, y, z));
             toGive.setItemDamage(world.getBlock(x, y, z).getDamageValue(world, x, y, z));
-            if (mode == REMOVING && !checkPermission(world, actor, x, y, z)) {
-                return PlaceResult.REJECT;
-            }
             world.setBlockToAir(x, y, z);
-            if (mode == REMOVING && !tryGiveOrDropItem(world, actor, toGive)) {
-                // We're in removing mode and something went wrong while trying to give the player the block we removed,
-                // let's just fail for now
-                return PlaceResult.REJECT;
-            }
         }
         return PlaceResult.ACCEPT;
     }
@@ -569,22 +577,30 @@ public class StructureUtility {
                 return PlaceResult.REJECT;
             }
         }
-        if (mode == REMOVING || !s.takeOne(stack, false)) {
+        if (mode == REMOVING) {
             if (world.isAirBlock(x, y, z)) {
                 return PlaceResult.SKIP;
             }
-            // If the user didn't have the item in their inventory, or we're in removing mode, we set it to air
+            // If we're in removing mode, we set it to air
             ItemStack toGive = new ItemStack(world.getBlock(x, y, z));
             toGive.setItemDamage(world.getBlock(x, y, z).getDamageValue(world, x, y, z));
-            if (mode == REMOVING && !checkPermission(world, actor, x, y, z)) {
+            if (!checkPermission(world, actor, x, y, z)) {
                 return PlaceResult.REJECT;
             }
             world.setBlockToAir(x, y, z);
-            if (mode == REMOVING && !tryGiveOrDropItem(world, actor, toGive)) {
+            if (!tryGiveOrDropItem(world, actor, toGive)) {
                 // We were in removing mode and something went wrong while trying to give the player the block we
                 // ...removed, let's just fail for now
                 return PlaceResult.REJECT;
             }
+        } else if (!s.takeOne(stack, false)) {
+            if (world.isAirBlock(x, y, z)) {
+                return PlaceResult.SKIP;
+            }
+            // If the user didn't have the item in their inventory, we set it to air
+            ItemStack toGive = new ItemStack(world.getBlock(x, y, z));
+            toGive.setItemDamage(world.getBlock(x, y, z).getDamageValue(world, x, y, z));
+            world.setBlockToAir(x, y, z);
         }
         return PlaceResult.ACCEPT;
     }
@@ -2050,7 +2066,6 @@ public class StructureUtility {
             @Deprecated
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
-                ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
                 if (predicate.test(t))
                     return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
                 return placeResultWhenDisabled;
@@ -2059,7 +2074,6 @@ public class StructureUtility {
             @Override
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
-                ItemConstructableTrigger.TriggerMode mode = ItemConstructableTrigger.getMode(trigger);
                 if (predicate.test(t)) return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, env);
                 return placeResultWhenDisabled;
             }
