@@ -7,5 +7,6 @@ import net.minecraft.world.World;
 public interface IStructureCompat {
 
     void markTextureUsed(IIcon o);
+
     boolean checkServerUtilitiesPermission(World world, EntityPlayer actor, int x, int z);
 }

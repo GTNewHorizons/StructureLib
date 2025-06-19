@@ -19,7 +19,6 @@ import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
 import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
 
-import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
