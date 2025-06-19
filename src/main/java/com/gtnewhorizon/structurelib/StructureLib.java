@@ -93,7 +93,7 @@ public class StructureLib {
     @Mod.Instance
     static StructureLib INSTANCE;
     @Mod.Instance(STRUCTURECOMPAT_MODID)
-    static Object COMPAT;
+    public static Object COMPAT;
 
     static Block blockHint;
     static Item itemBlockHint;
@@ -127,11 +127,6 @@ public class StructureLib {
         ChannelDescription.set(CHANNEL_SHOW_ERROR, MOD_ID, "channels.structurelib.show_errors");
 
         DevelopHelper.onPreInit();
-    }
-
-    @Mod.EventHandler
-    public void init(FMLInitializationEvent e) {
-        proxy.init(e);
     }
 
     @Mod.EventHandler

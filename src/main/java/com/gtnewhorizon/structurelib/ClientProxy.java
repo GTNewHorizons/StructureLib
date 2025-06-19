@@ -260,11 +260,6 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
     }
 
-    @Override
-    public void init(FMLInitializationEvent e) {
-        super.init(e);
-    }
-
     static void markTextureUsed(IIcon icon) {
         if (StructureLib.COMPAT instanceof IStructureCompat)
             ((IStructureCompat) StructureLib.COMPAT).markTextureUsed(icon);

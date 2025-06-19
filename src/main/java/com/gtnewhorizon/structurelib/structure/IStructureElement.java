@@ -2,7 +2,7 @@ package com.gtnewhorizon.structurelib.structure;
 
 import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
 import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
-import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.REMOVING;
+import static com.gtnewhorizon.structurelib.item.ModeToggleableItem.TriggerMode.REMOVING;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.checkForRemoving;
 
 import java.util.Arrays;
