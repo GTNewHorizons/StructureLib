@@ -23,27 +23,13 @@ import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
 
-public class ItemConstructableTrigger extends Item {
-
-    private static final String TAG_MODE = "mode";
+public class ItemConstructableTrigger extends ModeToggleableItem {
 
     private static final IIcon[] textures = new IIcon[3];
-
-    public enum TriggerMode {
-        BUILDING,
-        UPDATING,
-        REMOVING
-    }
 
     public ItemConstructableTrigger() {
         setUnlocalizedName("structurelib.constructableTrigger");
         setCreativeTab(StructureLib.creativeTab);
-    }
-
-    public static void cycleMode(ItemStack held) {
-        if (held.getTagCompound() == null) held.setTagCompound(new NBTTagCompound());
-        if (!held.getTagCompound().hasKey(TAG_MODE)) held.getTagCompound().setTag(TAG_MODE, new NBTTagInt(0));
-        held.getTagCompound().setInteger(TAG_MODE, (held.getTagCompound().getInteger(TAG_MODE) + 1) % 3);
     }
 
     @Override
@@ -87,15 +73,6 @@ public class ItemConstructableTrigger extends Item {
     private String getDisplayName(int mode) {
         return StatCollector.translateToLocal("item.structurelib.constructableTrigger.name") + " - "
                 + StatCollector.translateToLocal("item.structurelib.constructableTrigger.modes." + mode);
-    }
-
-    public static TriggerMode getMode(ItemStack held) {
-        if (held == null || !held.hasTagCompound() || !held.getTagCompound().hasKey(TAG_MODE)) {
-            // default behavior
-            return TriggerMode.BUILDING;
-        }
-        // get user-defined mode
-        return TriggerMode.values()[held.getTagCompound().getInteger(TAG_MODE)];
     }
 
     @Override

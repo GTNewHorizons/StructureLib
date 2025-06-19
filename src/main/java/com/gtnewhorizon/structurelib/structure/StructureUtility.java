@@ -1,35 +1,21 @@
 package com.gtnewhorizon.structurelib.structure;
 
-import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
-import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
-import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.BUILDING;
-import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.REMOVING;
-import static com.gtnewhorizon.structurelib.item.ItemConstructableTrigger.TriggerMode.UPDATING;
-import static java.lang.Integer.MIN_VALUE;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-
-import javax.annotation.Nullable;
-
+import com.google.common.collect.ImmutableList;
+import com.gtnewhorizon.structurelib.IStructureCompat;
+import com.gtnewhorizon.structurelib.StructureEvent.StructureElementVisitedEvent;
+import com.gtnewhorizon.structurelib.StructureLib;
+import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
+import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
+import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
+import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
+import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
+import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
+import com.gtnewhorizon.structurelib.util.Vec3Impl;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -45,27 +31,18 @@ import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.google.common.collect.ImmutableList;
-import com.gtnewhorizon.structurelib.StructureEvent.StructureElementVisitedEvent;
-import com.gtnewhorizon.structurelib.StructureLib;
-import com.gtnewhorizon.structurelib.StructureLibAPI;
-import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
-import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
-import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
-import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
-import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
-import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
-import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
-import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
-import com.gtnewhorizon.structurelib.util.Vec3Impl;
-import com.gtnewhorizon.structurelib.xmod.ServerUtilitiesCompat;
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.*;
 
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.registry.GameRegistry;
+import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
+import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
+import static com.gtnewhorizon.structurelib.item.ModeToggleableItem.TriggerMode.*;
+import static java.lang.Integer.MIN_VALUE;
 
 /**
  * A brief index of everything contained
@@ -924,10 +901,14 @@ public class StructureUtility {
                 Block block = world.getBlock(x, y, z);
                 int meta = world.getBlockMetadata(x, y, z);
                 TIER tier = tierExtractor.convert(block, meta);
-                if (mode != REMOVING && (Objects.equals(tier, tierExtractor.convert(hint.getKey(), hint.getValue()))))
-                    return PlaceResult.SKIP;
-                if (mode == REMOVING && (!isInAllKnownTiers(block) && !world.isAirBlock(x, y, z))) {
-                    return PlaceResult.REJECT;
+                if (mode == REMOVING) {
+                    if (!isInAllKnownTiers(block) && !world.isAirBlock(x, y, z)) {
+                        return PlaceResult.REJECT;
+                    }
+                } else {
+                    if ((Objects.equals(tier, tierExtractor.convert(hint.getKey(), hint.getValue())))) {
+                        return PlaceResult.SKIP;
+                    }
                 }
                 return StructureUtility.survivalPlaceBlock(
                         hint.getKey(),
@@ -3480,8 +3461,8 @@ public class StructureUtility {
 
     public static boolean checkPermission(World world, EntityPlayer actor, int x, int y, int z) {
         boolean res = true;
-        if (isSULoaded) {
-            res = ServerUtilitiesCompat.checkPermission(world, actor, x, z);
+        if (isSULoaded && StructureLib.COMPAT instanceof IStructureCompat isc) {
+            res = isc.checkServerUtilitiesPermission(world, actor, x, z);
         }
         res = res && !world.getBlock(x, y, z).isAssociatedBlock(Blocks.bedrock);
         // maybe check mining level who knows :shrug:
