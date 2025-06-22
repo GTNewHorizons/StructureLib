@@ -92,7 +92,7 @@ public class StructureLib {
     @Mod.Instance
     static StructureLib INSTANCE;
     @Mod.Instance(STRUCTURECOMPAT_MODID)
-    static Object COMPAT;
+    public static Object COMPAT;
 
     static Block blockHint;
     static Item itemBlockHint;

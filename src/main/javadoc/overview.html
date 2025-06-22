@@ -133,6 +133,16 @@ StructureLib API documentation.
     Usually there is no reason to reimplement this on your own.
 </p>
 
+<h2>{@link com.gtnewhorizon.structurelib.item.ModeToggleableItem}</h2>
+<p>
+    This class is the base class for {@link com.gtnewhorizon.structurelib.item.ItemConstructableTrigger} that defines
+    the <code>TriggerMode</code>s for the {@link com.gtnewhorizon.structurelib.item.ItemConstructableTrigger}. There are
+    3 modes, <code>BUILDING</code>, <code>UPDATING</code>, and <code>REMOVING</code>. Each of these modes does as they
+    say, where building will build a new multi from scratch, updating will remove existing an existing structure and
+    replace it with new components (think upgrading glass on a multi, changing from a tier 1 to tier 2 of a multi, etc),
+    and removing will just straight up remove the multi.
+</p>
+
 <h2><a href="#channels" id="channels">Channels</a></h2>
 
 <p>
