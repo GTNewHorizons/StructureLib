@@ -378,11 +378,12 @@ public class StructureLibAPI {
     public static void registerChannelItem(final String channel, final String modid, final int channelValue,
             final ItemStack stack) {
         ChannelDescription.item(channel, channelValue, stack);
+        // Value 0 is for "Not set", usable values are shifted by 1.
         AnimatedTooltipHandler.addItemTooltip(
                 stack,
-                AnimatedTooltipHandler.translatedText("structurelib.tooltip.channelvalue", channelValue, channel));
+                AnimatedTooltipHandler.translatedText("structurelib.tooltip.channelvalue", channelValue - 1, channel));
         AnimatedTooltipHandler.addItemTooltip(
                 stack,
-                AnimatedTooltipHandler.translatedText("structurelib.tooltip.indicator_dnd", channelValue, channel));
+                AnimatedTooltipHandler.translatedText("structurelib.tooltip.indicator_dnd", channelValue - 1, channel));
     }
 }
