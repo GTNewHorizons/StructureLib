@@ -14,7 +14,27 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.Rotation;
 
 public interface IAlignmentLimits {
 
+    /**
+     * Can be placed in any orientation.
+     */
     IAlignmentLimits UNLIMITED = (direction, rotation, flip) -> true;
+
+    /**
+     * Must be standing upright; i.e., top side of the block facing up.
+     */
+    IAlignmentLimits UPRIGHT = (direction, rotation, flip) -> direction.offsetY == 0
+            && (flip.isVerticallyFliped() ? rotation.isUpsideDown() : rotation.isNotRotated());
+
+    /**
+     * Can be in any orientation except upside down; i.e., top side of the block facing down.
+     */
+    IAlignmentLimits NOT_UPSIDE_DOWN = (direction, rotation, flip) -> direction.offsetY != 0
+            || (flip.isVerticallyFliped() ? !rotation.isNotRotated() : !rotation.isUpsideDown());
+
+    /**
+     * Front side of the block must be facing up.
+     */
+    IAlignmentLimits FACING_UP = (direction, rotation, flip) -> direction == ForgeDirection.UP;
 
     boolean isNewExtendedFacingValid(ForgeDirection direction, Rotation rotation, Flip flip);
 
