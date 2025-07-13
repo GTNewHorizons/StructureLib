@@ -12,6 +12,7 @@ import com.gtnewhorizon.structurelib.mixins.Mixins;
 
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 
+@IFMLLoadingPlugin.MCVersion("1.7.10")
 public class StructureLibCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     public static final Logger log = LogManager.getLogger("StructureLibCore");
