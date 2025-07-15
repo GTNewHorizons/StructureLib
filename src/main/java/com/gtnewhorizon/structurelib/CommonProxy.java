@@ -113,7 +113,8 @@ public class CommonProxy {
     private static final SyncedKeybind MODE_SWAP_KEY = SyncedKeybind.createConfigurable(
             "item.structurelib.constructableTrigger.keys.cycleMode",
             "item.structurelib.constructableTrigger.keyCategory",
-            0).registerGlobalListener((entityPlayerMP, syncedKeybind) -> {
+            0).registerGlobalListener((entityPlayerMP, syncedKeybind, isDown) -> {
+                if (!isDown) return;
                 final ItemStack held = entityPlayerMP.getHeldItem();
                 if (held != null && held.getItem() instanceof ItemConstructableTrigger) {
                     ItemConstructableTrigger.cycleMode(held);
