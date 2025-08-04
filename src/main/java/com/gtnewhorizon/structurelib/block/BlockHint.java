@@ -50,6 +50,10 @@ public class BlockHint extends Block {
 
     @Override
     public IIcon getIcon(int aSide, int aMeta) {
+        // For numbered hints, top and bottom are blank
+        if (aSide <= 1 && aMeta <= 11) {
+            return hint[13];
+        }
         return hint[aMeta];
     }
 
