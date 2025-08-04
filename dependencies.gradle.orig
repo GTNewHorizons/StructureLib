@@ -2,12 +2,16 @@
 
 dependencies {
     api("com.github.GTNewHorizons:GTNHLib:0.6.38:dev")
+<<<<<<< HEAD
+    implementation("com.github.GTNewHorizons:NotEnoughItems:2.7.64-GTNH:dev")
+=======
     implementation("com.github.GTNewHorizons:NotEnoughItems:2.7.69-GTNH:dev")
+>>>>>>> master
 
     testImplementation(platform('org.junit:junit-bom:5.9.2'))
     testImplementation('org.junit.jupiter:junit-jupiter')
 
-//    runtimeOnlyNonPublishable("com.github.GTNewHorizons:GT5-Unofficial:5.09.51.420:dev") {
+//    runtimeOnlyNonPublishable("com.github.GTNewHorizons:GT5-Unofficial:5.09.51.391:dev") {
 //        exclude group: "com.github.GTNewHorizons", module: "StructureLib"
 //    }
 }
