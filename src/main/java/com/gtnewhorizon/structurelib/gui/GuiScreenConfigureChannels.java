@@ -174,7 +174,7 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
                 .stream(
                         Splitter.on("\\n").split(StatCollector.translateToLocal(I18N_PREFIX + "info")).spliterator(),
                         false)
-                .flatMap(line -> fontRendererObj.listFormattedStringToWidth(line, width * 3 / 5).stream())
+                .flatMap(line -> fontRendererObj.listFormattedStringToWidth(line, width * 1 / 3).stream())
                 .collect(Collectors.toList());
     }
 
