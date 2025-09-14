@@ -29,9 +29,10 @@ public class ItemConstructableTrigger extends Item {
     @Override
     public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
         if (getMovingObjectPositionFromPlayer(world, player, true) == null) {
-            if (!world.isRemote) {
+            // channel gui is opened from server and config gui from client
+            if (!world.isRemote && !player.isSneaking()) {
                 player.openGui(StructureLib.instance(), 0, world, player.inventory.currentItem, 0, 0);
-            } else if (player.isSneaking()) {
+            } else if (world.isRemote && player.isSneaking()) {
                 StructureLib.instance().proxy().displayConfigGUI("registries");
             }
         }
