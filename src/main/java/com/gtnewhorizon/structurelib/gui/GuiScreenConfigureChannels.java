@@ -164,38 +164,15 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         list.onGuiInit(this);
         autoCompleteList.onGuiInit(this);
 
-        addButton(
-                new GuiButton(
-                        ADD_BTN,
-                        guiLeft + 12,
-                        guiTop + 157,
-                        47,
-                        20,
-                        I18n.format("item.structurelib.constructableTrigger.gui.add")));
-        addButton(
-                new GuiButton(
-                        UNSET_BTN,
-                        guiLeft + 65,
-                        guiTop + 157,
-                        47,
-                        20,
-                        I18n.format("item.structurelib.constructableTrigger.gui.unset")));
-        addButton(
-                new GuiButton(
-                        WIPE_BTN,
-                        guiLeft + 118,
-                        guiTop + 157,
-                        47,
-                        20,
-                        I18n.format("item.structurelib.constructableTrigger.gui.wipe")));
+        addButton(new GuiButton(ADD_BTN, guiLeft + 12, guiTop + 157, 47, 20, I18n.format(I18N_PREFIX + "add")));
+        addButton(new GuiButton(UNSET_BTN, guiLeft + 65, guiTop + 157, 47, 20, I18n.format(I18N_PREFIX + "unset")));
+        addButton(new GuiButton(WIPE_BTN, guiLeft + 118, guiTop + 157, 47, 20, I18n.format(I18N_PREFIX + "wipe")));
 
         updateButtons();
         tooltipSplitCache.clear();
         info = StreamSupport
                 .stream(
-                        Splitter.on("\\n").split(
-                                StatCollector.translateToLocal("item.structurelib.constructableTrigger.gui.info"))
-                                .spliterator(),
+                        Splitter.on("\\n").split(StatCollector.translateToLocal(I18N_PREFIX + "info")).spliterator(),
                         false)
                 .flatMap(line -> fontRendererObj.listFormattedStringToWidth(line, width * 3 / 5).stream())
                 .collect(Collectors.toList());
@@ -397,22 +374,10 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         int topLeftY = (this.height - this.getYSize()) / 2;
         drawTexturedModalRect(topLeftX, topLeftY, 0, 0, getXSize(), getYSize());
         list.drawScreen(mX, mY, partialTick);
-        fontRendererObj.drawString(
-                I18n.format("item.structurelib.constructableTrigger.gui.title"),
-                guiLeft + 12,
-                guiTop + 9,
-                0);
-        fontRendererObj.drawString(
-                I18n.format("item.structurelib.constructableTrigger.gui.key"),
-                guiLeft + 12,
-                guiTop + 122,
-                0);
+        fontRendererObj.drawString(I18n.format(I18N_PREFIX + "title"), guiLeft + 12, guiTop + 9, 0);
+        fontRendererObj.drawString(I18n.format(I18N_PREFIX + "key"), guiLeft + 12, guiTop + 122, 0);
         key.drawTextBox();
-        fontRendererObj.drawString(
-                I18n.format("item.structurelib.constructableTrigger.gui.value"),
-                guiLeft + 12,
-                guiTop + 142,
-                0);
+        fontRendererObj.drawString(I18n.format(I18N_PREFIX + "value"), guiLeft + 12, guiTop + 142, 0);
         value.drawTextBox();
     }
 
@@ -455,7 +420,7 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
             tooltip.addAll(
                     fontRendererObj.listFormattedStringToWidth(
                             StatCollector.translateToLocalFormatted(
-                                    "item.structurelib.constructableTrigger.gui.channels.from",
+                                    I18N_PREFIX + "channels.from",
                                     Loader.instance().getIndexedModList().get(e.getKey()).getName()),
                             maxLine));
             tooltip.addAll(
