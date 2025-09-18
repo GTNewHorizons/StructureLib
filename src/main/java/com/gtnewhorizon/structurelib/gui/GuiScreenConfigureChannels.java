@@ -218,8 +218,7 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         actionPerformed(but);
     }
 
-    @SuppressWarnings("unchecked")
-    private List<GuiButton> getButtonList() {
+    public List<GuiButton> getButtonList() {
         return buttonList;
     }
 
