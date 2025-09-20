@@ -2,7 +2,7 @@
 
 dependencies {
     api("com.github.GTNewHorizons:GTNHLib:0.6.39:dev")
-    implementation("com.github.GTNewHorizons:NotEnoughItems:2.7.85-GTNH:dev")
+    implementation("com.github.GTNewHorizons:NotEnoughItems:2.7.86-GTNH:dev")
 
     testImplementation(platform('org.junit:junit-bom:5.9.2'))
     testImplementation('org.junit.jupiter:junit-jupiter')
