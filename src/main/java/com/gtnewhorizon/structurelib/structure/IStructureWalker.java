@@ -2,7 +2,7 @@ package com.gtnewhorizon.structurelib.structure;
 
 import net.minecraft.world.World;
 
-interface IStructureWalker<T> {
+public interface IStructureWalker<T> {
 
     boolean visit(IStructureElement<T> element, World world, int x, int y, int z, int a, int b, int c);
 
