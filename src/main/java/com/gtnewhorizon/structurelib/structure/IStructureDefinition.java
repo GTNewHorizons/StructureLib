@@ -3,7 +3,10 @@ package com.gtnewhorizon.structurelib.structure;
 import static com.gtnewhorizon.structurelib.structure.IStructureWalker.ignoreBlockUnloaded;
 import static com.gtnewhorizon.structurelib.structure.IStructureWalker.skipBlockUnloaded;
 
+import java.util.List;
 import java.util.function.Function;
+
+import javax.annotation.Nonnull;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -15,6 +18,8 @@ import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.coords.Position;
+import com.gtnewhorizon.structurelib.coords.StructureDefinitionCoords;
 
 /**
  * This is the structure definition of your multi. You will have one of these for each multi.
@@ -318,6 +323,49 @@ public interface IStructureDefinition<T> {
                 "survivalBuild");
         return walker.getBuilt();
     }
+
+    /**
+     * Gets the controller position for a piece. Controller positions are denoted by a tilde.
+     * 
+     * @param piece The piece name
+     * @return The controller position, or null if it doesn't exist for the given piece
+     */
+    Position<StructureDefinitionCoords> getControllerPosition(String piece);
+
+    /**
+     * Gets the coordinate system for a piece. This is used to translate structure definition coordinates into structure
+     * relative coordinates.
+     * 
+     * @param piece The piece
+     * @return The coordinate system
+     * @throws IllegalArgumentException When the piece does not exist
+     */
+    StructureDefinitionCoords getCoordinateSystem(String piece);
+
+    /**
+     * Gets a socket from a piece.
+     * 
+     * @param piece  The piece name
+     * @param socket The socket character
+     * @return The socket's position
+     * @throws IllegalArgumentException When the piece does not exist
+     * @throws IllegalArgumentException When the socket does not exist
+     * @throws IllegalStateException    When more than one socket exists with this character
+     * @see StructureDefinition.Builder#addSocket(char, char)
+     */
+    Position<StructureDefinitionCoords> getSocket(String piece, char socket);
+
+    /**
+     * Gets all sockets with a given character for a piece.
+     * 
+     * @param piece  The piece name
+     * @param socket The socket character
+     * @return The list of socket positions, or an empty list if the socket is not present
+     * @throws IllegalArgumentException When the piece does not exist
+     * @see StructureDefinition.Builder#addSocket(char, char)
+     */
+    @Nonnull
+    List<Position<StructureDefinitionCoords>> getAllSockets(String piece, char socket);
 
     /**
      * Low level utility.
