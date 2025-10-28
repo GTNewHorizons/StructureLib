@@ -319,6 +319,22 @@ public interface IStructureDefinition<T> {
         return walker.getBuilt();
     }
 
+    default void iterate(String piece, World world, ExtendedFacing extendedFacing, int basePositionX, int basePositionY,
+            int basePositionZ, int basePositionA, int basePositionB, int basePositionC, IStructureWalker<T> predicate) {
+        StructureUtility.iterateV2(
+                getStructureFor(piece),
+                world,
+                extendedFacing,
+                basePositionX,
+                basePositionY,
+                basePositionZ,
+                basePositionA,
+                basePositionB,
+                basePositionC,
+                predicate,
+                "customIterate");
+    }
+
     /**
      * Low level utility.
      *
