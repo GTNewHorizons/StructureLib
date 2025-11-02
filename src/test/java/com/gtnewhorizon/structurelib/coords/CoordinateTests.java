@@ -10,6 +10,7 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import com.gtnewhorizon.structurelib.structure.StructureUtility;
 
+// spotless:off
 class CoordinateTests {
 
     private IStructureDefinition<?> getDefinition() {
@@ -98,3 +99,4 @@ class CoordinateTests {
             def.getAllSockets("main", 'Y'));
     }
 }
+// spotless:on
