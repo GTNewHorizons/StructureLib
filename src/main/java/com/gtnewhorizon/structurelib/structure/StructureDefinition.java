@@ -57,6 +57,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         private char d = '\uD000';
         private final Map<Vec3Impl, Character> navigates;
         private final Map<Character, IStructureElement<T>> elements;
+        private final Map<String, String[][]> uncompiledShapes;
         private final Map<String, String> shapes;
         private final Map<String, Set<Vec3Impl>> occupiedSpaces;
 
@@ -67,6 +68,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         private Builder() {
             navigates = new HashMap<>();
             elements = new HashMap<>();
+            uncompiledShapes = new HashMap<>();
             shapes = new HashMap<>();
             occupiedSpaces = new HashMap<>();
         }
@@ -102,6 +104,67 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
          * @return this builder
          */
         public Builder<T> addShape(String name, String[][] structurePiece) {
+            uncompiledShapes.put(name, structurePiece);
+
+            return this;
+        }
+
+        /**
+         * @deprecated use the unboxed version
+         */
+        @Deprecated
+        public Builder<T> addElement(Character name, IStructureElement<T> structurePiece) {
+            elements.putIfAbsent(name, structurePiece);
+            return this;
+        }
+
+        public Builder<T> addElement(char name, IStructureElement<T> structurePiece) {
+            elements.putIfAbsent(name, structurePiece);
+            return this;
+        }
+
+        /**
+         * Denotes {@code name} as a socket. Sockets are virtual structure elements that record their position in the
+         * structure for future retrieval. They are transformed into real structure elements and do not need their own
+         * element (see {@code replacement}).
+         *
+         * @param name        The socket name character
+         * @param replacement The replacement character
+         * @see IStructureDefinition#getSocket(String, char)
+         * @see IStructureDefinition#getAllSockets(String, char)
+         */
+        public Builder<T> addSocket(char name, char replacement) {
+            socketTranslations.put(name, replacement);
+            return this;
+        }
+
+        /**
+         * Like {@link #addSocket(char, char)} but without the replacement. The structure must have a structure element
+         * with the given character.
+         *
+         * @param name The socket name character
+         */
+        public Builder<T> addSocket(char name) {
+            // Adding a name -> name entry like this isn't ideal but this is the cleanest solution
+            socketTranslations.put(name, name);
+            return this;
+        }
+
+        public IStructureDefinition<T> build() {
+            uncompiledShapes.forEach(this::compileShape);
+
+            Map<String, IStructureElement<T>[]> structures = compileStructureMap();
+
+            return new StructureDefinition<>(
+                    new HashMap<>(elements),
+                    new HashMap<>(shapes),
+                    structures,
+                    occupiedSpaces,
+                    controllers,
+                    socketLocations);
+        }
+
+        private void compileShape(String name, String[][] structurePiece) {
             StringBuilder builder = new StringBuilder();
 
             if (structurePiece.length > 0) {
@@ -117,6 +180,10 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
                 builder.setLength(builder.length() - 1);
             }
 
+            // Always create a map for this piece, even if it doesn't have any sockets
+            // noinspection UnstableApiUsage
+            socketLocations.put(name, MultimapBuilder.hashKeys().arrayListValues().build());
+
             Set<Vec3Impl> occupiedSpace = new HashSet<>();
             // these track the global current location
             int aa = 0, bb = 0, cc = 0;
@@ -125,6 +192,15 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
             // I do know these are pretty bad variable naming, but I have no better idea
             for (int i = 0; i < builder.length(); i++) {
                 char ch = builder.charAt(i);
+
+                // Translate the element char if it's a socket, and record the socket position
+                if (socketTranslations.containsKey(ch)) {
+                    socketLocations.get(name).put(ch, new Position<>(aa, bb, cc));
+
+                    ch = socketTranslations.get(ch);
+                    builder.setCharAt(i, ch);
+                }
+
                 if (ch == ' ') {
                     builder.setCharAt(i, A);
                     ch = A;
@@ -173,66 +249,14 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
 
             String built = builder.toString().replaceAll("[\\uA000\\uB000\\uC000]", "");
 
-            if (built.contains("+") || socketTranslations.values().contains('+')) {
+            if (built.contains("+")) {
                 addElement('+', notAir());
             }
-            if (built.contains("-") || socketTranslations.values().contains('-')) {
+            if (built.contains("-")) {
                 addElement('-', isAir());
             }
+
             shapes.put(name, built);
-            return this;
-        }
-
-        /**
-         * @deprecated use the unboxed version
-         */
-        @Deprecated
-        public Builder<T> addElement(Character name, IStructureElement<T> structurePiece) {
-            elements.putIfAbsent(name, structurePiece);
-            return this;
-        }
-
-        public Builder<T> addElement(char name, IStructureElement<T> structurePiece) {
-            elements.putIfAbsent(name, structurePiece);
-            return this;
-        }
-
-        /**
-         * Denotes {@code name} as a socket. Sockets are virtual structure elements that record their position in the
-         * structure for future retrieval. They are transformed into real structure elements and do not need their own
-         * element (see {@code replacement}).
-         *
-         * @param name        The socket name character
-         * @param replacement The replacement character
-         * @see IStructureDefinition#getSocket(String, char)
-         * @see IStructureDefinition#getAllSockets(String, char)
-         */
-        public Builder<T> addSocket(char name, char replacement) {
-            socketTranslations.put(name, replacement);
-            return this;
-        }
-
-        /**
-         * Like {@link #addSocket(char, char)} but without the replacement. The structure must have a structure element
-         * with the given character.
-         *
-         * @param name The socket name character
-         */
-        public Builder<T> addSocket(char name) {
-            // Adding a name -> name entry like this isn't ideal but this is the cleanest solution
-            socketTranslations.put(name, name);
-            return this;
-        }
-
-        public IStructureDefinition<T> build() {
-            Map<String, IStructureElement<T>[]> structures = compileStructureMap();
-            return new StructureDefinition<>(
-                    new HashMap<>(elements),
-                    new HashMap<>(shapes),
-                    structures,
-                    occupiedSpaces,
-                    controllers,
-                    socketLocations);
         }
 
         @SuppressWarnings("unchecked")
@@ -253,16 +277,6 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
 
                 for (int i = 0; i < chars.length; i++) {
                     char ch = chars[i];
-
-                    if (socketTranslations.containsKey(ch)) {
-                        // noinspection UnstableApiUsage
-                        var positions = socketLocations
-                                .computeIfAbsent(e.getKey(), s -> MultimapBuilder.hashKeys().arrayListValues().build());
-
-                        positions.put(ch, new Position<>(a, b, c));
-
-                        ch = socketTranslations.get(ch);
-                    }
 
                     IStructureElement<T> element = this.elements.get(ch);
 
@@ -290,15 +304,9 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
 
             for (String shape : shapes.values()) {
                 for (char c : shape.toCharArray()) {
-                    if (!elements.containsKey(c) && !socketTranslations.containsKey(c)) {
+                    if (!elements.containsKey(c)) {
                         missing.add(c);
                     }
-                }
-            }
-
-            for (char c : socketTranslations.values()) {
-                if (!elements.containsKey(c)) {
-                    missing.add(c);
                 }
             }
 
