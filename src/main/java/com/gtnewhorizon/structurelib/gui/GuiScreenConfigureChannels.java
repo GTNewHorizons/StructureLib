@@ -298,11 +298,10 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
                 }
                 break;
         }
-        if (key.textboxKeyTyped(aChar, aKey)) {
+        if (key.textboxKeyTyped(aChar, aKey) || value.textboxKeyTyped(aChar, aKey)) {
             updateButtons();
             return;
         }
-        if (value.textboxKeyTyped(aChar, aKey)) return;
         super.keyTyped(aChar, aKey);
     }
 
@@ -313,7 +312,8 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         boolean existing = !StringUtils.isEmpty(keyText) && ChannelDataAccessor.hasSubChannel(trigger, keyText);
         getButtonList().get(ADD_BTN).displayString = existing ? I18n.format(I18N_PREFIX + "set")
                 : I18n.format(I18N_PREFIX + "add");
-        getButtonList().get(ADD_BTN).enabled = !StringUtils.isBlank(value.getText())
+        getButtonList().get(ADD_BTN).enabled = !StringUtils.isBlank(key.getText())
+                && !StringUtils.isBlank(value.getText())
                 && Integer.parseInt(value.getText()) > 0;
         getButtonList().get(UNSET_BTN).enabled = existing && !StringUtils.isBlank(value.getText());
 
