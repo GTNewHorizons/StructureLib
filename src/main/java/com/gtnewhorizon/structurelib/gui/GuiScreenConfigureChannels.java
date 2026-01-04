@@ -261,6 +261,11 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         switch (aKey) {
             case Keyboard.KEY_TAB:
                 if (key.isFocused()) {
+                    if (autoCompleteList.getSelectedElement() != null) {
+                        key.setText(autoCompleteList.getSelectedElement());
+                        return;
+                    }
+
                     key.setFocused(false);
                     value.setFocused(true);
                 } else {
