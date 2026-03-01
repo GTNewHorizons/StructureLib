@@ -148,15 +148,32 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
 
             occupiedSpaces.put(name, occupiedSpace);
 
-            String built = builder.toString().replaceAll("[\\uA000\\uB000\\uC000]", "");
+            boolean hasPlus = false;
+            boolean hasMinus = false;
 
-            if (built.contains("+")) {
+            int write = 0;
+            for (int read = 0; read < builder.length(); read++) {
+                char ch = builder.charAt(read);
+                if (ch == A || ch == B || ch == C) {
+                    continue;
+                }
+                if (ch == '+') {
+                    hasPlus = true;
+                } else if (ch == '-') {
+                    hasMinus = true;
+                }
+                if (read != write) builder.setCharAt(write, ch);
+                write++;
+            }
+            builder.setLength(write);
+
+            if (hasPlus) {
                 addElement('+', notAir());
             }
-            if (built.contains("-")) {
+            if (hasMinus) {
                 addElement('-', isAir());
             }
-            shapes.put(name, built);
+            shapes.put(name, builder.toString());
             return this;
         }
 
