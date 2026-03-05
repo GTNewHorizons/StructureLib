@@ -164,7 +164,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
                     socketLocations);
         }
 
-        private void compileShape(String name, String[][] structurePiece) {
+        private Builder<T> compileShape(String name, String[][] structurePiece) {
             StringBuilder builder = new StringBuilder();
 
             if (structurePiece.length > 0) {
