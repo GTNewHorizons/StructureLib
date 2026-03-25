@@ -36,7 +36,10 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.ChatStyle;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
@@ -338,9 +341,7 @@ public class StructureUtility {
         ItemStack stack = new ItemStack(itemBlock, 1, itemMeta);
         if (!s.takeOne(stack, true)) {
             if (chatter != null) chatter.accept(
-                    new ChatComponentTranslation(
-                            "structurelib.autoplace.error.no_simple_block",
-                            stack.func_151000_E()));
+                    new ChatComponentTranslation("structurelib.autoplace.missing_block", stack.func_151000_E()));
             return PlaceResult.REJECT;
         }
         if (block instanceof ICustomBlockSetting) {
@@ -447,7 +448,7 @@ public class StructureUtility {
         if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
         if (!assumeStackPresent && !s.takeOne(stack, true)) {
             if (chatter != null) chatter.accept(
-                    new ChatComponentTranslation("structurelib.autoplace.error.no_item_stack", stack.func_151000_E()));
+                    new ChatComponentTranslation("structurelib.autoplace.missing_block", stack.func_151000_E()));
             return PlaceResult.REJECT;
         }
         if (!stack.copy().tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f))
@@ -1410,6 +1411,53 @@ public class StructureUtility {
             };
         } else {
             return new IStructureElement<T>() {
+
+                @Override
+                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
+                        AutoPlaceEnvironment env) {
+                    BlocksToPlace e = getBlocksToPlace(t, world, x, y, z, trigger, env);
+                    IItemSource source = env.getSource();
+                    EntityPlayer actor = env.getActor();
+                    Consumer<IChatComponent> chatter = env.getChatter();
+                    if (check(t, world, x, y, z)) return PlaceResult.SKIP;
+                    if (e.getStacks() == null) {
+                        ItemStack taken = source.takeOne(e.getPredicate(), true);
+                        return StructureUtility.survivalPlaceBlock(
+                                taken,
+                                NBTMode.EXACT,
+                                taken.stackTagCompound,
+                                false,
+                                world,
+                                x,
+                                y,
+                                z,
+                                source,
+                                actor,
+                                chatter);
+                    }
+                    for (ItemStack stack : e.getStacks()) {
+                        if (!source.takeOne(stack, true)) {
+                            IChatComponent name = new ChatComponentText(stack.getDisplayName());
+                            name.setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW));
+                            env.getChatter()
+                                    .accept(new ChatComponentTranslation("structurelib.autoplace.missing_block", name));
+                            continue;
+                        }
+                        return StructureUtility.survivalPlaceBlock(
+                                stack,
+                                NBTMode.EXACT,
+                                stack.stackTagCompound,
+                                false,
+                                world,
+                                x,
+                                y,
+                                z,
+                                source,
+                                actor,
+                                chatter);
+                    }
+                    return PlaceResult.REJECT;
+                }
 
                 @Override
                 public boolean check(T t, World world, int x, int y, int z) {
