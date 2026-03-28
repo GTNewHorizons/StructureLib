@@ -1,5 +1,6 @@
 master
 feature/doc
+1.4.34
 1.4.33-pre
 1.4.32
 1.4.31-pre
