@@ -24,6 +24,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import com.google.common.collect.ImmutableSet;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.IntegerAxisSwap;
+import com.gtnewhorizon.structurelib.coords.StructureRelativeCoords;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 
 public enum ExtendedFacing {
@@ -166,6 +167,7 @@ public enum ExtendedFacing {
 
     private final String name;
     private final IntegerAxisSwap integerAxisSwap;
+    private final StructureRelativeCoords coordinateSystem;
 
     ExtendedFacing(String name) {
         this.name = name;
@@ -247,6 +249,7 @@ public enum ExtendedFacing {
         this.b = b;
         this.c = c;
         integerAxisSwap = new IntegerAxisSwap(a, b, c);
+        coordinateSystem = new StructureRelativeCoords(integerAxisSwap);
     }
 
     public static ExtendedFacing of(ForgeDirection direction, Rotation rotation, Flip flip) {
@@ -436,5 +439,9 @@ public enum ExtendedFacing {
 
     public ForgeDirection getRelativeForwardInWorld() {
         return c.getOpposite();
+    }
+
+    public StructureRelativeCoords asCoordinateSystem() {
+        return coordinateSystem;
     }
 }
