@@ -5,6 +5,7 @@ import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -40,6 +41,17 @@ public interface IStructureElement<T> {
      */
     default boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
         return true;
+    }
+
+    /**
+     * Returns a human-readable description of what block(s) this element accepts. Used for diagnostic messages when
+     * structure checks fail.
+     *
+     * @return a list of accepted block descriptions (e.g. display names), or null if no description is available
+     */
+    @Nullable
+    default List<String> getDescription() {
+        return null;
     }
 
     boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger);
@@ -203,6 +215,12 @@ public interface IStructureElement<T> {
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return IStructureElement.this.spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Nullable
+            @Override
+            public List<String> getDescription() {
+                return IStructureElement.this.getDescription();
             }
         };
     }
