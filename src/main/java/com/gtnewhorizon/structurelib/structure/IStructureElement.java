@@ -44,10 +44,16 @@ public interface IStructureElement<T> {
     }
 
     /**
-     * Returns a human-readable description of what block(s) this element accepts. Used for diagnostic messages when
-     * structure checks fail.
+     * Returns a description of what block(s) this element accepts. Used for diagnostic messages when structure checks
+     * fail.
+     * <p>
+     * Implementations should return <b>lang keys</b> (e.g. {@code "tile.blockGlass.name"}) rather than pre-translated
+     * display names. The caller is responsible for translating these keys on the client side via
+     * {@code StatCollector.translateToLocal()}. If a key has no matching translation, {@code translateToLocal} returns
+     * the input string unchanged, so pre-translated fallback strings also work.
      *
-     * @return a list of accepted block descriptions (e.g. display names), or null if no description is available
+     * @return a list of accepted block descriptions as lang keys (or display names as fallback), or null if no
+     *         description is available
      */
     @Nullable
     default List<String> getDescription() {

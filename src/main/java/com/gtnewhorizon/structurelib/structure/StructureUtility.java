@@ -1413,8 +1413,8 @@ public class StructureUtility {
                 @Nullable
                 @Override
                 public List<String> getDescription() {
-                    return Collections
-                            .singletonList(new ItemStack(Item.getItemFromBlock(block), 1, meta).getDisplayName());
+                    return Collections.singletonList(
+                            new ItemStack(Item.getItemFromBlock(block), 1, meta).getUnlocalizedName() + ".name");
                 }
             };
         } else {
@@ -1499,8 +1499,8 @@ public class StructureUtility {
                 @Nullable
                 @Override
                 public List<String> getDescription() {
-                    return Collections
-                            .singletonList(new ItemStack(Item.getItemFromBlock(block), 1, meta).getDisplayName());
+                    return Collections.singletonList(
+                            new ItemStack(Item.getItemFromBlock(block), 1, meta).getUnlocalizedName() + ".name");
                 }
             };
         }
@@ -1548,8 +1548,8 @@ public class StructureUtility {
                 @Nullable
                 @Override
                 public List<String> getDescription() {
-                    return Collections
-                            .singletonList(new ItemStack(Item.getItemFromBlock(block), 1, 0).getDisplayName());
+                    return Collections.singletonList(
+                            new ItemStack(Item.getItemFromBlock(block), 1, 0).getUnlocalizedName() + ".name");
                 }
             };
         } else {
@@ -1587,8 +1587,8 @@ public class StructureUtility {
                 @Nullable
                 @Override
                 public List<String> getDescription() {
-                    return Collections
-                            .singletonList(new ItemStack(Item.getItemFromBlock(block), 1, 0).getDisplayName());
+                    return Collections.singletonList(
+                            new ItemStack(Item.getItemFromBlock(block), 1, 0).getUnlocalizedName() + ".name");
                 }
             };
         }
