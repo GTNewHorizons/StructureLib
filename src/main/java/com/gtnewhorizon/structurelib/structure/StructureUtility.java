@@ -1413,8 +1413,9 @@ public class StructureUtility {
                 @Nullable
                 @Override
                 public List<String> getDescription() {
-                    return Collections.singletonList(
-                            new ItemStack(Item.getItemFromBlock(block), 1, meta).getUnlocalizedName() + ".name");
+                    Item item = Item.getItemFromBlock(block);
+                    if (item == null) return null;
+                    return Collections.singletonList(new ItemStack(item, 1, meta).getUnlocalizedName() + ".name");
                 }
             };
         } else {
@@ -1499,8 +1500,9 @@ public class StructureUtility {
                 @Nullable
                 @Override
                 public List<String> getDescription() {
-                    return Collections.singletonList(
-                            new ItemStack(Item.getItemFromBlock(block), 1, meta).getUnlocalizedName() + ".name");
+                    Item item = Item.getItemFromBlock(block);
+                    if (item == null) return null;
+                    return Collections.singletonList(new ItemStack(item, 1, meta).getUnlocalizedName() + ".name");
                 }
             };
         }
@@ -1548,8 +1550,9 @@ public class StructureUtility {
                 @Nullable
                 @Override
                 public List<String> getDescription() {
-                    return Collections.singletonList(
-                            new ItemStack(Item.getItemFromBlock(block), 1, 0).getUnlocalizedName() + ".name");
+                    Item item = Item.getItemFromBlock(block);
+                    if (item == null) return null;
+                    return Collections.singletonList(new ItemStack(item, 1, 0).getUnlocalizedName() + ".name");
                 }
             };
         } else {
@@ -1587,8 +1590,9 @@ public class StructureUtility {
                 @Nullable
                 @Override
                 public List<String> getDescription() {
-                    return Collections.singletonList(
-                            new ItemStack(Item.getItemFromBlock(block), 1, 0).getUnlocalizedName() + ".name");
+                    Item item = Item.getItemFromBlock(block);
+                    if (item == null) return null;
+                    return Collections.singletonList(new ItemStack(item, 1, 0).getUnlocalizedName() + ".name");
                 }
             };
         }

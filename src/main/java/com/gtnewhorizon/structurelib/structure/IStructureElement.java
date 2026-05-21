@@ -44,8 +44,13 @@ public interface IStructureElement<T> {
     }
 
     /**
-     * Returns a description of what block(s) this element accepts. Used for diagnostic messages when structure checks
-     * fail.
+     * Returns a human-readable description of what block(s) this element accepts. Used for diagnostic messages when
+     * structure checks fail (e.g. "expected Input Bus at (1, 2, 3)").
+     * <p>
+     * Unlike {@link #getBlocksToPlace}, which returns the full set of concrete block variants for autoplacing (e.g.
+     * every tier of Input Bus), this method returns <b>category-level</b> descriptions suitable for display to the
+     * player (e.g. just "Input Bus"). It also requires no parameters, no world, trigger item, or environment, making
+     * it usable in contexts where those are unavailable.
      * <p>
      * Implementations should return <b>lang keys</b> (e.g. {@code "tile.blockGlass.name"}) rather than pre-translated
      * display names. The caller is responsible for translating these keys on the client side via
