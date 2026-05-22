@@ -707,6 +707,19 @@ public class StructureUtility {
     public static <T, TIER> IStructureElement<T> ofBlocksTiered(ITierConverter<TIER> tierExtractor,
             @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet, BiConsumer<T, TIER> setter,
             Function<T, TIER> getter) {
+        return ofBlocksTiered(tierExtractor, allKnownTiers, notSet, setter, getter, null);
+    }
+
+    /**
+     * Like {@link #ofBlocksTiered(ITierConverter, List, Object, BiConsumer, Function)}, but with an explicit
+     * description that will be returned by {@link IStructureElement#getDescription()}.
+     *
+     * @param description the description lang keys to attach to this element, or null for no description
+     * @see #ofBlocksTiered(ITierConverter, List, Object, BiConsumer, Function)
+     */
+    public static <T, TIER> IStructureElement<T> ofBlocksTiered(ITierConverter<TIER> tierExtractor,
+            @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet, BiConsumer<T, TIER> setter,
+            Function<T, TIER> getter, @Nullable List<String> description) {
         List<Pair<Block, Integer>> hints = allKnownTiers == null ? Collections.emptyList() : allKnownTiers;
         if (hints.stream().anyMatch(Objects::isNull)) throw new IllegalArgumentException();
         IStructureElementCheckOnly<T> check = ofBlocksTiered(tierExtractor, notSet, setter, getter);
@@ -784,6 +797,12 @@ public class StructureUtility {
                         env.getSource(),
                         env.getActor(),
                         env.getChatter());
+            }
+
+            @Nullable
+            @Override
+            public List<String> getDescription() {
+                return description;
             }
 
         };
