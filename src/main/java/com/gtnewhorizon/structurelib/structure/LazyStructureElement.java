@@ -69,7 +69,7 @@ class LazyStructureElement<T> implements IStructureElementDeferred<T> {
 
     @Nullable
     @Override
-    public List<String> getDescription() {
-        return elem != null ? elem.getDescription() : null;
+    public List<String> getDescription(T context) {
+        return elem != null ? elem.getDescription(context) : null;
     }
 }

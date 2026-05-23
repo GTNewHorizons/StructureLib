@@ -722,7 +722,7 @@ public class StructureUtility {
 
     /**
      * Like {@link #ofBlocksTiered(ITierConverter, List, Object, BiConsumer, Function)}, but with an explicit
-     * description that will be returned by {@link IStructureElement#getDescription()}.
+     * description that will be returned by {@link IStructureElement#getDescription(Object)}.
      *
      * @param description the description lang keys to attach to this element, or null for no description
      * @see #ofBlocksTiered(ITierConverter, List, Object, BiConsumer, Function)
@@ -735,11 +735,8 @@ public class StructureUtility {
         IStructureElementCheckOnly<T> check = ofBlocksTiered(tierExtractor, notSet, setter, getter);
         return new StructureElement_Bridge<T>() {
 
-            private T lastContext;
-
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
-                lastContext = t;
                 return check.check(t, world, x, y, z);
             }
 
@@ -750,7 +747,6 @@ public class StructureUtility {
 
             @Override
             public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
-                lastContext = t;
                 Pair<Block, Integer> hint = getHint(trigger);
                 if (hint == null) return true;
                 TIER hintTier = tierExtractor.convert(hint.getKey(), hint.getValue());
@@ -815,9 +811,8 @@ public class StructureUtility {
 
             @Nullable
             @Override
-            public List<String> getDescription() {
-                if (lastContext == null) return description;
-                TIER currentTier = getter.apply(lastContext);
+            public List<String> getDescription(T context) {
+                TIER currentTier = getter.apply(context);
                 if (Objects.equals(currentTier, notSet)) return description;
 
                 for (Pair<Block, Integer> pair : hints) {
@@ -1457,7 +1452,7 @@ public class StructureUtility {
 
                 @Nullable
                 @Override
-                public List<String> getDescription() {
+                public List<String> getDescription(T context) {
                     Item item = Item.getItemFromBlock(block);
                     if (item == null) return null;
                     return Collections.singletonList(new ItemStack(item, 1, meta).getUnlocalizedName() + ".name");
@@ -1544,7 +1539,7 @@ public class StructureUtility {
 
                 @Nullable
                 @Override
-                public List<String> getDescription() {
+                public List<String> getDescription(T context) {
                     Item item = Item.getItemFromBlock(block);
                     if (item == null) return null;
                     return Collections.singletonList(new ItemStack(item, 1, meta).getUnlocalizedName() + ".name");
@@ -1594,7 +1589,7 @@ public class StructureUtility {
 
                 @Nullable
                 @Override
-                public List<String> getDescription() {
+                public List<String> getDescription(T context) {
                     Item item = Item.getItemFromBlock(block);
                     if (item == null) return null;
                     return Collections.singletonList(new ItemStack(item, 1, 0).getUnlocalizedName() + ".name");
@@ -1634,7 +1629,7 @@ public class StructureUtility {
 
                 @Nullable
                 @Override
-                public List<String> getDescription() {
+                public List<String> getDescription(T context) {
                     Item item = Item.getItemFromBlock(block);
                     if (item == null) return null;
                     return Collections.singletonList(new ItemStack(item, 1, 0).getUnlocalizedName() + ".name");
@@ -1905,8 +1900,8 @@ public class StructureUtility {
 
             @Nullable
             @Override
-            public List<String> getDescription() {
-                return element.getDescription();
+            public List<String> getDescription(T context) {
+                return element.getDescription(context);
             }
         };
     }
@@ -1964,7 +1959,7 @@ public class StructureUtility {
 
             @Nullable
             @Override
-            public List<String> getDescription() {
+            public List<String> getDescription(T context) {
                 return description;
             }
         };
@@ -2026,8 +2021,8 @@ public class StructureUtility {
 
             @Nullable
             @Override
-            public List<String> getDescription() {
-                return element.getDescription();
+            public List<String> getDescription(T context) {
+                return element.getDescription(context);
             }
         };
     }
@@ -2101,8 +2096,8 @@ public class StructureUtility {
 
             @Nullable
             @Override
-            public List<String> getDescription() {
-                return downstream.getDescription();
+            public List<String> getDescription(T context) {
+                return downstream.getDescription(context);
             }
         };
     }
@@ -2204,8 +2199,8 @@ public class StructureUtility {
 
             @Nullable
             @Override
-            public List<String> getDescription() {
-                return elem.getDescription();
+            public List<String> getDescription(T context) {
+                return elem.getDescription(context.getCurrentContext());
             }
         };
     }
@@ -3047,8 +3042,8 @@ public class StructureUtility {
 
             @Nullable
             @Override
-            public List<String> getDescription() {
-                return backing.getDescription();
+            public List<String> getDescription(T context) {
+                return backing.getDescription(context);
             }
         };
     }
