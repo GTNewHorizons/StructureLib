@@ -707,7 +707,17 @@ public class StructureUtility {
     public static <T, TIER> IStructureElement<T> ofBlocksTiered(ITierConverter<TIER> tierExtractor,
             @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet, BiConsumer<T, TIER> setter,
             Function<T, TIER> getter) {
-        return ofBlocksTiered(tierExtractor, allKnownTiers, notSet, setter, getter, null);
+        List<String> descriptions = null;
+        if (allKnownTiers != null) {
+            descriptions = new java.util.ArrayList<>();
+            for (Pair<Block, Integer> tier : allKnownTiers) {
+                Item item = Item.getItemFromBlock(tier.getLeft());
+                if (item != null) {
+                    descriptions.add(new ItemStack(item, 1, tier.getRight()).getUnlocalizedName() + ".name");
+                }
+            }
+        }
+        return ofBlocksTiered(tierExtractor, allKnownTiers, notSet, setter, getter, descriptions);
     }
 
     /**
