@@ -707,7 +707,17 @@ public class StructureUtility {
     public static <T, TIER> IStructureElement<T> ofBlocksTiered(ITierConverter<TIER> tierExtractor,
             @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet, BiConsumer<T, TIER> setter,
             Function<T, TIER> getter) {
-        return ofBlocksTiered(tierExtractor, allKnownTiers, notSet, setter, getter, null);
+        List<String> descriptions = null;
+        if (allKnownTiers != null) {
+            descriptions = new java.util.ArrayList<>();
+            for (Pair<Block, Integer> tier : allKnownTiers) {
+                Item item = Item.getItemFromBlock(tier.getLeft());
+                if (item != null) {
+                    descriptions.add(new ItemStack(item, 1, tier.getRight()).getUnlocalizedName() + ".name");
+                }
+            }
+        }
+        return ofBlocksTiered(tierExtractor, allKnownTiers, notSet, setter, getter, descriptions);
     }
 
     /**
@@ -725,8 +735,11 @@ public class StructureUtility {
         IStructureElementCheckOnly<T> check = ofBlocksTiered(tierExtractor, notSet, setter, getter);
         return new StructureElement_Bridge<T>() {
 
+            private T lastContext;
+
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
+                lastContext = t;
                 return check.check(t, world, x, y, z);
             }
 
@@ -737,6 +750,7 @@ public class StructureUtility {
 
             @Override
             public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                lastContext = t;
                 Pair<Block, Integer> hint = getHint(trigger);
                 if (hint == null) return true;
                 TIER hintTier = tierExtractor.convert(hint.getKey(), hint.getValue());
@@ -802,6 +816,18 @@ public class StructureUtility {
             @Nullable
             @Override
             public List<String> getDescription() {
+                if (lastContext == null) return description;
+                TIER currentTier = getter.apply(lastContext);
+                if (Objects.equals(currentTier, notSet)) return description;
+
+                for (Pair<Block, Integer> pair : hints) {
+                    TIER pairTier = tierExtractor.convert(pair.getKey(), pair.getValue());
+                    if (!Objects.equals(pairTier, currentTier)) continue;
+                    Item item = Item.getItemFromBlock(pair.getKey());
+                    if (item == null) continue;
+                    return Collections
+                            .singletonList(new ItemStack(item, 1, pair.getValue()).getUnlocalizedName() + ".name");
+                }
                 return description;
             }
 
