@@ -5,6 +5,7 @@ import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -40,6 +41,28 @@ public interface IStructureElement<T> {
      */
     default boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
         return true;
+    }
+
+    /**
+     * Returns a human-readable description of what block(s) this element accepts. Used for diagnostic messages when
+     * structure checks fail (e.g. "expected Input Bus at (1, 2, 3)").
+     * <p>
+     * Unlike {@link #getBlocksToPlace}, which returns the full set of concrete block variants for autoplacing (e.g.
+     * every tier of Input Bus), this method returns <b>category-level</b> descriptions suitable for display to the
+     * player (e.g. just "Input Bus"). It also requires no parameters, no world, trigger item, or environment, making it
+     * usable in contexts where those are unavailable.
+     * <p>
+     * Implementations should return <b>lang keys</b> (e.g. {@code "tile.blockGlass.name"}) rather than pre-translated
+     * display names. The caller is responsible for translating these keys on the client side via
+     * {@code StatCollector.translateToLocal()}. If a key has no matching translation, {@code translateToLocal} returns
+     * the input string unchanged, so pre-translated fallback strings also work.
+     *
+     * @return a list of accepted block descriptions as lang keys (or display names as fallback), or null if no
+     *         description is available
+     */
+    @Nullable
+    default List<String> getDescription() {
+        return null;
     }
 
     boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger);
@@ -203,6 +226,12 @@ public interface IStructureElement<T> {
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return IStructureElement.this.spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Nullable
+            @Override
+            public List<String> getDescription() {
+                return IStructureElement.this.getDescription();
             }
         };
     }

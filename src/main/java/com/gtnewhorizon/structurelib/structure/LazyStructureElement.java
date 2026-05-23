@@ -1,5 +1,6 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -64,5 +65,11 @@ class LazyStructureElement<T> implements IStructureElementDeferred<T> {
     public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
             AutoPlaceEnvironment env) {
         return get(t).survivalPlaceBlock(t, world, x, y, z, trigger, env);
+    }
+
+    @Nullable
+    @Override
+    public List<String> getDescription() {
+        return elem != null ? elem.getDescription() : null;
     }
 }

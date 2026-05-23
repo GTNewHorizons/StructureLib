@@ -1,7 +1,9 @@
 package com.gtnewhorizon.structurelib.structure;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -59,6 +61,19 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
             }
         }
         return false;
+    }
+
+    @Nullable
+    @Override
+    default List<String> getDescription() {
+        Set<String> descriptions = new LinkedHashSet<>();
+        for (IStructureElement<T> fallback : fallbacks()) {
+            List<String> desc = fallback.getDescription();
+            if (desc != null) {
+                descriptions.addAll(desc);
+            }
+        }
+        return descriptions.isEmpty() ? null : new ArrayList<>(descriptions);
     }
 
     @Nullable

@@ -707,6 +707,19 @@ public class StructureUtility {
     public static <T, TIER> IStructureElement<T> ofBlocksTiered(ITierConverter<TIER> tierExtractor,
             @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet, BiConsumer<T, TIER> setter,
             Function<T, TIER> getter) {
+        return ofBlocksTiered(tierExtractor, allKnownTiers, notSet, setter, getter, null);
+    }
+
+    /**
+     * Like {@link #ofBlocksTiered(ITierConverter, List, Object, BiConsumer, Function)}, but with an explicit
+     * description that will be returned by {@link IStructureElement#getDescription()}.
+     *
+     * @param description the description lang keys to attach to this element, or null for no description
+     * @see #ofBlocksTiered(ITierConverter, List, Object, BiConsumer, Function)
+     */
+    public static <T, TIER> IStructureElement<T> ofBlocksTiered(ITierConverter<TIER> tierExtractor,
+            @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet, BiConsumer<T, TIER> setter,
+            Function<T, TIER> getter, @Nullable List<String> description) {
         List<Pair<Block, Integer>> hints = allKnownTiers == null ? Collections.emptyList() : allKnownTiers;
         if (hints.stream().anyMatch(Objects::isNull)) throw new IllegalArgumentException();
         IStructureElementCheckOnly<T> check = ofBlocksTiered(tierExtractor, notSet, setter, getter);
@@ -785,6 +798,13 @@ public class StructureUtility {
                         env.getActor(),
                         env.getChatter());
             }
+
+            @Nullable
+            @Override
+            public List<String> getDescription() {
+                return description;
+            }
+
         };
     }
 
@@ -1408,6 +1428,14 @@ public class StructureUtility {
                         AutoPlaceEnvironment env) {
                     return BlocksToPlace.create(block, meta);
                 }
+
+                @Nullable
+                @Override
+                public List<String> getDescription() {
+                    Item item = Item.getItemFromBlock(block);
+                    if (item == null) return null;
+                    return Collections.singletonList(new ItemStack(item, 1, meta).getUnlocalizedName() + ".name");
+                }
             };
         } else {
             return new IStructureElement<T>() {
@@ -1487,6 +1515,14 @@ public class StructureUtility {
                         AutoPlaceEnvironment env) {
                     return BlocksToPlace.create(block, meta);
                 }
+
+                @Nullable
+                @Override
+                public List<String> getDescription() {
+                    Item item = Item.getItemFromBlock(block);
+                    if (item == null) return null;
+                    return Collections.singletonList(new ItemStack(item, 1, meta).getUnlocalizedName() + ".name");
+                }
             };
         }
     }
@@ -1529,6 +1565,14 @@ public class StructureUtility {
                     // there is getSubItems on ItemBlock, but it's client only
                     return BlocksToPlace.create(defaultBlock, defaultMeta);
                 }
+
+                @Nullable
+                @Override
+                public List<String> getDescription() {
+                    Item item = Item.getItemFromBlock(block);
+                    if (item == null) return null;
+                    return Collections.singletonList(new ItemStack(item, 1, 0).getUnlocalizedName() + ".name");
+                }
             };
         } else {
             return new IStructureElement<T>() {
@@ -1560,6 +1604,14 @@ public class StructureUtility {
                         AutoPlaceEnvironment env) {
                     // there is getSubItems on ItemBlock, but it's client only
                     return BlocksToPlace.create(defaultBlock, defaultMeta);
+                }
+
+                @Nullable
+                @Override
+                public List<String> getDescription() {
+                    Item item = Item.getItemFromBlock(block);
+                    if (item == null) return null;
+                    return Collections.singletonList(new ItemStack(item, 1, 0).getUnlocalizedName() + ".name");
                 }
             };
         }
@@ -1824,6 +1876,71 @@ public class StructureUtility {
                     AutoPlaceEnvironment env) {
                 return element.survivalPlaceBlock(t, world, x, y, z, trigger, env);
             }
+
+            @Nullable
+            @Override
+            public List<String> getDescription() {
+                return element.getDescription();
+            }
+        };
+    }
+
+    /**
+     * Wraps an element and overrides its description. Useful for providing human-readable names to elements whose
+     * underlying implementation doesn't provide a description (e.g. tiered block elements).
+     *
+     * @param description the description to use, or null to clear any existing description
+     * @param element     the element to wrap
+     */
+    public static <B extends IStructureElement<T>, T> IStructureElement<T> withDescription(
+            @Nullable List<String> description, B element) {
+        return new IStructureElement<T>() {
+
+            @Override
+            public boolean check(T t, World world, int x, int y, int z) {
+                return element.check(t, world, x, y, z);
+            }
+
+            @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return element.couldBeValid(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return element.placeBlock(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return element.spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Nullable
+            @Override
+            public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
+                    AutoPlaceEnvironment env) {
+                return element.getBlocksToPlace(t, world, x, y, z, trigger, env);
+            }
+
+            @Override
+            @Deprecated
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
+                    IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return element.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, chatter);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
+                    AutoPlaceEnvironment env) {
+                return element.survivalPlaceBlock(t, world, x, y, z, trigger, env);
+            }
+
+            @Nullable
+            @Override
+            public List<String> getDescription() {
+                return description;
+            }
         };
     }
 
@@ -1879,6 +1996,12 @@ public class StructureUtility {
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
                 return element.survivalPlaceBlock(t, world, x, y, z, trigger, env);
+            }
+
+            @Nullable
+            @Override
+            public List<String> getDescription() {
+                return element.getDescription();
             }
         };
     }
@@ -1948,6 +2071,12 @@ public class StructureUtility {
                     AutoPlaceEnvironment env) {
                 if (predicate.test(t)) return downstream.survivalPlaceBlock(t, world, x, y, z, trigger, env);
                 return placeResultWhenDisabled;
+            }
+
+            @Nullable
+            @Override
+            public List<String> getDescription() {
+                return downstream.getDescription();
             }
         };
     }
@@ -2045,6 +2174,12 @@ public class StructureUtility {
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
                 return elem.survivalPlaceBlock(t.getCurrentContext(), world, x, y, z, trigger, env);
+            }
+
+            @Nullable
+            @Override
+            public List<String> getDescription() {
+                return elem.getDescription();
             }
         };
     }
@@ -2882,6 +3017,12 @@ public class StructureUtility {
                     // instead of some false positive error messages like item not find
                     warnNoExplicitSubChannel(env.getActor());
                 return backing.survivalPlaceBlock(t, world, x, y, z, newTrigger, env);
+            }
+
+            @Nullable
+            @Override
+            public List<String> getDescription() {
+                return backing.getDescription();
             }
         };
     }
