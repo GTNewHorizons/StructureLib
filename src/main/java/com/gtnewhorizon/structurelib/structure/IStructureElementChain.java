@@ -65,10 +65,10 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
 
     @Nullable
     @Override
-    default List<String> getDescription() {
+    default List<String> getDescription(T context) {
         Set<String> descriptions = new LinkedHashSet<>();
         for (IStructureElement<T> fallback : fallbacks()) {
-            List<String> desc = fallback.getDescription();
+            List<String> desc = fallback.getDescription(context);
             if (desc != null) {
                 descriptions.addAll(desc);
             }

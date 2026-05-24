@@ -57,11 +57,13 @@ public interface IStructureElement<T> {
      * {@code StatCollector.translateToLocal()}. If a key has no matching translation, {@code translateToLocal} returns
      * the input string unchanged, so pre-translated fallback strings also work.
      *
+     * @param context the context object (e.g. the multiblock controller), used to determine state-dependent
+     *                descriptions
      * @return a list of accepted block descriptions as lang keys (or display names as fallback), or null if no
      *         description is available
      */
     @Nullable
-    default List<String> getDescription() {
+    default List<String> getDescription(T context) {
         return null;
     }
 
@@ -230,8 +232,8 @@ public interface IStructureElement<T> {
 
             @Nullable
             @Override
-            public List<String> getDescription() {
-                return IStructureElement.this.getDescription();
+            public List<String> getDescription(T context) {
+                return IStructureElement.this.getDescription(context);
             }
         };
     }
