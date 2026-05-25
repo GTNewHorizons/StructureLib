@@ -2811,7 +2811,7 @@ public class StructureUtility {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
-        return defer(keyExtractorCheck.andThen(map::get), keyExtractor.<IStructureElement<T>>andThen(map::get));
+        return defer(keyExtractorCheck.andThen(map::get), keyExtractor.andThen(map::get));
     }
 
     /**
