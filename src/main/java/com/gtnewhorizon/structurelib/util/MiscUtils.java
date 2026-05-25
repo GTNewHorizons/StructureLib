@@ -11,7 +11,6 @@ public class MiscUtils {
 
     private MiscUtils() {}
 
-    @SuppressWarnings("unchecked")
     public static Set<String> getTagKeys(NBTTagCompound tag) {
         return tag.func_150296_c();
     }
