@@ -37,7 +37,7 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T> {
     }
 
     @Override
-    public boolean visit(IStructureElement<T> element, World world, int x, int y, int z, int a, int b, int c) {
+    public boolean visit(IStructureElement<? super T> element, World world, int x, int y, int z, int a, int b, int c) {
         env.offsetABC[0] = a;
         env.offsetABC[1] = b;
         env.offsetABC[2] = c;

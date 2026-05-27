@@ -21,23 +21,23 @@ public interface IStructureWalker<T> {
      * @param c       The relative C position of the element in structure-local coordinates (pre transform)
      * @return False to stop iterating, true to continue.
      */
-    boolean visit(IStructureElement<T> element, World world, int x, int y, int z, int a, int b, int c);
+    boolean visit(IStructureElement<? super T> element, World world, int x, int y, int z, int a, int b, int c);
 
-    default boolean blockNotLoaded(IStructureElement<T> element, World world, int x, int y, int z, int a, int b,
+    default boolean blockNotLoaded(IStructureElement<? super T> element, World world, int x, int y, int z, int a, int b,
             int c) {
         return false;
     }
 
     static <T> IStructureWalker<T> ignoreBlockUnloaded(IStructureWalker<T> walker) {
-        return new IStructureWalker<T>() {
+        return new IStructureWalker<>() {
 
             @Override
-            public boolean visit(IStructureElement<T> element, World world, int x, int y, int z, int a, int b, int c) {
+            public boolean visit(IStructureElement<? super T> element, World world, int x, int y, int z, int a, int b, int c) {
                 return walker.visit(element, world, x, y, z, a, b, c);
             }
 
             @Override
-            public boolean blockNotLoaded(IStructureElement<T> element, World world, int x, int y, int z, int a, int b,
+            public boolean blockNotLoaded(IStructureElement<? super T> element, World world, int x, int y, int z, int a, int b,
                     int c) {
                 return walker.visit(element, world, x, y, z, a, b, c);
             }
@@ -45,15 +45,15 @@ public interface IStructureWalker<T> {
     }
 
     static <T> IStructureWalker<T> skipBlockUnloaded(IStructureWalker<T> walker) {
-        return new IStructureWalker<T>() {
+        return new IStructureWalker<>() {
 
             @Override
-            public boolean visit(IStructureElement<T> element, World world, int x, int y, int z, int a, int b, int c) {
+            public boolean visit(IStructureElement<? super T> element, World world, int x, int y, int z, int a, int b, int c) {
                 return walker.visit(element, world, x, y, z, a, b, c);
             }
 
             @Override
-            public boolean blockNotLoaded(IStructureElement<T> element, World world, int x, int y, int z, int a, int b,
+            public boolean blockNotLoaded(IStructureElement<? super T> element, World world, int x, int y, int z, int a, int b,
                     int c) {
                 return true;
             }
