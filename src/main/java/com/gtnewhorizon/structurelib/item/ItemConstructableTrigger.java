@@ -56,11 +56,11 @@ public class ItemConstructableTrigger extends Item {
                     .forEach(tooltip::add);
         } else {
             // Tooltip text:
-            //   Triggers Constructable Interface
-            //   Shows multiblock construction details,
-            //   just Use on a multiblock controller.
-            //   (Sneak Use in creative to build)
-            //   Quantity affects tier/mode/type
+            // Triggers Constructable Interface
+            // Shows multiblock construction details,
+            // just Use on a multiblock controller.
+            // (Sneak Use in creative to build)
+            // Quantity affects tier/mode/type
 
             tooltip.add(translateToLocal("item.structurelib.constructableTrigger.desc.0"));
             tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.1"));

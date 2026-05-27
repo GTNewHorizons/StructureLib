@@ -36,31 +36,32 @@ public class ItemBlockHint extends ItemBlock {
             case 9:
             case 10:
             case 11:
+                // Placeholder for a certain group.
                 tooltip.add(
                         EnumChatFormatting.AQUA.toString() + EnumChatFormatting.BOLD
-                                + translateToLocal("structurelib.blockhint.desc.1")); // Placeholder for a certain
-                                                                                      // group.
+                                + translateToLocal("structurelib.blockhint.desc.1"));
                 break;
             case 12:
+                // General placeholder.
                 tooltip.add(
                         EnumChatFormatting.AQUA.toString() + EnumChatFormatting.BOLD
-                                + translateToLocal("structurelib.blockhint.desc.2")); // General placeholder.
+                                + translateToLocal("structurelib.blockhint.desc.2"));
                 break;
             case 13:
+                // Make sure it contains Air material.
                 tooltip.add(
                         EnumChatFormatting.AQUA.toString() + EnumChatFormatting.BOLD
-                                + translateToLocal("structurelib.blockhint.desc.3")); // Make sure it contains Air
-                                                                                      // material.
+                                + translateToLocal("structurelib.blockhint.desc.3"));
                 break;
             case 14:
+                // Make sure it does not contain Air material.
                 tooltip.add(
                         EnumChatFormatting.AQUA.toString() + EnumChatFormatting.BOLD
-                                + translateToLocal("structurelib.blockhint.desc.4")); // Make sure it does not contain
-                                                                                      // Air material.
+                                + translateToLocal("structurelib.blockhint.desc.4"));
                 break;
             case 15:
-                tooltip.add(EnumChatFormatting.BLUE + translateToLocal("structurelib.blockhint.desc.5")); // ERROR, what
-                                                                                                        // did u expect?
+                // ERROR, what did u expect?
+                tooltip.add(EnumChatFormatting.BLUE + translateToLocal("structurelib.blockhint.desc.5"));
                 break;
             default: // WTF?
                 tooltip.add("Damn son where did you get that!?");
