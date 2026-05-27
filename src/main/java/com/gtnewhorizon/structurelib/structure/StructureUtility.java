@@ -3324,7 +3324,7 @@ public class StructureUtility {
         return (builder.toString().replaceAll("\"\"", "E"));
     }
 
-    static <T> boolean iterateV2(IStructureElement<T>[] elements, World world, ExtendedFacing extendedFacing,
+    static <T> boolean iterateV2(IStructureElement<? super T>[] elements, World world, ExtendedFacing extendedFacing,
             int basePositionX, int basePositionY, int basePositionZ, int basePositionA, int basePositionB,
             int basePositionC, IStructureWalker<T> predicate, String iterateType) {
         // change base position to base offset
@@ -3335,7 +3335,7 @@ public class StructureUtility {
         int[] abc = new int[] { basePositionA, basePositionB, basePositionC };
         int[] xyz = new int[3];
 
-        for (IStructureElement<T> element : elements) {
+        for (IStructureElement<? super T> element : elements) {
             if (element.isNavigating()) {
                 abc[0] = (element.resetA() ? basePositionA : abc[0]) + element.getStepA();
                 abc[1] = (element.resetB() ? basePositionB : abc[1]) + element.getStepB();
