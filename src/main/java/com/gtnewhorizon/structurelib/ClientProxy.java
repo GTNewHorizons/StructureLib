@@ -395,8 +395,6 @@ public class ClientProxy extends CommonProxy {
             double worldY = y + 0.25;
             double worldZ = z + 0.25;
 
-            // this rendering code is independently written by glee8e on July 10th, 2023
-            // and is released as part of StructureLib under LGPL terms, just like everything else in this project
             // cube is a very special model. its facings can be rendered correctly by viewer distance without using
             // surface normals and view vector
             // here we do a 2 pass render.
