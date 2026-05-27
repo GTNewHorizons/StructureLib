@@ -184,8 +184,7 @@ public class GuiEditRegistryConfig extends GuiScreen {
      */
     @Override
     public void onGuiClosed() {
-        if (this.configID != null && this.parentScreen instanceof GuiConfig) {
-            GuiConfig parentGuiConfig = (GuiConfig) this.parentScreen;
+        if (this.configID != null && this.parentScreen instanceof GuiConfig parentGuiConfig) {
             parentGuiConfig.needsRefresh = true;
             parentGuiConfig.initGui();
         }

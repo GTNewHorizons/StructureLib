@@ -346,9 +346,7 @@ public class ClientProxy extends CommonProxy {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof HintParticleInfo)) return false;
-
-            HintParticleInfo that = (HintParticleInfo) o;
+            if (!(o instanceof HintParticleInfo that)) return false;
 
             return x == that.x && y == that.y && z == that.z;
         }
