@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib.structure;
 import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
 import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 import static java.lang.Integer.MIN_VALUE;
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,6 +46,7 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -152,8 +154,7 @@ public class StructureUtility {
     @SuppressWarnings("rawtypes")
     private static final Map<Vec3Impl, IStructureNavigate> STEP = new HashMap<>();
 
-    @SuppressWarnings("rawtypes")
-    private static final IStructureElement AIR = new StructureElement_Bridge() {
+    private static final IStructureElement<Object> AIR = new StructureElement_Bridge<>() {
 
         @Override
         public boolean check(Object t, World world, int x, int y, int z) {
@@ -188,8 +189,7 @@ public class StructureUtility {
         }
     };
 
-    @SuppressWarnings("rawtypes")
-    private static final IStructureElement NOT_AIR = new StructureElement_Bridge() {
+    private static final IStructureElement<Object> NOT_AIR = new StructureElement_Bridge<>() {
 
         @Override
         public boolean check(Object t, World world, int x, int y, int z) {
@@ -232,8 +232,7 @@ public class StructureUtility {
         }
     };
 
-    @SuppressWarnings("rawtypes")
-    private static final IStructureElement ERROR = new StructureElement_Bridge() {
+    private static final IStructureElement<Object> ERROR = new StructureElement_Bridge<>() {
 
         @Override
         public boolean check(Object t, World world, int x, int y, int z) {
@@ -463,8 +462,7 @@ public class StructureUtility {
      * don't need to call this yourselves. Use {@code -} in shape to automatically use this. Provided nontheless in case
      * you want this as a fallback to something else.
      */
-    @SuppressWarnings("unchecked")
-    public static <T> IStructureElement<T> isAir() {
+    public static IStructureElement<Object> isAir() {
         return AIR;
     }
 
@@ -473,8 +471,7 @@ public class StructureUtility {
      * usually don't need to call this yourselves. Use {@code +} in shape to automatically use this. Provided nontheless
      * in case you want this as a fallback to something else.
      */
-    @SuppressWarnings("unchecked")
-    public static <T> IStructureElement<T> notAir() {
+    public static IStructureElement<Object> notAir() {
         return NOT_AIR;
     }
 
@@ -482,8 +479,7 @@ public class StructureUtility {
      * Check returns false. Placement is always handled by this and does nothing. Makes little to no use it in fallback
      * chain.
      */
-    @SuppressWarnings("unchecked")
-    public static <T> IStructureElement<T> error() {
+    public static IStructureElement<Object> error() {
         return ERROR;
     }
 
@@ -493,22 +489,22 @@ public class StructureUtility {
      * Spawn a hint with given amount of dots. Check always returns: true. Only useful as a fallback, e.g.
      * {@link #ofBlockUnlocalizedName(String, String, int, IStructureElement)}
      */
-    public static <T> IStructureElementNoPlacement<T> ofHint(int dots) {
+    public static IStructureElementNoPlacement<Object> ofHint(int dots) {
         int meta = dots - 1;
-        return new IStructureElementNoPlacement<T>() {
+        return new IStructureElementNoPlacement<>() {
 
             @Override
-            public boolean check(T t, World world, int x, int y, int z) {
+            public boolean check(Object t, World world, int x, int y, int z) {
                 return true;
             }
 
             @Override
-            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 return check(t, world, x, y, z);
             }
 
             @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 StructureLibAPI.hintParticle(world, x, y, z, StructureLibAPI.getBlockHint(), meta);
                 return false;
             }
@@ -519,21 +515,21 @@ public class StructureUtility {
      * Spawn a hint with given textures. Check always returns: true. Only useful as a fallback, e.g.
      * {@link #ofBlockUnlocalizedName(String, String, int, IStructureElement)}
      */
-    public static <T> IStructureElementNoPlacement<T> ofHintDeferred(Supplier<IIcon[]> icons) {
-        return new IStructureElementNoPlacement<T>() {
+    public static IStructureElementNoPlacement<Object> ofHintDeferred(Supplier<IIcon[]> icons) {
+        return new IStructureElementNoPlacement<>() {
 
             @Override
-            public boolean check(T t, World world, int x, int y, int z) {
+            public boolean check(Object t, World world, int x, int y, int z) {
                 return true;
             }
 
             @Override
-            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 return check(t, world, x, y, z);
             }
 
             @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 StructureLibAPI.hintParticle(world, x, y, z, icons.get());
                 return false;
             }
@@ -544,21 +540,21 @@ public class StructureUtility {
      * Spawn a hint with given amount of textures and tint. Check always returns: true. Only useful as a fallback, e.g.
      * {@link #ofBlockUnlocalizedName(String, String, int, IStructureElement)}
      */
-    public static <T> IStructureElementNoPlacement<T> ofHintDeferred(Supplier<IIcon[]> icons, short[] RGBa) {
-        return new IStructureElementNoPlacement<T>() {
+    public static IStructureElementNoPlacement<Object> ofHintDeferred(Supplier<IIcon[]> icons, short[] RGBa) {
+        return new IStructureElementNoPlacement<>() {
 
             @Override
-            public boolean check(T t, World world, int x, int y, int z) {
+            public boolean check(Object t, World world, int x, int y, int z) {
                 return true;
             }
 
             @Override
-            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 return check(t, world, x, y, z);
             }
 
             @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 StructureLibAPI.hintParticleTinted(world, x, y, z, icons.get(), RGBa);
                 return false;
             }
@@ -580,8 +576,8 @@ public class StructureUtility {
      *
      * @see #ofBlocksTiered(ITierConverter, Object, BiConsumer, Function)
      */
-    public static <T, TIER> IStructureElementCheckOnly<T> ofBlocksTiered(ITierConverter<TIER> tierExtractor,
-            @Nullable TIER notSet, BiConsumer<T, TIER> setter, Function<T, TIER> getter) {
+    public static <T, TIER> IStructureElementCheckOnly<T> ofBlocksTiered(ITierConverter<? extends TIER> tierExtractor,
+            @Nullable TIER notSet, BiConsumer<? super T, ? super TIER> setter, Function<? super T, ? extends TIER> getter) {
         if (tierExtractor == null) throw new IllegalArgumentException();
         if (setter == null) throw new IllegalArgumentException();
         if (getter == null) throw new IllegalArgumentException();
@@ -703,9 +699,9 @@ public class StructureUtility {
      * @param getter        a function to retrieve the current tier from context object
      * @param setter        a function to set the current tier into context object
      */
-    public static <T, TIER> IStructureElement<T> ofBlocksTiered(ITierConverter<TIER> tierExtractor,
-            @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet, BiConsumer<T, TIER> setter,
-            Function<T, TIER> getter) {
+    public static <T, TIER> IStructureElement<T> ofBlocksTiered(ITierConverter<? extends TIER> tierExtractor,
+            @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet, BiConsumer<? super T, ? super TIER> setter,
+            Function<? super T, ? extends TIER> getter) {
         List<String> descriptions = null;
         if (allKnownTiers != null) {
             descriptions = new java.util.ArrayList<>();
@@ -726,13 +722,13 @@ public class StructureUtility {
      * @param description the description lang keys to attach to this element, or null for no description
      * @see #ofBlocksTiered(ITierConverter, List, Object, BiConsumer, Function)
      */
-    public static <T, TIER> IStructureElement<T> ofBlocksTiered(ITierConverter<TIER> tierExtractor,
-            @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet, BiConsumer<T, TIER> setter,
-            Function<T, TIER> getter, @Nullable List<String> description) {
+    public static <T, TIER> IStructureElement<T> ofBlocksTiered(ITierConverter<? extends TIER> tierExtractor,
+            @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet, BiConsumer<? super T, ? super TIER> setter,
+            Function<? super T, ? extends TIER> getter, @Nullable List<String> description) {
         List<Pair<Block, Integer>> hints = allKnownTiers == null ? Collections.emptyList() : allKnownTiers;
         if (hints.stream().anyMatch(Objects::isNull)) throw new IllegalArgumentException();
         IStructureElementCheckOnly<T> check = ofBlocksTiered(tierExtractor, notSet, setter, getter);
-        return new StructureElement_Bridge<T>() {
+        return new StructureElement_Bridge<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -836,7 +832,7 @@ public class StructureUtility {
      * While no immediate error will be thrown, client code should ensure said mod is loaded and said mod is present,
      * otherwise bad things will happen later!
      */
-    public static <T> IStructureElement<T> ofBlockUnlocalizedName(String modid, String unlocalizedName, int meta) {
+    public static IStructureElement<Object> ofBlockUnlocalizedName(String modid, String unlocalizedName, int meta) {
         return ofBlockUnlocalizedName(modid, unlocalizedName, meta, false);
     }
 
@@ -851,13 +847,13 @@ public class StructureUtility {
      * <p>
      * Will place block or hint using the given meta if wildcard is true.
      */
-    public static <T> IStructureElement<T> ofBlockUnlocalizedName(String modid, String registryName, int meta,
+    public static IStructureElement<Object> ofBlockUnlocalizedName(String modid, String registryName, int meta,
             boolean wildcard) {
         if (StringUtils.isBlank(registryName)) throw new IllegalArgumentException();
         if (meta < 0) throw new IllegalArgumentException();
         if (meta > 15) throw new IllegalArgumentException();
         if (StringUtils.isBlank(modid)) throw new IllegalArgumentException();
-        return new StructureElement_Bridge<T>() {
+        return new StructureElement_Bridge<>() {
 
             private Block block;
 
@@ -867,24 +863,24 @@ public class StructureUtility {
             }
 
             @Override
-            public boolean check(T t, World world, int x, int y, int z) {
+            public boolean check(Object t, World world, int x, int y, int z) {
                 return world.getBlock(x, y, z) == getBlock() && (wildcard || world.getBlockMetadata(x, y, z) == meta);
             }
 
             @Override
-            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 return check(t, world, x, y, z);
             }
 
             @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 if (getBlock() == null) return error().spawnHint(t, world, x, y, z, trigger);
                 StructureLibAPI.hintParticle(world, x, y, z, getBlock(), meta);
                 return true;
             }
 
             @Override
-            public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean placeBlock(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 if (getBlock() == null) return error().placeBlock(t, world, x, y, z, trigger);
                 world.setBlock(x, y, z, getBlock(), meta, 2);
                 return true;
@@ -892,14 +888,14 @@ public class StructureUtility {
 
             @Nullable
             @Override
-            public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
+            public BlocksToPlace getBlocksToPlace(Object t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
                 if (getBlock() == null) return error().getBlocksToPlace(t, world, x, y, z, trigger, env);
                 return BlocksToPlace.create(getBlock(), meta);
             }
 
             @Override
-            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
+            public PlaceResult survivalPlaceBlock(Object t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
                 if (check(t, world, x, y, z)) return PlaceResult.SKIP;
                 if (getBlock() == null) return PlaceResult.REJECT;
@@ -929,13 +925,13 @@ public class StructureUtility {
      * form an OR relationship even if the mod is loaded and the block exists in registry.
      */
     public static <T> IStructureElement<T> ofBlockUnlocalizedName(String modid, String unlocalizedName, int meta,
-            IStructureElement<T> fallback) {
+            IStructureElement<? super T> fallback) {
         if (StringUtils.isBlank(unlocalizedName)) throw new IllegalArgumentException();
         if (meta < 0) throw new IllegalArgumentException();
         if (meta > 15) throw new IllegalArgumentException();
         if (StringUtils.isBlank(modid)) throw new IllegalArgumentException();
         if (fallback == null) throw new IllegalArgumentException();
-        return new IStructureElement<T>() {
+        return new IStructureElement<>() {
 
             private Block block;
             private boolean initialized;
@@ -1018,31 +1014,31 @@ public class StructureUtility {
      * <p>
      * Does not have autoplace.
      *
-     * @param blocsMap  Accepted (block, meta) pairs.
+     * @param blocksMap  Accepted (block, meta) pairs.
      * @param hintBlock hint block to use
      * @param hintMeta  hint meta to use
      * @see #ofBlocksMapHint(Map, Block, int)
      */
-    public static <T> IStructureElementNoPlacement<T> ofBlocksFlatHint(Map<Block, Integer> blocsMap, Block hintBlock,
+    public static IStructureElementNoPlacement<Object> ofBlocksFlatHint(Map<Block, Integer> blocksMap, Block hintBlock,
             int hintMeta) {
-        if (blocsMap == null || blocsMap.isEmpty() || hintBlock == null) {
+        if (blocksMap == null || blocksMap.isEmpty() || hintBlock == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementNoPlacement<T>() {
+        return new IStructureElementNoPlacement<>() {
 
             @Override
-            public boolean check(T t, World world, int x, int y, int z) {
+            public boolean check(Object t, World world, int x, int y, int z) {
                 Block worldBlock = world.getBlock(x, y, z);
-                return blocsMap.getOrDefault(worldBlock, MIN_VALUE) == worldBlock.getDamageValue(world, x, y, z);
+                return blocksMap.getOrDefault(worldBlock, MIN_VALUE) == worldBlock.getDamageValue(world, x, y, z);
             }
 
             @Override
-            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 return check(t, world, x, y, z);
             }
 
             @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 StructureLibAPI.hintParticle(world, x, y, z, hintBlock, hintMeta);
                 return true;
             }
@@ -1054,37 +1050,37 @@ public class StructureUtility {
      * <p>
      * Does not have autoplace.
      *
-     * @param blocsMap  Accepted (block, meta) pairs.
+     * @param blocksMap  Accepted (block, meta) pairs.
      * @param hintBlock hint block to use
      * @param hintMeta  hint meta to use
      * @see #ofBlocksFlatHint(Map, Block, int)
      */
-    public static <T> IStructureElementNoPlacement<T> ofBlocksMapHint(Map<Block, Collection<Integer>> blocsMap,
+    public static IStructureElementNoPlacement<Object> ofBlocksMapHint(Map<Block, ? extends Collection<Integer>> blocksMap,
             Block hintBlock, int hintMeta) {
-        if (blocsMap == null || blocsMap.isEmpty() || hintBlock == null) {
+        if (blocksMap == null || blocksMap.isEmpty() || hintBlock == null) {
             throw new IllegalArgumentException();
         }
-        for (Collection<Integer> value : blocsMap.values()) {
+        for (Collection<Integer> value : blocksMap.values()) {
             if (value.isEmpty()) {
                 throw new IllegalArgumentException();
             }
         }
-        return new IStructureElementNoPlacement<T>() {
+        return new IStructureElementNoPlacement<>() {
 
             @Override
-            public boolean check(T t, World world, int x, int y, int z) {
+            public boolean check(Object t, World world, int x, int y, int z) {
                 Block worldBlock = world.getBlock(x, y, z);
-                return blocsMap.getOrDefault(worldBlock, Collections.emptySet())
+                return defaultIfNull(blocksMap.get(worldBlock), Collections.emptySet())
                         .contains(worldBlock.getDamageValue(world, x, y, z));
             }
 
             @Override
-            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 return check(t, world, x, y, z);
             }
 
             @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 StructureLibAPI.hintParticle(world, x, y, z, hintBlock, hintMeta);
                 return true;
             }
@@ -1094,26 +1090,26 @@ public class StructureUtility {
     /**
      * Accept one (block, meta). Spawn hint particles using an alternative block and meta. Not very useful...
      */
-    public static <T> IStructureElementNoPlacement<T> ofBlockHint(Block block, int meta, Block hintBlock,
+    public static IStructureElementNoPlacement<Object> ofBlockHint(Block block, int meta, Block hintBlock,
             int hintMeta) {
         if (block == null || hintBlock == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementNoPlacement<T>() {
+        return new IStructureElementNoPlacement<>() {
 
             @Override
-            public boolean check(T t, World world, int x, int y, int z) {
+            public boolean check(Object t, World world, int x, int y, int z) {
                 Block worldBlock = world.getBlock(x, y, z);
                 return block == worldBlock && meta == worldBlock.getDamageValue(world, x, y, z);
             }
 
             @Override
-            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 return check(t, world, x, y, z);
             }
 
             @Override
-            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+            public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                 StructureLibAPI.hintParticle(world, x, y, z, hintBlock, hintMeta);
                 return true;
             }
@@ -1124,7 +1120,7 @@ public class StructureUtility {
      * Accept one (block, meta). Same as {@link #ofBlock(Block, int)}, except it explicitly turns off creative/survival
      * build.
      */
-    public static <T> IStructureElementNoPlacement<T> ofBlockHint(Block block, int meta) {
+    public static IStructureElementNoPlacement<Object> ofBlockHint(Block block, int meta) {
         return ofBlockHint(block, meta, block, meta);
     }
 
@@ -1133,12 +1129,12 @@ public class StructureUtility {
      * <p>
      * Useful when your logic is very complex. Does not support autoplace.
      */
-    public static <T> IStructureElementNoPlacement<T> ofBlockAdderHint(IBlockAdder<T> iBlockAdder, Block hintBlock,
+    public static <T> IStructureElementNoPlacement<T> ofBlockAdderHint(IBlockAdder<? super T> iBlockAdder, Block hintBlock,
             int hintMeta) {
         if (iBlockAdder == null || hintBlock == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementNoPlacement<T>() {
+        return new IStructureElementNoPlacement<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -1165,52 +1161,52 @@ public class StructureUtility {
      * Accept a set of blocks. Less cumbersome to use than {@link #ofBlocksMap(Map, Block, int)} when for any accepted
      * block type we accept only one meta for each.
      *
-     * @param blocsMap     Accepted (block, meta) pairs.
+     * @param blocksMap     Accepted (block, meta) pairs.
      * @param defaultBlock default block to place/spawn hint
      * @param defaultMeta  default meta to place/spawn hint
      * @see #ofBlocksMapHint(Map, Block, int)
      */
-    public static <T> IStructureElement<T> ofBlocksFlat(Map<Block, Integer> blocsMap, Block defaultBlock,
+    public static IStructureElement<Object> ofBlocksFlat(Map<Block, Integer> blocksMap, Block defaultBlock,
             int defaultMeta) {
-        if (blocsMap == null || blocsMap.isEmpty() || defaultBlock == null) {
+        if (blocksMap == null || blocksMap.isEmpty() || defaultBlock == null) {
             throw new IllegalArgumentException();
         }
         if (defaultBlock instanceof ICustomBlockSetting) {
-            return new IStructureElement<T>() {
+            return new IStructureElement<>() {
 
                 private BlocksToPlace blocksToPlace;
 
                 @Override
-                public boolean check(T t, World world, int x, int y, int z) {
+                public boolean check(Object t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
-                    return blocsMap.getOrDefault(worldBlock, MIN_VALUE) == worldBlock.getDamageValue(world, x, y, z);
+                    return blocksMap.getOrDefault(worldBlock, MIN_VALUE) == worldBlock.getDamageValue(world, x, y, z);
                 }
 
                 @Override
-                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     return check(t, world, x, y, z);
                 }
 
                 @Override
-                public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean placeBlock(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     ((ICustomBlockSetting) defaultBlock).setBlock(world, x, y, z, defaultMeta);
                     return true;
                 }
 
                 @Override
-                public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
                 }
 
                 @Nullable
                 @Override
-                public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
+                public BlocksToPlace getBlocksToPlace(Object t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
                     if (blocksToPlace == null) {
                         ImmutableList.Builder<ItemStack> blocks = ImmutableList.builder();
                         Predicate<ItemStack> predicate = s -> true;
-                        for (Entry<Block, Integer> e : blocsMap.entrySet()) {
+                        for (Entry<Block, Integer> e : blocksMap.entrySet()) {
                             Item i = Item.getItemFromBlock(e.getKey());
                             int meta = e.getValue();
                             if (i instanceof ISpecialItemBlock)
@@ -1225,40 +1221,40 @@ public class StructureUtility {
                 }
             };
         } else {
-            return new IStructureElement<T>() {
+            return new IStructureElement<>() {
 
                 private BlocksToPlace blocksToPlace;
 
                 @Override
-                public boolean check(T t, World world, int x, int y, int z) {
+                public boolean check(Object t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
-                    return blocsMap.getOrDefault(worldBlock, MIN_VALUE) == worldBlock.getDamageValue(world, x, y, z);
+                    return blocksMap.getOrDefault(worldBlock, MIN_VALUE) == worldBlock.getDamageValue(world, x, y, z);
                 }
 
                 @Override
-                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     return check(t, world, x, y, z);
                 }
 
                 @Override
-                public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean placeBlock(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     world.setBlock(x, y, z, defaultBlock, defaultMeta, 2);
                     return true;
                 }
 
                 @Override
-                public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
                 }
 
                 @Override
-                public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
+                public BlocksToPlace getBlocksToPlace(Object t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
                     if (blocksToPlace == null) {
                         ImmutableList.Builder<ItemStack> blocks = ImmutableList.builder();
                         Predicate<ItemStack> predicate = s -> true;
-                        for (Entry<Block, Integer> e : blocsMap.entrySet()) {
+                        for (Entry<Block, Integer> e : blocksMap.entrySet()) {
                             Item i = Item.getItemFromBlock(e.getKey());
                             int meta = e.getValue();
                             if (i instanceof ISpecialItemBlock)
@@ -1283,7 +1279,7 @@ public class StructureUtility {
      * @param defaultMeta  default meta to place/spawn hint
      * @see #ofBlocksMapHint(Map, Block, int)
      */
-    public static <T> IStructureElement<T> ofBlocksMap(Map<Block, Collection<Integer>> blocsMap, Block defaultBlock,
+    public static IStructureElement<Object> ofBlocksMap(Map<Block, ? extends Collection<Integer>> blocsMap, Block defaultBlock,
             int defaultMeta) {
         if (blocsMap == null || blocsMap.isEmpty() || defaultBlock == null) {
             throw new IllegalArgumentException();
@@ -1294,41 +1290,41 @@ public class StructureUtility {
             }
         }
         if (defaultBlock instanceof ICustomBlockSetting) {
-            return new IStructureElement<T>() {
+            return new IStructureElement<>() {
 
                 private BlocksToPlace blocksToPlace;
 
                 @Override
-                public boolean check(T t, World world, int x, int y, int z) {
+                public boolean check(Object t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
-                    return blocsMap.getOrDefault(worldBlock, Collections.emptySet())
+                    return defaultIfNull(blocsMap.get(worldBlock), Collections.emptySet())
                             .contains(worldBlock.getDamageValue(world, x, y, z));
                 }
 
                 @Override
-                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     return check(t, world, x, y, z);
                 }
 
                 @Override
-                public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean placeBlock(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     ((ICustomBlockSetting) defaultBlock).setBlock(world, x, y, z, defaultMeta);
                     return true;
                 }
 
                 @Override
-                public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
                 }
 
                 @Override
-                public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
+                public BlocksToPlace getBlocksToPlace(Object t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
                     if (blocksToPlace == null) {
                         ImmutableList.Builder<ItemStack> blocks = ImmutableList.builder();
                         Predicate<ItemStack> predicate = s -> true;
-                        for (Entry<Block, Collection<Integer>> e : blocsMap.entrySet()) {
+                        for (Entry<Block, ? extends Collection<Integer>> e : blocsMap.entrySet()) {
                             Item i = Item.getItemFromBlock(e.getKey());
                             for (int meta : e.getValue()) {
                                 if (i instanceof ISpecialItemBlock)
@@ -1344,41 +1340,41 @@ public class StructureUtility {
                 }
             };
         } else {
-            return new IStructureElement<T>() {
+            return new IStructureElement<>() {
 
                 private BlocksToPlace blocksToPlace;
 
                 @Override
-                public boolean check(T t, World world, int x, int y, int z) {
+                public boolean check(Object t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
-                    return blocsMap.getOrDefault(worldBlock, Collections.emptySet())
+                    return defaultIfNull(blocsMap.get(worldBlock), Collections.emptySet())
                             .contains(worldBlock.getDamageValue(world, x, y, z));
                 }
 
                 @Override
-                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     return check(t, world, x, y, z);
                 }
 
                 @Override
-                public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean placeBlock(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     world.setBlock(x, y, z, defaultBlock, defaultMeta, 2);
                     return true;
                 }
 
                 @Override
-                public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
                 }
 
                 @Override
-                public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
+                public BlocksToPlace getBlocksToPlace(Object t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
                     if (blocksToPlace == null) {
                         ImmutableList.Builder<ItemStack> blocks = ImmutableList.builder();
                         Predicate<ItemStack> predicate = s -> true;
-                        for (Entry<Block, Collection<Integer>> e : blocsMap.entrySet()) {
+                        for (Entry<Block, ? extends Collection<Integer>> e : blocsMap.entrySet()) {
                             Item i = Item.getItemFromBlock(e.getKey());
                             for (int meta : e.getValue()) {
                                 if (i instanceof ISpecialItemBlock)
@@ -1404,7 +1400,7 @@ public class StructureUtility {
      * @param defaultBlock hint block
      * @param defaultMeta  hint meta
      */
-    public static <T> IStructureElement<T> ofBlock(Block block, int meta, Block defaultBlock, int defaultMeta) {
+    public static IStructureElement<Object> ofBlock(Block block, int meta, Block defaultBlock, int defaultMeta) {
         if (block == null || defaultBlock == null) {
             throw new IllegalArgumentException();
         }
@@ -1417,50 +1413,50 @@ public class StructureUtility {
             }
         }
         if (block instanceof ICustomBlockSetting) {
-            return new IStructureElement<T>() {
+            return new IStructureElement<>() {
 
                 @Override
-                public boolean check(T t, World world, int x, int y, int z) {
+                public boolean check(Object t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
                     return block == worldBlock && meta == worldBlock.getDamageValue(world, x, y, z);
                 }
 
                 @Override
-                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     return check(t, world, x, y, z);
                 }
 
                 @Override
-                public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean placeBlock(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     ((ICustomBlockSetting) defaultBlock).setBlock(world, x, y, z, defaultMeta);
                     return true;
                 }
 
                 @Override
-                public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
                 }
 
                 @Override
-                public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
+                public BlocksToPlace getBlocksToPlace(Object t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
                     return BlocksToPlace.create(block, meta);
                 }
 
                 @Nullable
                 @Override
-                public List<String> getDescription(T context) {
+                public List<String> getDescription(Object context) {
                     Item item = Item.getItemFromBlock(block);
                     if (item == null) return null;
                     return Collections.singletonList(new ItemStack(item, 1, meta).getUnlocalizedName() + ".name");
                 }
             };
         } else {
-            return new IStructureElement<T>() {
+            return new IStructureElement<>() {
 
                 @Override
-                public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
+                public PlaceResult survivalPlaceBlock(Object t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
                     BlocksToPlace e = getBlocksToPlace(t, world, x, y, z, trigger, env);
                     IItemSource source = env.getSource();
@@ -1507,37 +1503,37 @@ public class StructureUtility {
                 }
 
                 @Override
-                public boolean check(T t, World world, int x, int y, int z) {
+                public boolean check(Object t, World world, int x, int y, int z) {
                     Block worldBlock = world.getBlock(x, y, z);
                     return block == worldBlock && meta == worldBlock.getDamageValue(world, x, y, z);
                 }
 
                 @Override
-                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     return check(t, world, x, y, z);
                 }
 
                 @Override
-                public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean placeBlock(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     world.setBlock(x, y, z, defaultBlock, defaultMeta, 2);
                     return true;
                 }
 
                 @Override
-                public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
                 }
 
                 @Override
-                public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
+                public BlocksToPlace getBlocksToPlace(Object t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
                     return BlocksToPlace.create(block, meta);
                 }
 
                 @Nullable
                 @Override
-                public List<String> getDescription(T context) {
+                public List<String> getDescription(Object context) {
                     Item item = Item.getItemFromBlock(block);
                     if (item == null) return null;
                     return Collections.singletonList(new ItemStack(item, 1, meta).getUnlocalizedName() + ".name");
@@ -1549,37 +1545,37 @@ public class StructureUtility {
     /**
      * Same as {@link #ofBlock(Block, int, Block, int)} but ignores target meta id
      */
-    public static <T> IStructureElement<T> ofBlockAnyMeta(Block block, Block defaultBlock, int defaultMeta) {
+    public static IStructureElement<Object> ofBlockAnyMeta(Block block, Block defaultBlock, int defaultMeta) {
         if (block == null || defaultBlock == null) {
             throw new IllegalArgumentException();
         }
         if (block instanceof ICustomBlockSetting) {
-            return new IStructureElement<T>() {
+            return new IStructureElement<>() {
 
                 @Override
-                public boolean check(T t, World world, int x, int y, int z) {
+                public boolean check(Object t, World world, int x, int y, int z) {
                     return block == world.getBlock(x, y, z);
                 }
 
                 @Override
-                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     return check(t, world, x, y, z);
                 }
 
                 @Override
-                public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean placeBlock(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     ((ICustomBlockSetting) defaultBlock).setBlock(world, x, y, z, defaultMeta);
                     return true;
                 }
 
                 @Override
-                public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
                 }
 
                 @Override
-                public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
+                public BlocksToPlace getBlocksToPlace(Object t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
                     // there is getSubItems on ItemBlock, but it's client only
                     return BlocksToPlace.create(defaultBlock, defaultMeta);
@@ -1587,39 +1583,39 @@ public class StructureUtility {
 
                 @Nullable
                 @Override
-                public List<String> getDescription(T context) {
+                public List<String> getDescription(Object context) {
                     Item item = Item.getItemFromBlock(block);
                     if (item == null) return null;
                     return Collections.singletonList(new ItemStack(item, 1, 0).getUnlocalizedName() + ".name");
                 }
             };
         } else {
-            return new IStructureElement<T>() {
+            return new IStructureElement<>() {
 
                 @Override
-                public boolean check(T t, World world, int x, int y, int z) {
+                public boolean check(Object t, World world, int x, int y, int z) {
                     return block == world.getBlock(x, y, z);
                 }
 
                 @Override
-                public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     return check(t, world, x, y, z);
                 }
 
                 @Override
-                public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean placeBlock(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     world.setBlock(x, y, z, defaultBlock, defaultMeta, 2);
                     return true;
                 }
 
                 @Override
-                public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                public boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
                     StructureLibAPI.hintParticle(world, x, y, z, defaultBlock, defaultMeta);
                     return true;
                 }
 
                 @Override
-                public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
+                public BlocksToPlace getBlocksToPlace(Object t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
                     // there is getSubItems on ItemBlock, but it's client only
                     return BlocksToPlace.create(defaultBlock, defaultMeta);
@@ -1627,7 +1623,7 @@ public class StructureUtility {
 
                 @Nullable
                 @Override
-                public List<String> getDescription(T context) {
+                public List<String> getDescription(Object context) {
                     Item item = Item.getItemFromBlock(block);
                     if (item == null) return null;
                     return Collections.singletonList(new ItemStack(item, 1, 0).getUnlocalizedName() + ".name");
@@ -1639,21 +1635,21 @@ public class StructureUtility {
     /**
      * Accept a single block with a fixed meta. Most primitive form of structure.
      */
-    public static <T> IStructureElement<T> ofBlock(Block block, int meta) {
+    public static IStructureElement<Object> ofBlock(Block block, int meta) {
         return ofBlock(block, meta, block, meta);
     }
 
     /**
      * Accept a single block, but accept any meta.
      */
-    public static <T> IStructureElement<T> ofBlockAnyMeta(Block block) {
+    public static IStructureElement<Object> ofBlockAnyMeta(Block block) {
         return ofBlockAnyMeta(block, block, 0);
     }
 
     /**
      * Accept a single block, but accept any meta. Spawn hint/autoplace using given meta.
      */
-    public static <T> IStructureElement<T> ofBlockAnyMeta(Block block, int defaultMeta) {
+    public static IStructureElement<Object> ofBlockAnyMeta(Block block, int defaultMeta) {
         return ofBlockAnyMeta(block, block, defaultMeta);
     }
 
@@ -1666,13 +1662,13 @@ public class StructureUtility {
      * <p>
      * Useful when your logic is very complex.
      */
-    public static <T> IStructureElement<T> ofBlockAdder(IBlockAdder<T> iBlockAdder, Block defaultBlock,
+    public static <T> IStructureElement<T> ofBlockAdder(IBlockAdder<? super T> iBlockAdder, Block defaultBlock,
             int defaultMeta) {
         if (iBlockAdder == null || defaultBlock == null) {
             throw new IllegalArgumentException();
         }
         if (defaultBlock instanceof ICustomBlockSetting) {
-            return new StructureElement_Bridge<T>() {
+            return new StructureElement_Bridge<>() {
 
                 @Override
                 public boolean check(T t, World world, int x, int y, int z) {
@@ -1718,7 +1714,7 @@ public class StructureUtility {
                 }
             };
         } else {
-            return new StructureElement_Bridge<T>() {
+            return new StructureElement_Bridge<>() {
 
                 @Override
                 public boolean check(T t, World world, int x, int y, int z) {
@@ -1766,7 +1762,7 @@ public class StructureUtility {
         }
     }
 
-    public static <T> IStructureElement<T> ofBlockAdder(IBlockAdder<T> iBlockAdder, int dots) {
+    public static <T> IStructureElement<T> ofBlockAdder(IBlockAdder<? super T> iBlockAdder, int dots) {
         return ofBlockAdder(iBlockAdder, StructureLibAPI.getBlockHint(), dots - 1);
     }
 
@@ -1774,12 +1770,12 @@ public class StructureUtility {
      * Try to add a structure element with a tile entity. Note that tile adder will be called with a null argument at
      * locations without tile entity.
      */
-    public static <T> IStructureElementNoPlacement<T> ofTileAdder(ITileAdder<T> iTileAdder, Block hintBlock,
+    public static <T> IStructureElementNoPlacement<T> ofTileAdder(ITileAdder<? super T> iTileAdder, Block hintBlock,
             int hintMeta) {
         if (iTileAdder == null || hintBlock == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementNoPlacement<T>() {
+        return new IStructureElementNoPlacement<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -1807,17 +1803,17 @@ public class StructureUtility {
      * Try to add a structure element with a particular type of tile entity. Note that tile adder will not be called at
      * locations without a tile entity.
      */
-    public static <T, E> IStructureElementNoPlacement<T> ofSpecificTileAdder(BiPredicate<T, E> iTileAdder,
-            Class<E> tileClass, Block hintBlock, int hintMeta) {
+    public static <T, E> IStructureElementNoPlacement<T> ofSpecificTileAdder(BiPredicate<? super T, ? super E> iTileAdder,
+            Class<? extends E> tileClass, Block hintBlock, int hintMeta) {
         if (iTileAdder == null || hintBlock == null || tileClass == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementNoPlacement<T>() {
+        return new IStructureElementNoPlacement<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
                 TileEntity tileEntity = world.getTileEntity(x, y, z);
-                // This used to check if it's a GT tile. Since this is now an standalone mod we no longer do this
+                // This used to check if it's a GT tile. Since this is now a standalone mod we no longer do this
                 return tileClass.isInstance(tileEntity) && iTileAdder.test(t, tileClass.cast(tileEntity));
             }
 
@@ -1848,9 +1844,8 @@ public class StructureUtility {
      * @param onCheckPass side effect
      * @param element     downstream
      */
-    public static <B extends IStructureElement<T>, T> IStructureElement<T> onElementPass(Consumer<T> onCheckPass,
-            B element) {
-        return new IStructureElement<T>() {
+    public static <T> IStructureElement<T> onElementPass(Consumer<? super T> onCheckPass, IStructureElement<? super T> element) {
+        return new IStructureElement<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -1911,9 +1906,8 @@ public class StructureUtility {
      * @param description the description to use, or null to clear any existing description
      * @param element     the element to wrap
      */
-    public static <B extends IStructureElement<T>, T> IStructureElement<T> withDescription(
-            @Nullable List<String> description, B element) {
-        return new IStructureElement<T>() {
+    public static <T> IStructureElement<T> withDescription(@Nullable List<String> description, IStructureElement<? super T> element) {
+        return new IStructureElement<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -1969,9 +1963,8 @@ public class StructureUtility {
      * @param onFail  side effect
      * @param element downstream
      */
-    public static <B extends IStructureElement<T>, T> IStructureElement<T> onElementFail(Consumer<T> onFail,
-            B element) {
-        return new IStructureElement<T>() {
+    public static <T> IStructureElement<T> onElementFail(Consumer<? super T> onFail, IStructureElement<? super T> element) {
+        return new IStructureElement<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -2032,8 +2025,7 @@ public class StructureUtility {
      * <p>
      * Return SKIP when survival auto place if given predicate returns false.
      */
-    public static <T> IStructureElement<T> onlyIf(Predicate<? super T> predicate,
-            IStructureElement<? super T> downstream) {
+    public static <T> IStructureElement<T> onlyIf(Predicate<? super T> predicate, IStructureElement<? super T> downstream) {
         return onlyIf(predicate, downstream, PlaceResult.SKIP);
     }
 
@@ -2042,9 +2034,9 @@ public class StructureUtility {
      *
      * @param placeResultWhenDisabled value to return for survival auto place when predicate returns false
      */
-    public static <T> IStructureElement<T> onlyIf(Predicate<? super T> predicate,
-            IStructureElement<? super T> downstream, PlaceResult placeResultWhenDisabled) {
-        return new IStructureElement<T>() {
+    public static <T> IStructureElement<T> onlyIf(Predicate<? super T> predicate, IStructureElement<? super T> downstream,
+                                                  PlaceResult placeResultWhenDisabled) {
+        return new IStructureElement<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -2118,11 +2110,11 @@ public class StructureUtility {
      * will finally return false.
      */
     @SafeVarargs
-    public static <T> IStructureElementChain<T> ofChain(IStructureElement<T>... elementChain) {
+    public static <T> IStructureElementChain<T> ofChain(IStructureElement<? super T>... elementChain) {
         if (elementChain == null || elementChain.length == 0) {
             throw new IllegalArgumentException();
         }
-        for (IStructureElement<T> iStructureElement : elementChain) {
+        for (IStructureElement<? super T> iStructureElement : elementChain) {
             if (iStructureElement == null) {
                 throw new IllegalArgumentException();
             }
@@ -2138,7 +2130,7 @@ public class StructureUtility {
      * @see #ofChain(IStructureElement[])
      */
     @SuppressWarnings("unchecked")
-    public static <T> IStructureElementChain<T> ofChain(List<IStructureElement<T>> elementChain) {
+    public static <T> IStructureElementChain<T> ofChain(List<? extends IStructureElement<? super T>> elementChain) {
         return ofChain(elementChain.toArray(new IStructureElement[0]));
     }
 
@@ -2152,8 +2144,9 @@ public class StructureUtility {
      * @param <T>   existing context object type
      */
     public static <CTX, T extends IWithExtendedContext<CTX>> IStructureElement<T> withContext(
-            IStructureElement<CTX> elem) {
-        return new IStructureElement<T>() {
+            IStructureElement<? super CTX> elem) {
+
+        return new IStructureElement<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -2212,7 +2205,7 @@ public class StructureUtility {
      * context object (e.g. GT5 multiblock controller), e.g. hatch texture index to use. Use `lazy` if the data you
      * access will remain constant across different context object.
      */
-    public static <T> IStructureElementDeferred<T> lazy(Supplier<IStructureElement<T>> to) {
+    public static <T> IStructureElementDeferred<T> lazy(Supplier<? extends IStructureElement<? super T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
         }
@@ -2230,7 +2223,7 @@ public class StructureUtility {
      *
      * @param to create structure element from the first context object passed in
      */
-    public static <T> IStructureElementDeferred<T> lazy(Function<T, IStructureElement<T>> to) {
+    public static <T> IStructureElementDeferred<T> lazy(Function<? super T, ? extends IStructureElement<? super T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
         }
@@ -2247,11 +2240,11 @@ public class StructureUtility {
      *
      * @param to downstream element supplier
      */
-    public static <T> IStructureElementDeferred<T> defer(Supplier<IStructureElement<T>> to) {
+    public static <T> IStructureElementDeferred<T> defer(Supplier<? extends IStructureElement<? super T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementDeferred<T>() {
+        return new IStructureElementDeferred<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -2305,11 +2298,11 @@ public class StructureUtility {
      *
      * @param to downstream element supplier
      */
-    public static <T> IStructureElementDeferred<T> defer(Function<T, IStructureElement<T>> to) {
+    public static <T> IStructureElementDeferred<T> defer(Function<? super T, ? extends IStructureElement<? super T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementDeferred<T>() {
+        return new IStructureElementDeferred<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -2363,8 +2356,8 @@ public class StructureUtility {
      * @deprecated renamed to partitionBy
      */
     @Deprecated
-    public static <T, K> IStructureElementDeferred<T> defer(Function<T, K> keyExtractor,
-            Map<K, IStructureElement<T>> map) {
+    public static <T, K> IStructureElementDeferred<T> defer(Function<? super T, ? extends K> keyExtractor,
+            Map<K, ? extends IStructureElement<? super T>> map) {
         return partitionBy(keyExtractor, map);
     }
 
@@ -2381,8 +2374,8 @@ public class StructureUtility {
      * @param keyExtractor extract a key from the context object
      * @param map          all possible structure element
      */
-    public static <T, K> IStructureElementDeferred<T> partitionBy(Function<T, K> keyExtractor,
-            Map<K, IStructureElement<T>> map) {
+    public static <T, K> IStructureElementDeferred<T> partitionBy(Function<? super T, ? extends K> keyExtractor,
+            Map<K, ? extends IStructureElement<? super T>> map) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
@@ -2405,8 +2398,8 @@ public class StructureUtility {
      * @deprecated renamed to partitionBy
      */
     @Deprecated
-    public static <T, K> IStructureElementDeferred<T> defer(Function<T, K> keyExtractor,
-            Map<K, IStructureElement<T>> map, IStructureElement<T> defaultElem) {
+    public static <T, K> IStructureElementDeferred<T> defer(Function<? super T, ? extends K> keyExtractor,
+            Map<K, ? extends IStructureElement<? super T>> map, IStructureElement<? super T> defaultElem) {
         return partitionBy(keyExtractor, map, defaultElem);
     }
 
@@ -2424,12 +2417,12 @@ public class StructureUtility {
      * @param map          all possible structure element
      * @param defaultElem  element to use when keyExtractor returns a value not found in given map
      */
-    public static <T, K> IStructureElementDeferred<T> partitionBy(Function<T, K> keyExtractor,
-            Map<K, IStructureElement<T>> map, IStructureElement<T> defaultElem) {
+    public static <T, K> IStructureElementDeferred<T> partitionBy(Function<? super T, ? extends K> keyExtractor,
+            Map<K, ? extends IStructureElement<? super T>> map, IStructureElement<? super T> defaultElem) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
-        return defer(keyExtractor.andThen(key -> map.getOrDefault(key, defaultElem)));
+        return defer(keyExtractor.andThen(key -> defaultIfNull(map.get(key), defaultElem)));
     }
 
     /**
@@ -2447,8 +2440,8 @@ public class StructureUtility {
      */
     @SafeVarargs
     @Deprecated
-    public static <T> IStructureElementDeferred<T> defer(Function<T, Integer> keyExtractor,
-            IStructureElement<T>... array) {
+    public static <T> IStructureElementDeferred<T> defer(Function<? super T, Integer> keyExtractor,
+            IStructureElement<? super T>... array) {
         return partitionBy(keyExtractor, array);
     }
 
@@ -2465,8 +2458,8 @@ public class StructureUtility {
      * @param array        all possible structure element
      */
     @SafeVarargs
-    public static <T> IStructureElementDeferred<T> partitionBy(Function<T, Integer> keyExtractor,
-            IStructureElement<T>... array) {
+    public static <T> IStructureElementDeferred<T> partitionBy(Function<? super T, Integer> keyExtractor,
+            IStructureElement<? super T>... array) {
         if (keyExtractor == null || array == null) {
             throw new IllegalArgumentException();
         }
@@ -2487,8 +2480,8 @@ public class StructureUtility {
      * @deprecated renamed to partitionBy
      */
     @Deprecated
-    public static <T> IStructureElementDeferred<T> defer(Function<T, Integer> keyExtractor,
-            List<IStructureElement<T>> array) {
+    public static <T> IStructureElementDeferred<T> defer(Function<? super T, Integer> keyExtractor,
+            List<? extends IStructureElement<? super T>> array) {
         return partitionBy(keyExtractor, array);
     }
 
@@ -2505,8 +2498,8 @@ public class StructureUtility {
      * @param array        all possible structure element
      */
     @SuppressWarnings("unchecked")
-    public static <T> IStructureElementDeferred<T> partitionBy(Function<T, Integer> keyExtractor,
-            List<IStructureElement<T>> array) {
+    public static <T> IStructureElementDeferred<T> partitionBy(Function<? super T, Integer> keyExtractor,
+            List<? extends IStructureElement<? super T>> array) {
         return partitionBy(keyExtractor, array.toArray(new IStructureElement[0]));
     }
 
@@ -2522,11 +2515,11 @@ public class StructureUtility {
      *
      * @param to downstream element supplier
      */
-    public static <T> IStructureElementDeferred<T> defer(BiFunction<T, ItemStack, IStructureElement<T>> to) {
+    public static <T> IStructureElementDeferred<T> defer(BiFunction<? super T, ItemStack, ? extends IStructureElement<? super T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementDeferred<T>() {
+        return new IStructureElementDeferred<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -2586,8 +2579,8 @@ public class StructureUtility {
      * @deprecated renamed to partitionBy
      */
     @Deprecated
-    public static <T, K> IStructureElementDeferred<T> defer(BiFunction<T, ItemStack, K> keyExtractor,
-            Map<K, IStructureElement<T>> map) {
+    public static <T, K> IStructureElementDeferred<T> defer(BiFunction<? super T, ItemStack, ? extends K> keyExtractor,
+            Map<K, ? extends IStructureElement<? super T>> map) {
         return partitionBy(keyExtractor, map);
     }
 
@@ -2606,8 +2599,8 @@ public class StructureUtility {
      * @param keyExtractor extract a key from the context object and trigger item
      * @param map          all possible structure element
      */
-    public static <T, K> IStructureElementDeferred<T> partitionBy(BiFunction<T, ItemStack, K> keyExtractor,
-            Map<K, IStructureElement<T>> map) {
+    public static <T, K> IStructureElementDeferred<T> partitionBy(BiFunction<? super T, ItemStack, ? extends K> keyExtractor,
+            Map<K, ? extends IStructureElement<? super T>> map) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
@@ -2632,8 +2625,8 @@ public class StructureUtility {
      * @deprecated renamed to partitionBy
      */
     @Deprecated
-    public static <T, K> IStructureElementDeferred<T> defer(BiFunction<T, ItemStack, K> keyExtractor,
-            Map<K, IStructureElement<T>> map, IStructureElement<T> defaultElem) {
+    public static <T, K> IStructureElementDeferred<T> defer(BiFunction<? super T, ItemStack, ? extends K> keyExtractor,
+            Map<K, ? extends IStructureElement<? super T>> map, IStructureElement<? super T> defaultElem) {
         return partitionBy(keyExtractor, map, defaultElem);
     }
 
@@ -2653,12 +2646,12 @@ public class StructureUtility {
      * @param map          all possible structure element
      * @param defaultElem  element to use when keyExtractor returns a value not found in given map
      */
-    public static <T, K> IStructureElementDeferred<T> partitionBy(BiFunction<T, ItemStack, K> keyExtractor,
-            Map<K, IStructureElement<T>> map, IStructureElement<T> defaultElem) {
+    public static <T, K> IStructureElementDeferred<T> partitionBy(BiFunction<? super T, ItemStack, ? extends K> keyExtractor,
+            Map<K, ? extends IStructureElement<? super T>> map, IStructureElement<? super T> defaultElem) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
-        return defer(keyExtractor.andThen(key -> map.getOrDefault(key, defaultElem)));
+        return defer(keyExtractor.andThen(key -> defaultIfNull(map.get(key), defaultElem)));
     }
 
     /**
@@ -2676,8 +2669,8 @@ public class StructureUtility {
      * @param array        all possible structure element
      */
     @SafeVarargs
-    public static <T> IStructureElementDeferred<T> defer(BiFunction<T, ItemStack, Integer> keyExtractor,
-            IStructureElement<T>... array) {
+    public static <T> IStructureElementDeferred<T> defer(BiFunction<? super T, ItemStack, Integer> keyExtractor,
+            IStructureElement<? super T>... array) {
         if (keyExtractor == null || array == null) {
             throw new IllegalArgumentException();
         }
@@ -2698,8 +2691,8 @@ public class StructureUtility {
      * @param keyExtractor extract a key from the context object and trigger item
      * @param array        all possible structure element
      */
-    public static <T> IStructureElementDeferred<T> defer(BiFunction<T, ItemStack, Integer> keyExtractor,
-            List<IStructureElement<T>> array) {
+    public static <T> IStructureElementDeferred<T> defer(BiFunction<? super T, ItemStack, Integer> keyExtractor,
+            List<? extends IStructureElement<? super T>> array) {
         return defer(keyExtractor.andThen(array::get));
     }
 
@@ -2718,12 +2711,12 @@ public class StructureUtility {
      * @param toCheck override the check function with the returned element
      * @param to      create structure element from the context object passed in
      */
-    public static <T> IStructureElementDeferred<T> defer(Function<T, IStructureElement<T>> toCheck,
-            BiFunction<T, ItemStack, IStructureElement<T>> to) {
+    public static <T> IStructureElementDeferred<T> defer(Function<? super T, ? extends IStructureElement<? super T>> toCheck,
+            BiFunction<? super T, ItemStack, ? extends IStructureElement<? super T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
         }
-        return new IStructureElementDeferred<T>() {
+        return new IStructureElementDeferred<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
@@ -2780,8 +2773,8 @@ public class StructureUtility {
      * @deprecated renamed to partitionBy
      */
     @Deprecated
-    public static <T, K> IStructureElementDeferred<T> defer(Function<T, K> keyExtractorCheck,
-            BiFunction<T, ItemStack, K> keyExtractor, Map<K, IStructureElement<T>> map) {
+    public static <T, K> IStructureElementDeferred<T> defer(Function<? super T, ? extends K> keyExtractorCheck,
+            BiFunction<? super T, ItemStack, ? extends K> keyExtractor, Map<K, ? extends IStructureElement<? super T>> map) {
         return partitionBy(keyExtractorCheck, keyExtractor, map);
     }
 
@@ -2804,8 +2797,8 @@ public class StructureUtility {
      * @param keyExtractor      extract a key from the context object and trigger item
      * @param map               all possible structure element
      */
-    public static <T, K> IStructureElementDeferred<T> partitionBy(Function<T, K> keyExtractorCheck,
-            BiFunction<T, ItemStack, K> keyExtractor, Map<K, IStructureElement<T>> map) {
+    public static <T, K> IStructureElementDeferred<T> partitionBy(Function<? super T, ? extends K> keyExtractorCheck,
+            BiFunction<? super T, ItemStack, ? extends K> keyExtractor, Map<K, ? extends IStructureElement<? super T>> map) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
@@ -2832,9 +2825,9 @@ public class StructureUtility {
      * @deprecated renamed to partitionBy
      */
     @Deprecated
-    public static <T, K> IStructureElementDeferred<T> defer(Function<T, K> keyExtractorCheck,
-            BiFunction<T, ItemStack, K> keyExtractor, Map<K, IStructureElement<T>> map,
-            IStructureElement<T> defaultElem) {
+    public static <T, K> IStructureElementDeferred<T> defer(Function<? super T, ? extends K> keyExtractorCheck,
+            BiFunction<? super T, ItemStack, ? extends K> keyExtractor, Map<K, ? extends IStructureElement<? super T>> map,
+            IStructureElement<? super T> defaultElem) {
         return partitionBy(keyExtractorCheck, keyExtractor, map, defaultElem);
     }
 
@@ -2856,15 +2849,16 @@ public class StructureUtility {
      * @param keyExtractor      extract a key from the context object and trigger item
      * @param map               all possible structure element
      */
-    public static <T, K> IStructureElementDeferred<T> partitionBy(Function<T, K> keyExtractorCheck,
-            BiFunction<T, ItemStack, K> keyExtractor, Map<K, IStructureElement<T>> map,
-            IStructureElement<T> defaultElem) {
+    public static <T, K> IStructureElementDeferred<T> partitionBy(Function<? super T, ? extends K> keyExtractorCheck,
+            BiFunction<? super T, ItemStack, ? extends K> keyExtractor, Map<K, ? extends IStructureElement<? super T>> map,
+            IStructureElement<? super T> defaultElem) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
+
         return defer(
-                keyExtractorCheck.andThen(k -> map.getOrDefault(k, defaultElem)),
-                keyExtractor.andThen(k -> map.getOrDefault(k, defaultElem)));
+                keyExtractorCheck.andThen(k -> defaultIfNull(map.get(k), defaultElem)),
+                keyExtractor.andThen(k -> defaultIfNull(map.get(k), defaultElem)));
     }
 
     /**
@@ -2888,8 +2882,8 @@ public class StructureUtility {
      */
     @SafeVarargs
     @Deprecated
-    public static <T> IStructureElementDeferred<T> defer(Function<T, Integer> keyExtractorCheck,
-            BiFunction<T, ItemStack, Integer> keyExtractor, IStructureElement<T>... array) {
+    public static <T> IStructureElementDeferred<T> defer(Function<? super T, Integer> keyExtractorCheck,
+            BiFunction<? super T, ItemStack, Integer> keyExtractor, IStructureElement<? super T>... array) {
         return partitionBy(keyExtractorCheck, keyExtractor, array);
     }
 
@@ -2912,8 +2906,8 @@ public class StructureUtility {
      * @param array             all possible structure element
      */
     @SafeVarargs
-    public static <T> IStructureElementDeferred<T> partitionBy(Function<T, Integer> keyExtractorCheck,
-            BiFunction<T, ItemStack, Integer> keyExtractor, IStructureElement<T>... array) {
+    public static <T> IStructureElementDeferred<T> partitionBy(Function<? super T, Integer> keyExtractorCheck,
+            BiFunction<? super T, ItemStack, Integer> keyExtractor, IStructureElement<? super T>... array) {
         if (keyExtractor == null || array == null) {
             throw new IllegalArgumentException();
         }
@@ -2938,8 +2932,8 @@ public class StructureUtility {
      * @deprecated renamed to partitionBy
      */
     @Deprecated
-    public static <T> IStructureElementDeferred<T> defer(Function<T, Integer> keyExtractorCheck,
-            BiFunction<T, ItemStack, Integer> keyExtractor, List<IStructureElement<T>> array) {
+    public static <T> IStructureElementDeferred<T> defer(Function<? super T, Integer> keyExtractorCheck,
+            BiFunction<? super T, ItemStack, Integer> keyExtractor, List<? extends IStructureElement<? super T>> array) {
         return partitionBy(keyExtractorCheck, keyExtractor, array);
     }
 
@@ -2960,8 +2954,8 @@ public class StructureUtility {
      * @param array             all possible structure element
      */
     @SuppressWarnings("unchecked")
-    public static <T> IStructureElementDeferred<T> partitionBy(Function<T, Integer> keyExtractorCheck,
-            BiFunction<T, ItemStack, Integer> keyExtractor, List<IStructureElement<T>> array) {
+    public static <T> IStructureElementDeferred<T> partitionBy(Function<? super T, Integer> keyExtractorCheck,
+            BiFunction<? super T, ItemStack, Integer> keyExtractor, List<? extends IStructureElement<? super T>> array) {
         return partitionBy(keyExtractorCheck, keyExtractor, array.toArray(new IStructureElement[0]));
     }
 
@@ -2972,8 +2966,8 @@ public class StructureUtility {
     /**
      * See channels.md in docs folder
      */
-    public static <T> IStructureElement<T> withChannel(String channel, IStructureElement<T> backing) {
-        return new IStructureElement<T>() {
+    public static <T> IStructureElement<T> withChannel(String channel, IStructureElement<? super T> backing) {
+        return new IStructureElement<>() {
 
             public boolean check(T t, World world, int x, int y, int z) {
                 return backing.check(t, world, x, y, z);
