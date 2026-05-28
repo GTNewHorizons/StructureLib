@@ -13,14 +13,14 @@ import net.minecraft.world.World;
 
 class LazyStructureElement<T> implements IStructureElementDeferred<T> {
 
-    private Function<T, IStructureElement<T>> to;
-    private IStructureElement<T> elem;
+    private Function<? super T, ? extends IStructureElement<? super T>> to;
+    private IStructureElement<? super T> elem;
 
-    public LazyStructureElement(Function<T, IStructureElement<T>> to) {
+    public LazyStructureElement(Function<? super T, ? extends IStructureElement<? super T>> to) {
         this.to = to;
     }
 
-    private IStructureElement<T> get(T t) {
+    private IStructureElement<? super T> get(T t) {
         if (to != null) {
             elem = to.apply(t);
             to = null;
