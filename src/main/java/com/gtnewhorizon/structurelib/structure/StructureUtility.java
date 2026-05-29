@@ -2143,7 +2143,7 @@ public class StructureUtility {
      * @param <CTX> extended context type
      * @param <T>   existing context object type
      */
-    public static <CTX, T extends IWithExtendedContext<CTX>> IStructureElement<T> withContext(
+    public static <CTX, T extends IWithExtendedContext<? extends CTX>> IStructureElement<T> withContext(
             IStructureElement<? super CTX> elem) {
 
         return new IStructureElement<>() {
