@@ -150,7 +150,6 @@ public class StructureUtility {
 
     private static final String NICE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz=|!@#$%&()[]{};:<>/?_,.*^'`";
 
-    @SuppressWarnings("rawtypes")
     private static final Map<Vec3Impl, IStructureNavigate> STEP = new HashMap<>();
 
     private static final IStructureElement<Object> AIR = new StructureElement_Bridge<>() {
@@ -3059,15 +3058,14 @@ public class StructureUtility {
     /**
      * Used internally, to generate skips for structure definitions
      */
-    static <T> IStructureNavigate<T> step(int a, int b, int c) {
+    static IStructureNavigate step(int a, int b, int c) {
         return step(new Vec3Impl(a, b, c));
     }
 
     /**
      * Used internally, to generate skips for structure definitions
      */
-    @SuppressWarnings("unchecked")
-    static <T> IStructureNavigate<T> step(Vec3Impl step) {
+    static IStructureNavigate step(Vec3Impl step) {
         if (step == null || step.get0() < 0 || step.get1() < 0 || step.get2() < 0) {
             throw new IllegalArgumentException();
         }
@@ -3082,8 +3080,8 @@ public class StructureUtility {
         });
     }
 
-    private static <T> IStructureNavigate<T> stepA(int a, int b, int c) {
-        return new IStructureNavigate<>() {
+    private static IStructureNavigate stepA(int a, int b, int c) {
+        return new IStructureNavigate() {
 
             @Override
             public int getStepA() {
@@ -3102,8 +3100,8 @@ public class StructureUtility {
         };
     }
 
-    private static <T> IStructureNavigate<T> stepB(int a, int b, int c) {
-        return new IStructureNavigate<>() {
+    private static IStructureNavigate stepB(int a, int b, int c) {
+        return new IStructureNavigate() {
 
             @Override
             public int getStepA() {
@@ -3127,8 +3125,8 @@ public class StructureUtility {
         };
     }
 
-    private static <T> IStructureNavigate<T> stepC(int a, int b, int c) {
-        return new IStructureNavigate<>() {
+    private static IStructureNavigate stepC(int a, int b, int c) {
+        return new IStructureNavigate() {
 
             @Override
             public int getStepA() {
