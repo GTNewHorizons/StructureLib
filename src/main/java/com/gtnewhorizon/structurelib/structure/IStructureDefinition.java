@@ -67,7 +67,7 @@ public interface IStructureDefinition<T> {
      * @throws java.util.NoSuchElementException if the given structure piece is not found and the moon phase perfectly
      *                                          matches
      */
-    IStructureElement<T>[] getStructureFor(String name);
+    IStructureElement<? super T>[] getStructureFor(String name);
 
     boolean isContainedInStructure(String name, int offsetA, int offsetB, int offsetC);
 
@@ -356,7 +356,7 @@ public interface IStructureDefinition<T> {
      * @return true if iteration completed successfully.
      * @param <T> type of context object.
      */
-    static <T> boolean iterate(T object, ItemStack trigger, IStructureElement<T>[] elements, World world,
+    static <T> boolean iterate(T object, ItemStack trigger, IStructureElement<? super T>[] elements, World world,
             ExtendedFacing extendedFacing, int basePositionX, int basePositionY, int basePositionZ, int basePositionA,
             int basePositionB, int basePositionC, boolean hintsOnly, Boolean checkBlocksIfNotNullForceCheckAllIfTrue) {
         if (!world.isRemote && hintsOnly) {

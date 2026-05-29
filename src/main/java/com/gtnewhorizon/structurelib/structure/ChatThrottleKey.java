@@ -14,9 +14,7 @@ class ChatThrottleKey {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof NoExplicitChannel)) return false;
-
-            NoExplicitChannel that = (NoExplicitChannel) o;
+            if (!(o instanceof NoExplicitChannel that)) return false;
 
             return subchannel.equals(that.subchannel);
         }

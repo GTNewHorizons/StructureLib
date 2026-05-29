@@ -141,8 +141,7 @@ public class Vec3Impl implements Comparable<Vec3Impl> {
     public boolean equals(Object o) {
         if (this == o) {
             return true;
-        } else if (o instanceof Vec3Impl) {
-            Vec3Impl vec3i = (Vec3Impl) o;
+        } else if (o instanceof Vec3Impl vec3i) {
             return val0 == vec3i.val0 && val1 == vec3i.val1 && val2 == vec3i.val2;
         }
         return false;

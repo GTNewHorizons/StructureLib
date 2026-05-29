@@ -112,7 +112,6 @@ public class GuiEditRegistryConfig extends GuiScreen {
     /**
      * Adds the buttons (and other controls) to the screen in question.
      */
-    @SuppressWarnings("unchecked")
     @Override
     public void initGui() {
         Keyboard.enableRepeatEvents(true);
@@ -185,8 +184,7 @@ public class GuiEditRegistryConfig extends GuiScreen {
      */
     @Override
     public void onGuiClosed() {
-        if (this.configID != null && this.parentScreen instanceof GuiConfig) {
-            GuiConfig parentGuiConfig = (GuiConfig) this.parentScreen;
+        if (this.configID != null && this.parentScreen instanceof GuiConfig parentGuiConfig) {
             parentGuiConfig.needsRefresh = true;
             parentGuiConfig.initGui();
         }
@@ -319,19 +317,14 @@ public class GuiEditRegistryConfig extends GuiScreen {
         for (EntriesList list : lists) {
             list.drawScreenPost(mouseX, mouseY, partialTicks);
         }
-        if (this.undoHoverChecker.checkHover(mouseX, mouseY)) this.drawToolTip(
+        if (this.undoHoverChecker.checkHover(mouseX, mouseY)) this.func_146283_a(
                 this.mc.fontRenderer.listFormattedStringToWidth(I18n.format("fml.configgui.tooltip.undoAll"), 300),
                 mouseX,
                 mouseY);
-        if (this.resetHoverChecker.checkHover(mouseX, mouseY)) this.drawToolTip(
+        if (this.resetHoverChecker.checkHover(mouseX, mouseY)) this.func_146283_a(
                 this.mc.fontRenderer.listFormattedStringToWidth(I18n.format("fml.configgui.tooltip.resetAll"), 300),
                 mouseX,
                 mouseY);
-    }
-
-    @SuppressWarnings("rawtypes")
-    public void drawToolTip(List stringList, int x, int y) {
-        this.func_146283_a(stringList, x, y);
     }
 
     private class EntriesList extends GuiListExtended {
@@ -571,13 +564,13 @@ public class GuiEditRegistryConfig extends GuiScreen {
         void drawToolTip(int mouseX, int mouseY) {
             // ensure checkHover() is always called, or the hover threshold might fail under certain corner cases
             if (hoverCheckerText.checkHover(mouseX, mouseY)) {
-                GuiEditRegistryConfig.this.drawToolTip(
+                GuiEditRegistryConfig.this.func_146283_a(
                         mc.fontRenderer.listFormattedStringToWidth(tooltip, entriesList.getListWidth()),
                         mouseX,
                         mouseY);
             }
             if (hoverCheckerBtnDrag.checkHover(mouseX, mouseY) && !isDragging) {
-                GuiEditRegistryConfig.this.drawToolTip(
+                GuiEditRegistryConfig.this.func_146283_a(
                         mc.fontRenderer.listFormattedStringToWidth(
                                 I18n.format("structurelib.configgui.drag.tooltip"),
                                 entriesList.getListWidth()),
