@@ -46,7 +46,6 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -577,7 +576,8 @@ public class StructureUtility {
      * @see #ofBlocksTiered(ITierConverter, Object, BiConsumer, Function)
      */
     public static <T, TIER> IStructureElementCheckOnly<T> ofBlocksTiered(ITierConverter<? extends TIER> tierExtractor,
-            @Nullable TIER notSet, BiConsumer<? super T, ? super TIER> setter, Function<? super T, ? extends TIER> getter) {
+            @Nullable TIER notSet, BiConsumer<? super T, ? super TIER> setter,
+            Function<? super T, ? extends TIER> getter) {
         if (tierExtractor == null) throw new IllegalArgumentException();
         if (setter == null) throw new IllegalArgumentException();
         if (getter == null) throw new IllegalArgumentException();
@@ -700,8 +700,8 @@ public class StructureUtility {
      * @param setter        a function to set the current tier into context object
      */
     public static <T, TIER> IStructureElement<T> ofBlocksTiered(ITierConverter<? extends TIER> tierExtractor,
-            @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet, BiConsumer<? super T, ? super TIER> setter,
-            Function<? super T, ? extends TIER> getter) {
+            @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet,
+            BiConsumer<? super T, ? super TIER> setter, Function<? super T, ? extends TIER> getter) {
         List<String> descriptions = null;
         if (allKnownTiers != null) {
             descriptions = new java.util.ArrayList<>();
@@ -723,8 +723,9 @@ public class StructureUtility {
      * @see #ofBlocksTiered(ITierConverter, List, Object, BiConsumer, Function)
      */
     public static <T, TIER> IStructureElement<T> ofBlocksTiered(ITierConverter<? extends TIER> tierExtractor,
-            @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet, BiConsumer<? super T, ? super TIER> setter,
-            Function<? super T, ? extends TIER> getter, @Nullable List<String> description) {
+            @Nullable List<Pair<Block, Integer>> allKnownTiers, @Nullable TIER notSet,
+            BiConsumer<? super T, ? super TIER> setter, Function<? super T, ? extends TIER> getter,
+            @Nullable List<String> description) {
         List<Pair<Block, Integer>> hints = allKnownTiers == null ? Collections.emptyList() : allKnownTiers;
         if (hints.stream().anyMatch(Objects::isNull)) throw new IllegalArgumentException();
         IStructureElementCheckOnly<T> check = ofBlocksTiered(tierExtractor, notSet, setter, getter);
@@ -1014,7 +1015,7 @@ public class StructureUtility {
      * <p>
      * Does not have autoplace.
      *
-     * @param blocksMap  Accepted (block, meta) pairs.
+     * @param blocksMap Accepted (block, meta) pairs.
      * @param hintBlock hint block to use
      * @param hintMeta  hint meta to use
      * @see #ofBlocksMapHint(Map, Block, int)
@@ -1050,13 +1051,13 @@ public class StructureUtility {
      * <p>
      * Does not have autoplace.
      *
-     * @param blocksMap  Accepted (block, meta) pairs.
+     * @param blocksMap Accepted (block, meta) pairs.
      * @param hintBlock hint block to use
      * @param hintMeta  hint meta to use
      * @see #ofBlocksFlatHint(Map, Block, int)
      */
-    public static IStructureElementNoPlacement<Object> ofBlocksMapHint(Map<Block, ? extends Collection<Integer>> blocksMap,
-            Block hintBlock, int hintMeta) {
+    public static IStructureElementNoPlacement<Object> ofBlocksMapHint(
+            Map<Block, ? extends Collection<Integer>> blocksMap, Block hintBlock, int hintMeta) {
         if (blocksMap == null || blocksMap.isEmpty() || hintBlock == null) {
             throw new IllegalArgumentException();
         }
@@ -1129,8 +1130,8 @@ public class StructureUtility {
      * <p>
      * Useful when your logic is very complex. Does not support autoplace.
      */
-    public static <T> IStructureElementNoPlacement<T> ofBlockAdderHint(IBlockAdder<? super T> iBlockAdder, Block hintBlock,
-            int hintMeta) {
+    public static <T> IStructureElementNoPlacement<T> ofBlockAdderHint(IBlockAdder<? super T> iBlockAdder,
+            Block hintBlock, int hintMeta) {
         if (iBlockAdder == null || hintBlock == null) {
             throw new IllegalArgumentException();
         }
@@ -1161,7 +1162,7 @@ public class StructureUtility {
      * Accept a set of blocks. Less cumbersome to use than {@link #ofBlocksMap(Map, Block, int)} when for any accepted
      * block type we accept only one meta for each.
      *
-     * @param blocksMap     Accepted (block, meta) pairs.
+     * @param blocksMap    Accepted (block, meta) pairs.
      * @param defaultBlock default block to place/spawn hint
      * @param defaultMeta  default meta to place/spawn hint
      * @see #ofBlocksMapHint(Map, Block, int)
@@ -1279,8 +1280,8 @@ public class StructureUtility {
      * @param defaultMeta  default meta to place/spawn hint
      * @see #ofBlocksMapHint(Map, Block, int)
      */
-    public static IStructureElement<Object> ofBlocksMap(Map<Block, ? extends Collection<Integer>> blocsMap, Block defaultBlock,
-            int defaultMeta) {
+    public static IStructureElement<Object> ofBlocksMap(Map<Block, ? extends Collection<Integer>> blocsMap,
+            Block defaultBlock, int defaultMeta) {
         if (blocsMap == null || blocsMap.isEmpty() || defaultBlock == null) {
             throw new IllegalArgumentException();
         }
@@ -1803,8 +1804,8 @@ public class StructureUtility {
      * Try to add a structure element with a particular type of tile entity. Note that tile adder will not be called at
      * locations without a tile entity.
      */
-    public static <T, E> IStructureElementNoPlacement<T> ofSpecificTileAdder(BiPredicate<? super T, ? super E> iTileAdder,
-            Class<? extends E> tileClass, Block hintBlock, int hintMeta) {
+    public static <T, E> IStructureElementNoPlacement<T> ofSpecificTileAdder(
+            BiPredicate<? super T, ? super E> iTileAdder, Class<? extends E> tileClass, Block hintBlock, int hintMeta) {
         if (iTileAdder == null || hintBlock == null || tileClass == null) {
             throw new IllegalArgumentException();
         }
@@ -1844,7 +1845,8 @@ public class StructureUtility {
      * @param onCheckPass side effect
      * @param element     downstream
      */
-    public static <T> IStructureElement<T> onElementPass(Consumer<? super T> onCheckPass, IStructureElement<? super T> element) {
+    public static <T> IStructureElement<T> onElementPass(Consumer<? super T> onCheckPass,
+            IStructureElement<? super T> element) {
         return new IStructureElement<>() {
 
             @Override
@@ -1906,7 +1908,8 @@ public class StructureUtility {
      * @param description the description to use, or null to clear any existing description
      * @param element     the element to wrap
      */
-    public static <T> IStructureElement<T> withDescription(@Nullable List<String> description, IStructureElement<? super T> element) {
+    public static <T> IStructureElement<T> withDescription(@Nullable List<String> description,
+            IStructureElement<? super T> element) {
         return new IStructureElement<>() {
 
             @Override
@@ -1963,7 +1966,8 @@ public class StructureUtility {
      * @param onFail  side effect
      * @param element downstream
      */
-    public static <T> IStructureElement<T> onElementFail(Consumer<? super T> onFail, IStructureElement<? super T> element) {
+    public static <T> IStructureElement<T> onElementFail(Consumer<? super T> onFail,
+            IStructureElement<? super T> element) {
         return new IStructureElement<>() {
 
             @Override
@@ -2025,7 +2029,8 @@ public class StructureUtility {
      * <p>
      * Return SKIP when survival auto place if given predicate returns false.
      */
-    public static <T> IStructureElement<T> onlyIf(Predicate<? super T> predicate, IStructureElement<? super T> downstream) {
+    public static <T> IStructureElement<T> onlyIf(Predicate<? super T> predicate,
+            IStructureElement<? super T> downstream) {
         return onlyIf(predicate, downstream, PlaceResult.SKIP);
     }
 
@@ -2034,8 +2039,8 @@ public class StructureUtility {
      *
      * @param placeResultWhenDisabled value to return for survival auto place when predicate returns false
      */
-    public static <T> IStructureElement<T> onlyIf(Predicate<? super T> predicate, IStructureElement<? super T> downstream,
-                                                  PlaceResult placeResultWhenDisabled) {
+    public static <T> IStructureElement<T> onlyIf(Predicate<? super T> predicate,
+            IStructureElement<? super T> downstream, PlaceResult placeResultWhenDisabled) {
         return new IStructureElement<>() {
 
             @Override
@@ -2223,7 +2228,8 @@ public class StructureUtility {
      *
      * @param to create structure element from the first context object passed in
      */
-    public static <T> IStructureElementDeferred<T> lazy(Function<? super T, ? extends IStructureElement<? super T>> to) {
+    public static <T> IStructureElementDeferred<T> lazy(
+            Function<? super T, ? extends IStructureElement<? super T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
         }
@@ -2298,7 +2304,8 @@ public class StructureUtility {
      *
      * @param to downstream element supplier
      */
-    public static <T> IStructureElementDeferred<T> defer(Function<? super T, ? extends IStructureElement<? super T>> to) {
+    public static <T> IStructureElementDeferred<T> defer(
+            Function<? super T, ? extends IStructureElement<? super T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
         }
@@ -2515,7 +2522,8 @@ public class StructureUtility {
      *
      * @param to downstream element supplier
      */
-    public static <T> IStructureElementDeferred<T> defer(BiFunction<? super T, ItemStack, ? extends IStructureElement<? super T>> to) {
+    public static <T> IStructureElementDeferred<T> defer(
+            BiFunction<? super T, ItemStack, ? extends IStructureElement<? super T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
         }
@@ -2599,7 +2607,8 @@ public class StructureUtility {
      * @param keyExtractor extract a key from the context object and trigger item
      * @param map          all possible structure element
      */
-    public static <T, K> IStructureElementDeferred<T> partitionBy(BiFunction<? super T, ItemStack, ? extends K> keyExtractor,
+    public static <T, K> IStructureElementDeferred<T> partitionBy(
+            BiFunction<? super T, ItemStack, ? extends K> keyExtractor,
             Map<K, ? extends IStructureElement<? super T>> map) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
@@ -2646,7 +2655,8 @@ public class StructureUtility {
      * @param map          all possible structure element
      * @param defaultElem  element to use when keyExtractor returns a value not found in given map
      */
-    public static <T, K> IStructureElementDeferred<T> partitionBy(BiFunction<? super T, ItemStack, ? extends K> keyExtractor,
+    public static <T, K> IStructureElementDeferred<T> partitionBy(
+            BiFunction<? super T, ItemStack, ? extends K> keyExtractor,
             Map<K, ? extends IStructureElement<? super T>> map, IStructureElement<? super T> defaultElem) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
@@ -2711,7 +2721,8 @@ public class StructureUtility {
      * @param toCheck override the check function with the returned element
      * @param to      create structure element from the context object passed in
      */
-    public static <T> IStructureElementDeferred<T> defer(Function<? super T, ? extends IStructureElement<? super T>> toCheck,
+    public static <T> IStructureElementDeferred<T> defer(
+            Function<? super T, ? extends IStructureElement<? super T>> toCheck,
             BiFunction<? super T, ItemStack, ? extends IStructureElement<? super T>> to) {
         if (to == null) {
             throw new IllegalArgumentException();
@@ -2774,7 +2785,8 @@ public class StructureUtility {
      */
     @Deprecated
     public static <T, K> IStructureElementDeferred<T> defer(Function<? super T, ? extends K> keyExtractorCheck,
-            BiFunction<? super T, ItemStack, ? extends K> keyExtractor, Map<K, ? extends IStructureElement<? super T>> map) {
+            BiFunction<? super T, ItemStack, ? extends K> keyExtractor,
+            Map<K, ? extends IStructureElement<? super T>> map) {
         return partitionBy(keyExtractorCheck, keyExtractor, map);
     }
 
@@ -2798,7 +2810,8 @@ public class StructureUtility {
      * @param map               all possible structure element
      */
     public static <T, K> IStructureElementDeferred<T> partitionBy(Function<? super T, ? extends K> keyExtractorCheck,
-            BiFunction<? super T, ItemStack, ? extends K> keyExtractor, Map<K, ? extends IStructureElement<? super T>> map) {
+            BiFunction<? super T, ItemStack, ? extends K> keyExtractor,
+            Map<K, ? extends IStructureElement<? super T>> map) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
@@ -2826,8 +2839,8 @@ public class StructureUtility {
      */
     @Deprecated
     public static <T, K> IStructureElementDeferred<T> defer(Function<? super T, ? extends K> keyExtractorCheck,
-            BiFunction<? super T, ItemStack, ? extends K> keyExtractor, Map<K, ? extends IStructureElement<? super T>> map,
-            IStructureElement<? super T> defaultElem) {
+            BiFunction<? super T, ItemStack, ? extends K> keyExtractor,
+            Map<K, ? extends IStructureElement<? super T>> map, IStructureElement<? super T> defaultElem) {
         return partitionBy(keyExtractorCheck, keyExtractor, map, defaultElem);
     }
 
@@ -2850,8 +2863,8 @@ public class StructureUtility {
      * @param map               all possible structure element
      */
     public static <T, K> IStructureElementDeferred<T> partitionBy(Function<? super T, ? extends K> keyExtractorCheck,
-            BiFunction<? super T, ItemStack, ? extends K> keyExtractor, Map<K, ? extends IStructureElement<? super T>> map,
-            IStructureElement<? super T> defaultElem) {
+            BiFunction<? super T, ItemStack, ? extends K> keyExtractor,
+            Map<K, ? extends IStructureElement<? super T>> map, IStructureElement<? super T> defaultElem) {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
@@ -2933,7 +2946,8 @@ public class StructureUtility {
      */
     @Deprecated
     public static <T> IStructureElementDeferred<T> defer(Function<? super T, Integer> keyExtractorCheck,
-            BiFunction<? super T, ItemStack, Integer> keyExtractor, List<? extends IStructureElement<? super T>> array) {
+            BiFunction<? super T, ItemStack, Integer> keyExtractor,
+            List<? extends IStructureElement<? super T>> array) {
         return partitionBy(keyExtractorCheck, keyExtractor, array);
     }
 
@@ -2955,7 +2969,8 @@ public class StructureUtility {
      */
     @SuppressWarnings("unchecked")
     public static <T> IStructureElementDeferred<T> partitionBy(Function<? super T, Integer> keyExtractorCheck,
-            BiFunction<? super T, ItemStack, Integer> keyExtractor, List<? extends IStructureElement<? super T>> array) {
+            BiFunction<? super T, ItemStack, Integer> keyExtractor,
+            List<? extends IStructureElement<? super T>> array) {
         return partitionBy(keyExtractorCheck, keyExtractor, array.toArray(new IStructureElement[0]));
     }
 
@@ -3068,7 +3083,7 @@ public class StructureUtility {
     }
 
     private static <T> IStructureNavigate<T> stepA(int a, int b, int c) {
-        return new IStructureNavigate<T>() {
+        return new IStructureNavigate<>() {
 
             @Override
             public int getStepA() {
@@ -3088,7 +3103,7 @@ public class StructureUtility {
     }
 
     private static <T> IStructureNavigate<T> stepB(int a, int b, int c) {
-        return new IStructureNavigate<T>() {
+        return new IStructureNavigate<>() {
 
             @Override
             public int getStepA() {
@@ -3113,7 +3128,7 @@ public class StructureUtility {
     }
 
     private static <T> IStructureNavigate<T> stepC(int a, int b, int c) {
-        return new IStructureNavigate<T>() {
+        return new IStructureNavigate<>() {
 
             @Override
             public int getStepA() {
