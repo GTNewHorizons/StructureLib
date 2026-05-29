@@ -32,13 +32,14 @@ public interface IStructureWalker<T> {
         return new IStructureWalker<>() {
 
             @Override
-            public boolean visit(IStructureElement<? super T> element, World world, int x, int y, int z, int a, int b, int c) {
+            public boolean visit(IStructureElement<? super T> element, World world, int x, int y, int z, int a, int b,
+                    int c) {
                 return walker.visit(element, world, x, y, z, a, b, c);
             }
 
             @Override
-            public boolean blockNotLoaded(IStructureElement<? super T> element, World world, int x, int y, int z, int a, int b,
-                    int c) {
+            public boolean blockNotLoaded(IStructureElement<? super T> element, World world, int x, int y, int z, int a,
+                    int b, int c) {
                 return walker.visit(element, world, x, y, z, a, b, c);
             }
         };
@@ -48,13 +49,14 @@ public interface IStructureWalker<T> {
         return new IStructureWalker<>() {
 
             @Override
-            public boolean visit(IStructureElement<? super T> element, World world, int x, int y, int z, int a, int b, int c) {
+            public boolean visit(IStructureElement<? super T> element, World world, int x, int y, int z, int a, int b,
+                    int c) {
                 return walker.visit(element, world, x, y, z, a, b, c);
             }
 
             @Override
-            public boolean blockNotLoaded(IStructureElement<? super T> element, World world, int x, int y, int z, int a, int b,
-                    int c) {
+            public boolean blockNotLoaded(IStructureElement<? super T> element, World world, int x, int y, int z, int a,
+                    int b, int c) {
                 return true;
             }
         };

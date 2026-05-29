@@ -30,7 +30,7 @@ import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
  * represents what a particular element can be and how this particular element should be autoplaced.
  *
  * @param <T> Type of the context object. {@link IStructureElement} is contravariant over T, so parameters and fields of
- *           type {@link IStructureElement} should be declared as {@code IStructureElement<? super T>}
+ *            type {@link IStructureElement} should be declared as {@code IStructureElement<? super T>}
  */
 public interface IStructureElement<T> {
 
