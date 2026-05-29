@@ -3059,7 +3059,7 @@ public class StructureUtility {
     /**
      * Used internally, to generate skips for structure definitions
      */
-    public static <T> IStructureNavigate<T> step(int a, int b, int c) {
+    static <T> IStructureNavigate<T> step(int a, int b, int c) {
         return step(new Vec3Impl(a, b, c));
     }
 
@@ -3067,7 +3067,7 @@ public class StructureUtility {
      * Used internally, to generate skips for structure definitions
      */
     @SuppressWarnings("unchecked")
-    public static <T> IStructureNavigate<T> step(Vec3Impl step) {
+    static <T> IStructureNavigate<T> step(Vec3Impl step) {
         if (step == null || step.get0() < 0 || step.get1() < 0 || step.get2() < 0) {
             throw new IllegalArgumentException();
         }
