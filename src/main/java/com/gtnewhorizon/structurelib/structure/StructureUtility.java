@@ -2111,11 +2111,9 @@ public class StructureUtility {
      * using {@link #isAir()}. It will not attempt to capture any errors though, so next one will not be tried if
      * previous one would crash.
      * <p>
-     * (*): For survival auto place, it will:
-     * REJECT, if all structure elements return REJECT;
-     * REJECT_CONTINUE, if all structure elements return REJECT_CONTINUE (none returned REJECT);
-     * SKIP, as soon as any structure element returns SKIP;
-     * any other result, immediately upon any structure element returning those.
+     * (*): For survival auto place, it will: REJECT, if all structure elements return REJECT; REJECT_CONTINUE, if all
+     * structure elements return REJECT_CONTINUE (none returned REJECT); SKIP, as soon as any structure element returns
+     * SKIP; any other result, immediately upon any structure element returning those.
      * <p>
      * Take care while chaining, as it will try to call every structure element until it returns true. If none does it
      * will finally return false.
