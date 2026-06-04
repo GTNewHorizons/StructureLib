@@ -97,47 +97,51 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
     @Override
     default PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s,
             EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
-        boolean haveSkip = false;
+        boolean allContinue = true;
         List<IChatComponent> bufferedNoise = new ArrayList<>();
         for (IStructureElement<T> fallback : fallbacks()) {
             PlaceResult result = fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, bufferedNoise::add);
             switch (result) {
+                case REJECT_CONTINUE:
+                    break;
                 case REJECT:
+                    allContinue = false;
                     break;
                 case SKIP:
-                    haveSkip = true;
-                    break;
+                    bufferedNoise.forEach(chatter);
+                    return PlaceResult.SKIP;
                 default:
                     return result;
             }
         }
         // dump all that noise back into upstream
         bufferedNoise.forEach(chatter);
-        // TODO need reconsider to ensure this is the right course of action
-        return haveSkip ? PlaceResult.SKIP : PlaceResult.REJECT;
+        return allContinue ? PlaceResult.REJECT_CONTINUE : PlaceResult.REJECT;
     }
 
     @Override
     default PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
             AutoPlaceEnvironment env) {
-        boolean haveSkip = false;
+        boolean allContinue = true;
         List<IChatComponent> bufferedNoise = new ArrayList<>();
         for (IStructureElement<T> fallback : fallbacks()) {
             PlaceResult result = fallback
                     .survivalPlaceBlock(t, world, x, y, z, trigger, env.withChatter(bufferedNoise::add));
             switch (result) {
+                case REJECT_CONTINUE:
+                    break;
                 case REJECT:
+                    allContinue = false;
                     break;
                 case SKIP:
-                    haveSkip = true;
-                    break;
+                    bufferedNoise.forEach(env.getChatter());
+                    return PlaceResult.SKIP;
                 default:
                     return result;
             }
         }
         // dump all that noise back into upstream
         bufferedNoise.forEach(env.getChatter());
-        // TODO need reconsider to ensure this is the right course of action
-        return haveSkip ? PlaceResult.SKIP : PlaceResult.REJECT;
+        return allContinue ? PlaceResult.REJECT_CONTINUE : PlaceResult.REJECT;
     }
 }
