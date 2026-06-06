@@ -791,7 +791,7 @@ public class StructureUtility {
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
                 Pair<Block, Integer> hint = getHint(trigger);
-                if (hint == null) return PlaceResult.REJECT; // TODO or SKIP?
+                if (hint == null) return PlaceResult.REJECT;
                 Block block = world.getBlock(x, y, z);
                 int meta = world.getBlockMetadata(x, y, z);
                 TIER tier = tierExtractor.convert(block, meta);
