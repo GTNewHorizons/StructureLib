@@ -791,7 +791,7 @@ public class StructureUtility {
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
                 Pair<Block, Integer> hint = getHint(trigger);
-                if (hint == null) return PlaceResult.REJECT; // TODO or SKIP?
+                if (hint == null) return PlaceResult.REJECT;
                 Block block = world.getBlock(x, y, z);
                 int meta = world.getBlockMetadata(x, y, z);
                 TIER tier = tierExtractor.convert(block, meta);
@@ -2032,11 +2032,11 @@ public class StructureUtility {
     /**
      * Enable this structure element only if given predicate returns true.
      * <p>
-     * Return SKIP when survival auto place if given predicate returns false.
+     * Return REJECT_CONTINUE when survival auto place if given predicate returns false.
      */
     public static <T> IStructureElement<T> onlyIf(Predicate<? super T> predicate,
             IStructureElement<? super T> downstream) {
-        return onlyIf(predicate, downstream, PlaceResult.SKIP);
+        return onlyIf(predicate, downstream, PlaceResult.REJECT_CONTINUE);
     }
 
     /**
@@ -2111,10 +2111,10 @@ public class StructureUtility {
      * using {@link #isAir()}. It will not attempt to capture any errors though, so next one will not be tried if
      * previous one would crash.
      * <p>
-     * (*): For survival auto place, it will * REJECT, if all structure element REJECT * SKIP, if 1 or more structure
-     * element SKIP and the rest structure element (0 or more) REJECT * any other result, **immediately** upon any
-     * structure element returns these other results. This behavior is not 100% fixed and might change later on, but we
-     * will send the notice on a best effort basis.
+     * (*): For survival auto place, it will: REJECT, if any structure element returns REJECT (and none returned ACCEPT,
+     * STOP, ACCEPT_STOP, or SKIP); REJECT_CONTINUE, if all structure elements return REJECT_CONTINUE (none returned
+     * REJECT); SKIP, as soon as any structure element returns SKIP; any other result, immediately upon any structure
+     * element returning those.
      * <p>
      * Take care while chaining, as it will try to call every structure element until it returns true. If none does it
      * will finally return false.

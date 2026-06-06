@@ -96,7 +96,7 @@ public interface IStructureElement<T> {
                 "Default implementation of survivalPlaceBlock hit! Things aren't going to work well! IStructureElement class: {}",
                 getClass().getName());
         if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
-        return PlaceResult.SKIP;
+        return PlaceResult.REJECT_CONTINUE;
     }
 
     /**
@@ -206,7 +206,7 @@ public interface IStructureElement<T> {
         if (StructureLibAPI.isDebugEnabled()) LOGGER.info(
                 "Fallback shim code of survivalPlaceBlock hit! Things aren't going to work well! IStructureElement class: {}",
                 getClass().getName());
-        return PlaceResult.SKIP;
+        return PlaceResult.REJECT_CONTINUE;
     }
 
     /**
@@ -268,16 +268,21 @@ public interface IStructureElement<T> {
 
     enum PlaceResult {
         /**
-         * This element either exists already, or does not yet have an implementation for survivalPlaceBlock, or some
-         * other unforeseen situations. TODO this definition doesn't seem right. Should we separate SKIP from EXISTS, or
-         * SKIP from ERROR?
+         * The element's check passed, the position is already valid. No placement is needed. In the walker: continue
+         * iteration (no error, not counted as placed). In ofChain: short-circuits, remaining alternatives are skipped.
          */
         SKIP,
         /**
-         * This element's space is occupied by other stuff and require player attention, or player missing required
-         * resource, or the block cannot be placed due to obscure mechanisms, or some other unforeseen situations.
+         * The element cannot handle this position (occupied, missing resources, etc.). In the walker: stop iteration
+         * with error particles. In ofChain: try next alternative.
          */
         REJECT,
+        /**
+         * This element has no survivalPlaceBlock implementation (default fallback), or otherwise cannot place but is
+         * not an error condition. In the walker: continue iteration silently (like SKIP). In ofChain: try next
+         * alternative (like REJECT), so a better-suited element can handle it.
+         */
+        REJECT_CONTINUE,
         /**
          * Autoplace cannot proceed within this tick. To proceed further would require stopping the placement and wait
          * for next round.

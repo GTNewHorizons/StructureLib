@@ -43,9 +43,10 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T> {
         env.offsetABC[2] = c;
         env.setSource(params.getSource());
         PlaceResult placeResult = element.survivalPlaceBlock(object, world, x, y, z, trigger, env);
-        if (placeResult != PlaceResult.SKIP && built == -1) built = 0;
+        if (placeResult != PlaceResult.SKIP && placeResult != PlaceResult.REJECT_CONTINUE && built == -1) built = 0;
         switch (placeResult) {
             case SKIP:
+            case REJECT_CONTINUE:
                 return true;
             case ACCEPT:
                 if (check) element.check(object, world, x, y, z);
