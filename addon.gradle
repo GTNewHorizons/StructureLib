@@ -1,7 +1,7 @@
 javadoc {
     javadocTool = javaToolchains.javadocToolFor {
         // Last version with frames, but it also has search
-        languageVersion = JavaLanguageVersion.of(11)
+        languageVersion = JavaLanguageVersion.of(25)
         vendor = JvmVendorSpec.ADOPTIUM
     }
 
