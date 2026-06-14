@@ -637,7 +637,7 @@ public class StructureUtility {
      * given tier, then player will be allowed to use multiple kinds of blocks, but their tier is guaranteed to be the
      * same.
      * <p>
-     * <h3>WARNING</h3> <b>You SHOULD NOT return notSet from your tierExtractor.</b> If you do so, we will have this
+     * <h4>WARNING</h4> <b>You SHOULD NOT return notSet from your tierExtractor.</b> If you do so, we will have this
      * chain of events:
      * <ul>
      * <li>at check start, tier is reset to notSet
@@ -650,7 +650,7 @@ public class StructureUtility {
      * doing its business
      * <li>Player enjoy a (probably) hilariously shaped multi and (probably) reduced build cost.
      * </ul>
-     * <h3>Example Implementation</h3>
+     * <h4>Example Implementation</h4>
      * <p>
      * Assume you have 16 tier, each map to one particular block's 16 different meta. You will usually want something
      * like this
