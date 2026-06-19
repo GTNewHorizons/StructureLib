@@ -75,7 +75,6 @@ public class SortedRegistry<V> implements Iterable<V> {
     }
 
     static void cleanup(MinecraftServer server) {
-        @SuppressWarnings("unchecked")
         List<EntityPlayerMP> players = server.getConfigurationManager().playerEntityList;
         Set<UUID> onlinePlayerIDs = players.stream().map(EntityPlayerMP::getUniqueID).collect(Collectors.toSet());
         int removed = 0;

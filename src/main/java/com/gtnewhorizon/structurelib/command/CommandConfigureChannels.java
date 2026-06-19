@@ -45,9 +45,7 @@ public class CommandConfigureChannels extends CommandBase {
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length == 0) throw new WrongUsageException(getCommandUsage(sender));
 
-        if (!(sender instanceof EntityPlayerMP)) throw new WrongUsageException("must be a player");
-
-        EntityPlayerMP player = (EntityPlayerMP) sender;
+        if (!(sender instanceof EntityPlayerMP player)) throw new WrongUsageException("must be a player");
 
         ItemStack heldItem = player.getHeldItem();
         if (heldItem == null || !(heldItem.getItem() instanceof ItemConstructableTrigger)) {

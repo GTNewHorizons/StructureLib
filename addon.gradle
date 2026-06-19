@@ -1,7 +1,7 @@
 javadoc {
     javadocTool = javaToolchains.javadocToolFor {
         // Last version with frames, but it also has search
-        languageVersion = JavaLanguageVersion.of(11)
+        languageVersion = JavaLanguageVersion.of(25)
         vendor = JvmVendorSpec.ADOPTIUM
     }
 
@@ -18,9 +18,8 @@ javadoc {
 
     options {
         overview "src/main/javadoc/overview.html"
-        links 'https://docs.oracle.com/javase/8/docs/api/'
+        links 'https://docs.oracle.com/en/java/javase/25/docs/api/'
         links 'https://skmedix.github.io/ForgeJavaDocs/javadoc/forge/1.7.10-10.13.4.1614/'
-        addBooleanOption("-frames", true)
     }
 }
 

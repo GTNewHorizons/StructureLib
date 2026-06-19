@@ -344,8 +344,7 @@ public class StructureUtility {
                     new ChatComponentTranslation("structurelib.autoplace.missing_block", stack.func_151000_E()));
             return PlaceResult.REJECT;
         }
-        if (block instanceof ICustomBlockSetting) {
-            ICustomBlockSetting blockCustom = (ICustomBlockSetting) block;
+        if (block instanceof ICustomBlockSetting blockCustom) {
             blockCustom.setBlock(world, x, y, z, meta);
         } else if (!stack.copy()
                 .tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f)) {
@@ -638,7 +637,7 @@ public class StructureUtility {
      * given tier, then player will be allowed to use multiple kinds of blocks, but their tier is guaranteed to be the
      * same.
      * <p>
-     * <h3>WARNING</h3> <b>You SHOULD NOT return notSet from your tierExtractor.</b> If you do so, we will have this
+     * <h4>WARNING</h4> <b>You SHOULD NOT return notSet from your tierExtractor.</b> If you do so, we will have this
      * chain of events:
      * <ul>
      * <li>at check start, tier is reset to notSet
@@ -651,7 +650,7 @@ public class StructureUtility {
      * doing its business
      * <li>Player enjoy a (probably) hilariously shaped multi and (probably) reduced build cost.
      * </ul>
-     * <h3>Example Implementation</h3>
+     * <h4>Example Implementation</h4>
      * <p>
      * Assume you have 16 tier, each map to one particular block's 16 different meta. You will usually want something
      * like this
@@ -770,8 +769,7 @@ public class StructureUtility {
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                 Pair<Block, Integer> hint = getHint(trigger);
                 if (hint == null) return false;
-                if (hint.getKey() instanceof ICustomBlockSetting) {
-                    ICustomBlockSetting block = (ICustomBlockSetting) hint.getKey();
+                if (hint.getKey() instanceof ICustomBlockSetting block) {
                     block.setBlock(world, x, y, z, hint.getValue());
                 } else {
                     world.setBlock(x, y, z, hint.getKey(), hint.getValue(), 2);
@@ -2811,7 +2809,7 @@ public class StructureUtility {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
-        return defer(keyExtractorCheck.andThen(map::get), keyExtractor.<IStructureElement<T>>andThen(map::get));
+        return defer(keyExtractorCheck.andThen(map::get), keyExtractor.andThen(map::get));
     }
 
     /**

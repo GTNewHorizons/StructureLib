@@ -39,9 +39,7 @@ public class CommandRegistryDebug extends CommandBase {
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length != 1) throw new WrongUsageException(getCommandUsage(sender));
 
-        if (!(sender instanceof EntityPlayerMP)) throw new WrongUsageException("must be a player");
-
-        EntityPlayerMP player = (EntityPlayerMP) sender;
+        if (!(sender instanceof EntityPlayerMP player)) throw new WrongUsageException("must be a player");
 
         SortedRegistry<?> registry = SortedRegistry.getRegistry(args[0]);
         if (registry == null) throw new WrongUsageException("registry not found");
