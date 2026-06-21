@@ -64,6 +64,9 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
     private GuiTextField key, value;
     protected int guiTop, guiLeft;
     private List<String> info;
+    private boolean wipePending = false;
+    private long wipePendingTime = 0;
+    private static final long WIPE_CONFIRM_TIMEOUT_MS = 3000;
 
     public GuiScreenConfigureChannels(Container container, ItemStack trigger) {
         super(container);
@@ -346,9 +349,17 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
                 ChannelDataAccessor.unsetChannelData(trigger, key.getText());
                 break;
             case WIPE_BTN:
-                ChannelDataAccessor.wipeChannelData(trigger);
-                key.setText("");
-                this.value.setText("");
+                if (!wipePending) {
+                    wipePending = true;
+                    wipePendingTime = System.currentTimeMillis();
+                    btn.displayString = I18n.format(I18N_PREFIX + "wipe.confirm");
+                } else {
+                    wipePending = false;
+                    btn.displayString = I18n.format(I18N_PREFIX + "wipe");
+                    ChannelDataAccessor.wipeChannelData(trigger);
+                    key.setText("");
+                    this.value.setText("");
+                }
                 break;
         }
 
@@ -369,6 +380,10 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         super.updateScreen();
         key.updateCursorCounter();
         value.updateCursorCounter();
+        if (wipePending && System.currentTimeMillis() - wipePendingTime > WIPE_CONFIRM_TIMEOUT_MS) {
+            wipePending = false;
+            getButtonList().get(WIPE_BTN).displayString = I18n.format(I18N_PREFIX + "wipe");
+        }
     }
 
     @Override
