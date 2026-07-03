@@ -344,8 +344,7 @@ public class StructureUtility {
                     new ChatComponentTranslation("structurelib.autoplace.missing_block", stack.func_151000_E()));
             return PlaceResult.REJECT;
         }
-        if (block instanceof ICustomBlockSetting) {
-            ICustomBlockSetting blockCustom = (ICustomBlockSetting) block;
+        if (block instanceof ICustomBlockSetting blockCustom) {
             blockCustom.setBlock(world, x, y, z, meta);
         } else if (!stack.copy()
                 .tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f)) {
@@ -638,7 +637,7 @@ public class StructureUtility {
      * given tier, then player will be allowed to use multiple kinds of blocks, but their tier is guaranteed to be the
      * same.
      * <p>
-     * <h3>WARNING</h3> <b>You SHOULD NOT return notSet from your tierExtractor.</b> If you do so, we will have this
+     * <h4>WARNING</h4> <b>You SHOULD NOT return notSet from your tierExtractor.</b> If you do so, we will have this
      * chain of events:
      * <ul>
      * <li>at check start, tier is reset to notSet
@@ -651,7 +650,7 @@ public class StructureUtility {
      * doing its business
      * <li>Player enjoy a (probably) hilariously shaped multi and (probably) reduced build cost.
      * </ul>
-     * <h3>Example Implementation</h3>
+     * <h4>Example Implementation</h4>
      * <p>
      * Assume you have 16 tier, each map to one particular block's 16 different meta. You will usually want something
      * like this
@@ -770,8 +769,7 @@ public class StructureUtility {
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                 Pair<Block, Integer> hint = getHint(trigger);
                 if (hint == null) return false;
-                if (hint.getKey() instanceof ICustomBlockSetting) {
-                    ICustomBlockSetting block = (ICustomBlockSetting) hint.getKey();
+                if (hint.getKey() instanceof ICustomBlockSetting block) {
                     block.setBlock(world, x, y, z, hint.getValue());
                 } else {
                     world.setBlock(x, y, z, hint.getKey(), hint.getValue(), 2);
@@ -791,7 +789,7 @@ public class StructureUtility {
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
                 Pair<Block, Integer> hint = getHint(trigger);
-                if (hint == null) return PlaceResult.REJECT; // TODO or SKIP?
+                if (hint == null) return PlaceResult.REJECT;
                 Block block = world.getBlock(x, y, z);
                 int meta = world.getBlockMetadata(x, y, z);
                 TIER tier = tierExtractor.convert(block, meta);
@@ -2032,11 +2030,11 @@ public class StructureUtility {
     /**
      * Enable this structure element only if given predicate returns true.
      * <p>
-     * Return SKIP when survival auto place if given predicate returns false.
+     * Return REJECT_CONTINUE when survival auto place if given predicate returns false.
      */
     public static <T> IStructureElement<T> onlyIf(Predicate<? super T> predicate,
             IStructureElement<? super T> downstream) {
-        return onlyIf(predicate, downstream, PlaceResult.SKIP);
+        return onlyIf(predicate, downstream, PlaceResult.REJECT_CONTINUE);
     }
 
     /**
@@ -2111,10 +2109,10 @@ public class StructureUtility {
      * using {@link #isAir()}. It will not attempt to capture any errors though, so next one will not be tried if
      * previous one would crash.
      * <p>
-     * (*): For survival auto place, it will * REJECT, if all structure element REJECT * SKIP, if 1 or more structure
-     * element SKIP and the rest structure element (0 or more) REJECT * any other result, **immediately** upon any
-     * structure element returns these other results. This behavior is not 100% fixed and might change later on, but we
-     * will send the notice on a best effort basis.
+     * (*): For survival auto place, it will: REJECT, if any structure element returns REJECT (and none returned ACCEPT,
+     * STOP, ACCEPT_STOP, or SKIP); REJECT_CONTINUE, if all structure elements return REJECT_CONTINUE (none returned
+     * REJECT); SKIP, as soon as any structure element returns SKIP; any other result, immediately upon any structure
+     * element returning those.
      * <p>
      * Take care while chaining, as it will try to call every structure element until it returns true. If none does it
      * will finally return false.
@@ -2811,7 +2809,7 @@ public class StructureUtility {
         if (keyExtractor == null || map == null) {
             throw new IllegalArgumentException();
         }
-        return defer(keyExtractorCheck.andThen(map::get), keyExtractor.<IStructureElement<T>>andThen(map::get));
+        return defer(keyExtractorCheck.andThen(map::get), keyExtractor.andThen(map::get));
     }
 
     /**

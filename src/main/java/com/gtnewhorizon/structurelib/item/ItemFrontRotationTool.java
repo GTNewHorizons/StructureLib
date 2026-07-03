@@ -34,15 +34,14 @@ public class ItemFrontRotationTool extends Item {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void addInformation(ItemStack p_77624_1_, EntityPlayer p_77624_2_, List<String> aList, boolean p_77624_4_) {
-        aList.add(translateToLocal("item.structurelib.frontRotationTool.desc.0")); // Triggers Front Rotation Interface
-        aList.add(EnumChatFormatting.BLUE + translateToLocal("item.structurelib.frontRotationTool.desc.1")); // Rotates
-                                                                                                             // only the
-                                                                                                             // front
-                                                                                                             // panel,
-        aList.add(EnumChatFormatting.BLUE + translateToLocal("item.structurelib.frontRotationTool.desc.2")); // which
-                                                                                                             // allows
-                                                                                                             // structure
-                                                                                                             // rotation.
+    public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltip, boolean adv) {
+        // Tooltip Text:
+        // Triggers Front Rotation Interface
+        // Rotates only the front panel,
+        // which allows structure rotation.
+
+        tooltip.add(translateToLocal("item.structurelib.frontRotationTool.desc.0"));
+        tooltip.add(EnumChatFormatting.BLUE + translateToLocal("item.structurelib.frontRotationTool.desc.1"));
+        tooltip.add(EnumChatFormatting.BLUE + translateToLocal("item.structurelib.frontRotationTool.desc.2"));
     }
 }

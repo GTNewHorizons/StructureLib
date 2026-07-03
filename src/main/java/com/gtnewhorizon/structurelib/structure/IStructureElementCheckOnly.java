@@ -27,12 +27,12 @@ public interface IStructureElementCheckOnly<T> extends IStructureElement<T> {
     @Override
     default PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s,
             EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
-        return PlaceResult.SKIP;
+        return PlaceResult.REJECT_CONTINUE;
     }
 
     @Override
     default PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
             AutoPlaceEnvironment env) {
-        return PlaceResult.SKIP;
+        return PlaceResult.REJECT_CONTINUE;
     }
 }

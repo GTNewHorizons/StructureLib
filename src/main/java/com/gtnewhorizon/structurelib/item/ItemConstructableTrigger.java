@@ -45,31 +45,30 @@ public class ItemConstructableTrigger extends Item {
         return ConstructableUtility.handle(stack, player, world, x, y, z, side);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public void addInformation(ItemStack aStack, EntityPlayer ep, List aList, boolean boo) {
+    public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltip, boolean adv) {
         if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
-            aList.add(
+            tooltip.add(
                     translateToLocalFormatted(
                             "item.structurelib.constructableTrigger.desc.lshift.0",
-                            ChannelDataAccessor.countChannelData(aStack)));
-            ChannelDataAccessor.iterateChannelData(aStack).map(e -> e.getKey() + ": " + e.getValue())
-                    .forEach(aList::add);
+                            ChannelDataAccessor.countChannelData(stack)));
+            ChannelDataAccessor.iterateChannelData(stack).map(e -> e.getKey() + ": " + e.getValue())
+                    .forEach(tooltip::add);
         } else {
-            aList.add(translateToLocal("item.structurelib.constructableTrigger.desc.0")); // Triggers Constructable
-                                                                                          // Interface
-            aList.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.1")); // Shows multiblock
-                                                                                                 // construction
-                                                                                                 // details,
-            aList.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.2")); // just Use on a
-                                                                                                 // multiblock
-                                                                                                 // controller.
-            aList.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.3")); // (Sneak Use in
-                                                                                                 // creative to build)
-            aList.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.4")); // Quantity affects
-                                                                                                 // tier/mode/type
-            if (ChannelDataAccessor.hasSubChannel(aStack))
-                aList.add(translateToLocal("item.structurelib.constructableTrigger.desc.5"));
+            // Tooltip text:
+            // Triggers Constructable Interface
+            // Shows multiblock construction details,
+            // just Use on a multiblock controller.
+            // (Sneak Use in creative to build)
+            // Quantity affects tier/mode/type
+
+            tooltip.add(translateToLocal("item.structurelib.constructableTrigger.desc.0"));
+            tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.1"));
+            tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.2"));
+            tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.3"));
+            tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.4"));
+            if (ChannelDataAccessor.hasSubChannel(stack))
+                tooltip.add(translateToLocal("item.structurelib.constructableTrigger.desc.5"));
         }
     }
 }

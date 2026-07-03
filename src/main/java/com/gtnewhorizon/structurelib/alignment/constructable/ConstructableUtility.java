@@ -70,8 +70,7 @@ public class ConstructableUtility {
 
         if (constructable == null) return false;
 
-        if (aPlayer instanceof EntityPlayerMP) {
-            EntityPlayerMP playerMP = (EntityPlayerMP) aPlayer;
+        if (aPlayer instanceof EntityPlayerMP playerMP) {
             // server side and sneaking (already checked above)
             // do construct
             if (aPlayer.capabilities.isCreativeMode) {
