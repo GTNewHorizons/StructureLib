@@ -3015,7 +3015,8 @@ public class StructureUtility {
             @Override
             public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
-                return backing.getBlocksToPlace(t, world, x, y, z, ChannelDataAccessor.withChannel(trigger, channel), env);
+                return backing
+                        .getBlocksToPlace(t, world, x, y, z, ChannelDataAccessor.withChannel(trigger, channel), env);
             }
 
             @Deprecated
