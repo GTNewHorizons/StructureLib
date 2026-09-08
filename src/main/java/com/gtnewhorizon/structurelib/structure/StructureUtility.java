@@ -1503,11 +1503,10 @@ public class StructureUtility {
                     }
                     for (ItemStack stack : e.getStacks()) {
                         if (!source.takeOne(stack, true)) {
-                            env.getChatter()
-                                    .accept(
-                                            new ChatComponentTranslation(
-                                                    "structurelib.autoplace.missing_block",
-                                                    getStackChatName(stack)));
+                            env.getChatter().accept(
+                                    new ChatComponentTranslation(
+                                            "structurelib.autoplace.missing_block",
+                                            getStackChatName(stack)));
                             continue;
                         }
                         return StructureUtility.survivalPlaceBlock(
