@@ -39,8 +39,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
-import net.minecraft.util.ChatStyle;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.StatCollector;
@@ -1505,12 +1503,11 @@ public class StructureUtility {
                     }
                     for (ItemStack stack : e.getStacks()) {
                         if (!source.takeOne(stack, true)) {
-                            String key = stack.getUnlocalizedName() + ".name";
-                            IChatComponent name = StatCollector.canTranslate(key) ? new ChatComponentTranslation(key)
-                                    : new ChatComponentText(stack.getDisplayName());
-                            name.setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW));
                             env.getChatter()
-                                    .accept(new ChatComponentTranslation("structurelib.autoplace.missing_block", name));
+                                    .accept(
+                                            new ChatComponentTranslation(
+                                                    "structurelib.autoplace.missing_block",
+                                                    getStackChatName(stack)));
                             continue;
                         }
                         return StructureUtility.survivalPlaceBlock(
