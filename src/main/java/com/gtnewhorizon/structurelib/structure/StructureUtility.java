@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.event.HoverEvent;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
@@ -42,6 +43,7 @@ import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -318,6 +320,25 @@ public class StructureUtility {
     }
 
     /**
+     * Build a chat component naming the given stack, so that the receiving client localizes it.
+     * <p>
+     * Falls back to the server side display name for stacks whose name is not a plain translation key, e.g. items that
+     * assemble their name in {@link Item#getItemStackDisplayName(ItemStack)}.
+     */
+    private static IChatComponent getStackChatName(ItemStack stack) {
+        String key = stack.getUnlocalizedName() + ".name";
+        if (!StatCollector.canTranslate(key)) return stack.func_151000_E();
+        IChatComponent name = new ChatComponentText("[").appendSibling(new ChatComponentTranslation(key))
+                .appendText("]");
+        NBTTagCompound tag = new NBTTagCompound();
+        stack.writeToNBT(tag);
+        name.getChatStyle()
+                .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new ChatComponentText(tag.toString())))
+                .setColor(stack.getRarity().rarityColor);
+        return name;
+    }
+
+    /**
      * This is a helper method for implementing
      * {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
      * <p>
@@ -341,7 +362,7 @@ public class StructureUtility {
         ItemStack stack = new ItemStack(itemBlock, 1, itemMeta);
         if (!s.takeOne(stack, true)) {
             if (chatter != null) chatter.accept(
-                    new ChatComponentTranslation("structurelib.autoplace.missing_block", stack.func_151000_E()));
+                    new ChatComponentTranslation("structurelib.autoplace.missing_block", getStackChatName(stack)));
             return PlaceResult.REJECT;
         }
         if (block instanceof ICustomBlockSetting blockCustom) {
@@ -447,7 +468,7 @@ public class StructureUtility {
         if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
         if (!assumeStackPresent && !s.takeOne(stack, true)) {
             if (chatter != null) chatter.accept(
-                    new ChatComponentTranslation("structurelib.autoplace.missing_block", stack.func_151000_E()));
+                    new ChatComponentTranslation("structurelib.autoplace.missing_block", getStackChatName(stack)));
             return PlaceResult.REJECT;
         }
         if (!stack.copy().tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f))
@@ -1484,7 +1505,9 @@ public class StructureUtility {
                     }
                     for (ItemStack stack : e.getStacks()) {
                         if (!source.takeOne(stack, true)) {
-                            IChatComponent name = new ChatComponentText(stack.getDisplayName());
+                            String key = stack.getUnlocalizedName() + ".name";
+                            IChatComponent name = StatCollector.canTranslate(key) ? new ChatComponentTranslation(key)
+                                    : new ChatComponentText(stack.getDisplayName());
                             name.setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW));
                             env.getChatter()
                                     .accept(new ChatComponentTranslation("structurelib.autoplace.missing_block", name));
