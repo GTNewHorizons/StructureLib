@@ -28,6 +28,9 @@ import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 /**
  * Use StructureUtility to instantiate. These are the building blocks for your {@link IStructureDefinition}. It
  * represents what a particular element can be and how this particular element should be autoplaced.
+ *
+ * @param <T> Type of the context object. {@link IStructureElement} is contravariant over T, so parameters and fields of
+ *            type {@link IStructureElement} should be declared as {@code IStructureElement<? super T>}
  */
 public interface IStructureElement<T> {
 
@@ -213,7 +216,7 @@ public interface IStructureElement<T> {
      * Forget the messed up class dependency graph for now. this is just so convenient.
      */
     default IStructureElementNoPlacement<T> noPlacement() {
-        return new IStructureElementNoPlacement<T>() {
+        return new IStructureElementNoPlacement<>() {
 
             @Override
             public boolean check(T t, World world, int x, int y, int z) {
