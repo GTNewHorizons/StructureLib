@@ -10,11 +10,18 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.FluidStack;
 
 import com.gtnewhorizon.gtnhlib.util.AnimatedTooltipHandler;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.fluid.FluidBlockPlacement;
+import com.gtnewhorizon.structurelib.fluid.FluidContainerExtractor;
+import com.gtnewhorizon.structurelib.fluid.FluidContainerExtractors;
+import com.gtnewhorizon.structurelib.fluid.FluidPlacementRegistry;
+import com.gtnewhorizon.structurelib.fluid.FluidSourceProviders;
+import com.gtnewhorizon.structurelib.fluid.IFluidSourceProvider;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
@@ -362,6 +369,76 @@ public class StructureLibAPI {
      */
     public static void registerChannelDescription(final String channel, final String modid, final String description) {
         ChannelDescription.set(channel, modid, description);
+    }
+
+    /**
+     * Register what it costs to place a fluid block, and how to place it.
+     * <p>
+     * Water and lava are registered by default, and every Forge fluid block is recognised automatically, so this is
+     * only needed for a fluid block that costs something else than one bucket, for a fluid block that has to be written
+     * into the world in a special way, or for a block that has an item form but should always be paid for with fluid.
+     *
+     * @param block     the fluid block
+     * @param meta      the block meta. {@link net.minecraftforge.oredict.OreDictionary#WILDCARD_VALUE} covers every
+     *                  meta of this block.
+     * @param placement what this block state costs and how to place it
+     */
+    public static void registerFluidBlockCost(Block block, int meta, FluidBlockPlacement placement) {
+        FluidPlacementRegistry.register(block, meta, placement);
+    }
+
+    /**
+     * Register what it costs to place a fluid block, preferring the item form when the block has one.
+     *
+     * @param block the fluid block
+     * @param meta  the block meta
+     * @param cost  how much fluid one block of this state costs
+     * @see #registerFluidBlockCost(Block, int, FluidBlockPlacement)
+     */
+    public static void registerFluidBlockCost(Block block, int meta, FluidStack cost) {
+        FluidPlacementRegistry.register(block, meta, cost);
+    }
+
+    /**
+     * Register what it costs to place a fluid block.
+     *
+     * @param block      the fluid block
+     * @param meta       the block meta
+     * @param cost       how much fluid one block of this state costs
+     * @param forceFluid whether to always pay with fluid, even when this block also has an item form
+     * @see #registerFluidBlockCost(Block, int, FluidBlockPlacement)
+     */
+    public static void registerFluidBlockCost(Block block, int meta, FluidStack cost, boolean forceFluid) {
+        FluidPlacementRegistry.register(block, meta, cost, forceFluid);
+    }
+
+    /**
+     * Register a way to pull fluid out of an item, so that autoplace can pay for a fluid block with it.
+     * <p>
+     * Forge's fluid container item and Forge's fluid container registry are both supported out of the box, which covers
+     * buckets and most modded cells. Register your own extractor for a container that exposes its fluid by other means.
+     *
+     * @param key       unique key. Matches the key shown in the config gui.
+     * @param extractor the extractor
+     */
+    public static void registerFluidContainerExtractor(String key, FluidContainerExtractor extractor) {
+        FluidContainerExtractors.register(key, extractor);
+    }
+
+    /**
+     * Register a way to hand StructureLib fluid without the player having to carry a fluid container, e.g. the ME
+     * network behind a wireless terminal the player has on them.
+     * <p>
+     * Providers are asked before the fluid containers the player is carrying, in the order the player configured, so
+     * the player can reorder or disable every provider in StructureLib's config. A provider should look up what it
+     * drains from every time it is asked for fluid rather than when it is created, as the player can walk out of range
+     * or put a terminal away between two rounds of autoplace.
+     *
+     * @param key      unique key. Matches the key shown in the config gui.
+     * @param provider the provider
+     */
+    public static void registerFluidSourceProvider(String key, IFluidSourceProvider provider) {
+        FluidSourceProviders.register(key, provider);
     }
 
     /**

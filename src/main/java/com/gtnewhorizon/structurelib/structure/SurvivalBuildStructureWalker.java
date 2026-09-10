@@ -1,5 +1,7 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
@@ -7,7 +9,7 @@ import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
 
-class SurvivalBuildStructureWalker<T> implements IStructureWalker<T> {
+class SurvivalBuildStructureWalker<T> implements IStructureWalker<T>, AutoPlaceEnvironment.FluidRoundState {
 
     final T object;
     final ItemStack trigger;
@@ -16,11 +18,14 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T> {
     private final boolean check;
     private int built = -1;
 
+    private Boolean fluidGateResult;
+    private boolean fluidDeferred;
+
     private final AutoPlaceEnvironment env;
 
     public SurvivalBuildStructureWalker(T object, ItemStack trigger, int elementBudget,
             ISurvivalBuildEnvironment params, IStructureDefinition<?> definition, String piece, ExtendedFacing facing,
-            int[] baseOffsetABC, boolean check) {
+            int[] baseOffsetABC, int[] basePositionXYZ, boolean check) {
         this.object = object;
         this.trigger = trigger;
         this.elementBudget = elementBudget;
@@ -33,7 +38,11 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T> {
                 definition,
                 piece,
                 facing,
-                baseOffsetABC);
+                baseOffsetABC,
+                basePositionXYZ,
+                object,
+                params.getFluidSource(),
+                this);
     }
 
     @Override
@@ -65,7 +74,34 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T> {
         }
     }
 
+    /**
+     * Number of elements this round has placed, or -1 when the structure is done.
+     * <p>
+     * A round that only had to wait for the structure to be built before it could place its fluid did not build
+     * anything, and the structure is not done either, so it reports no progress instead of reporting completion.
+     */
     public int getBuilt() {
-        return built;
+        return built == -1 && fluidDeferred ? 0 : built;
+    }
+
+    @Nullable
+    @Override
+    public Boolean getGateResult() {
+        return fluidGateResult;
+    }
+
+    @Override
+    public void setGateResult(boolean ready) {
+        fluidGateResult = ready;
+    }
+
+    @Override
+    public void markDeferred() {
+        fluidDeferred = true;
+    }
+
+    @Override
+    public boolean isDeferred() {
+        return fluidDeferred;
     }
 }

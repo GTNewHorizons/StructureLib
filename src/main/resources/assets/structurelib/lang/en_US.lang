@@ -199,3 +199,23 @@ structurelib.sortedregistry.inventoryproviders.5000-main-inventory=Main Player I
 structurelib.sortedregistry.inventoryproviders.5000-main-inventory.tooltip=36 slots of item in your main inventory. Armor slots excluded.
 structurelib.sortedregistry.inventoryproviders.7000-ender-inventory=Ender Chest Inventory
 structurelib.sortedregistry.inventoryproviders.7000-ender-inventory.tooltip=Links to your vanilla ender chest inventory. Require at least one "ender backpack like" item in main inventory to work.
+
+structurelib.autoplace.missing_fluid=§cMissing fluid: %s (%s)
+structurelib.fluid.requirement=%s (%s mB)
+
+structurelib.config.common.autoplace.tooltip=Configurations that control how survival autoplace places blocks.
+structurelib.config.common.autoplace.fluidAutoplace.tooltip=Whether survival autoplace may place fluid blocks, e.g. the water a multiblock needs inside itself, by draining fluid from the player's fluid containers.\nA multiblock can also provide its own fluid source.\nThis only disables fluid blocks. Multiblocks keep working, they just cannot have those positions filled by autoplace.
+structurelib.config.common.autoplace.fluidGateMode.tooltip=How careful autoplace is about placing a fluid into a structure that is not finished yet, as a fluid would flow out of it.\nNONE: place the fluid right away.\nLENIENT: only place the fluid when it cannot flow out of the structure.\nSTRICT: only place the fluid once every non fluid element of the structure is satisfied.
+
+structurelib.sortedregistry.fluidcontainerextractors.3000-forge-fluid-container-item=Forge fluid container item
+structurelib.sortedregistry.fluidcontainerextractors.3000-forge-fluid-container-item.tooltip=Containers implementing Forge's IFluidContainerItem, e.g. most modded cells. They hold their fluid in their own NBT, so they are drained in place.
+structurelib.sortedregistry.fluidcontainerextractors.5000-forge-fluid-container-registry=Forge fluid container registry
+structurelib.sortedregistry.fluidcontainerextractors.5000-forge-fluid-container-registry.tooltip=Containers registered with Forge's FluidContainerRegistry, e.g. buckets. They are consumed as a whole, and are replaced by their empty container.
+structurelib.config.registries.fluidcontainerextractors=Fluid container extraction
+structurelib.config.registries.fluidcontainerextractors.tooltip=Controls which ways of pulling fluid out of an item are enabled during survival autoplace
+
+structurelib.config.registries.fluidsourceproviders=Fluid sources
+structurelib.config.registries.fluidsourceproviders.tooltip=Controls which additional ways of getting fluid are used during survival autoplace, e.g. an ME network the player can reach with a wireless terminal. Whatever the player is carrying is always used after these.
+
+structurelib.sortedregistry.fluidsourceproviders.0999-ae2fc=ME network (wireless terminal)
+structurelib.sortedregistry.fluidsourceproviders.0999-ae2fc.tooltip=Fills the fluid a multiblock needs straight out of the ME network behind the wireless terminal the player has on them, when the terminal is linked and in range of a wireless access point.

@@ -4,6 +4,7 @@ import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
 import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 import static java.lang.Integer.MIN_VALUE;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,16 +45,23 @@ import net.minecraft.util.IIcon;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidStack;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.google.common.collect.ImmutableList;
+import com.gtnewhorizon.structurelib.ConfigurationHandler;
 import com.gtnewhorizon.structurelib.StructureEvent.StructureElementVisitedEvent;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.fluid.FluidBlockPlacement;
+import com.gtnewhorizon.structurelib.fluid.FluidBlockRequirement;
+import com.gtnewhorizon.structurelib.fluid.FluidFillPolicy;
+import com.gtnewhorizon.structurelib.fluid.FluidPlacementRegistry;
+import com.gtnewhorizon.structurelib.structure.IStructureElement.BlocksToPlace;
 import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
 import com.gtnewhorizon.structurelib.structure.adders.IBlockAdder;
 import com.gtnewhorizon.structurelib.structure.adders.ITileAdder;
@@ -121,6 +129,19 @@ import cpw.mods.fml.common.registry.GameRegistry;
  * <li>{@link #isAir()}, {@link #notAir()}: They are supplied by default under the identifier {@code '-'} and
  * {@code '+'} respectively, but are provided here regardless in case you want to use them as a fallback.</li>
  * </ul>
+ * <h3>Fluid Element</h3> These accept a fluid block, e.g. a water source block, and pay for it by draining fluid from
+ * the autoplace environment's fluid source instead of by taking an item. See {@link FluidAutoplace} for how a fluid is
+ * kept from flowing out of a structure that is not finished yet, and {@link FluidPlacementRegistry} for what a fluid
+ * block costs.
+ * <ul>
+ * <li>{@link #ofFluidBlock(Block, int)} and its overloads: cost and placement are taken from the registry, or stated
+ * explicitly</li>
+ * <li>{@link #ofFluid(Fluid, int, Block, int)} and its overloads: the same, stating the fluid and the amount to pay in
+ * the code of the structure definition</li>
+ * </ul>
+ * Note that {@link #ofBlock(Block, int)} and the other block elements automatically become a fluid element when the
+ * block has no item form, e.g. for water and lava, so an existing structure definition needs no change to have its
+ * fluid positions filled.
  * <h3>Complex Block Element</h3> In case your logic on determining which block is accepted is complex, use these.
  * <ul>
  * <li>{@link #ofBlockAdder(IBlockAdder, Block, int)}, {@link #ofBlockAdderHint(IBlockAdder, Block, int)} and their
@@ -266,6 +287,99 @@ public class StructureUtility {
     private StructureUtility() {}
 
     /**
+     * What it costs to place this block state with fluid, or null when autoplace has to use the item form of this
+     * block.
+     * <p>
+     * A block state that has an item form keeps using it, unless its registration with {@link FluidPlacementRegistry}
+     * asked for fluid to be preferred. This is what keeps blocks that are both a fluid block and an item behaving the
+     * way they did before fluid autoplace existed.
+     */
+    @Nullable
+    private static FluidBlockPlacement resolveFluidPlacement(Block block, int meta) {
+        if (block == null || !ConfigurationHandler.INSTANCE.isFluidAutoplaceEnabled()) return null;
+        FluidBlockPlacement placement = FluidPlacementRegistry.resolve(block, meta);
+        if (placement == null) return null;
+        if (placement.forceFluid() || !FluidPlacementRegistry.hasItemForm(block)) return placement;
+        return null;
+    }
+
+    private static boolean hasFluidPlacementFlat(Map<Block, Integer> blocsMap) {
+        for (Entry<Block, Integer> e : blocsMap.entrySet()) {
+            if (resolveFluidPlacement(e.getKey(), e.getValue()) != null) return true;
+        }
+        return false;
+    }
+
+    private static boolean hasFluidPlacementMap(Map<Block, Collection<Integer>> blocsMap) {
+        for (Entry<Block, Collection<Integer>> e : blocsMap.entrySet()) {
+            for (int meta : e.getValue()) {
+                if (resolveFluidPlacement(e.getKey(), meta) != null) return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Describe how to place any one of the given block states, one meta per block.
+     * <p>
+     * A state that cannot be paid for with an item, e.g. a fluid block, is described by what it costs to place it with
+     * fluid instead.
+     */
+    private static BlocksToPlace blocksToPlaceOfBlocksFlat(Map<Block, Integer> blocsMap) {
+        List<ItemStack> blocks = new ArrayList<>();
+        List<FluidBlockRequirement> fluids = new ArrayList<>();
+        Predicate<ItemStack> predicate = s -> false;
+        for (Entry<Block, Integer> e : blocsMap.entrySet()) {
+            Block block = e.getKey();
+            int meta = e.getValue();
+            FluidBlockPlacement placement = resolveFluidPlacement(block, meta);
+            Item i = Item.getItemFromBlock(block);
+            if (placement != null && (i == null || placement.forceFluid())) {
+                fluids.add(FluidBlockRequirement.of(placement, block, meta, FluidFillPolicy.EXACT_STATE));
+                continue;
+            }
+            if (i == null) continue;
+            int itemMeta = i instanceof ISpecialItemBlock
+                    ? ((ISpecialItemBlock) i).getItemMetaFromBlockMeta(block, meta)
+                    : meta;
+            ItemStack stack = new ItemStack(i, 1, itemMeta);
+            blocks.add(stack);
+            predicate = predicate.or(ItemStackPredicate.from(stack));
+        }
+        return new BlocksToPlace(predicate, blocks, fluids);
+    }
+
+    /**
+     * Describe how to place any one of the given block states, with a set of accepted metas per block.
+     *
+     * @see #blocksToPlaceOfBlocksFlat(Map)
+     */
+    private static BlocksToPlace blocksToPlaceOfBlocksMap(Map<Block, Collection<Integer>> blocsMap) {
+        List<ItemStack> blocks = new ArrayList<>();
+        List<FluidBlockRequirement> fluids = new ArrayList<>();
+        Predicate<ItemStack> predicate = s -> false;
+        for (Entry<Block, Collection<Integer>> e : blocsMap.entrySet()) {
+            Block block = e.getKey();
+            for (int meta : e.getValue()) {
+                FluidBlockPlacement placement = resolveFluidPlacement(block, meta);
+                Item i = Item.getItemFromBlock(block);
+                if (placement != null && (i == null || placement.forceFluid())) {
+                    fluids.add(FluidBlockRequirement.of(placement, block, meta, FluidFillPolicy.EXACT_STATE));
+                    continue;
+                }
+                if (i == null) continue;
+                int itemMeta = i instanceof ISpecialItemBlock
+                        ? ((ISpecialItemBlock) i).getItemMetaFromBlockMeta(block, meta)
+                        : meta;
+                ItemStack stack = new ItemStack(i, 1, itemMeta);
+                blocks.add(stack);
+                predicate = predicate.or(ItemStackPredicate.from(stack));
+            }
+        }
+        return new BlocksToPlace(predicate, blocks, fluids);
+    }
+
+    /**
      * This is a helper method for implementing
      * {@link IStructureElement#survivalPlaceBlock(Object, World, int, int, int, ItemStack, IItemSource, EntityPlayerMP, Consumer)}
      * <p>
@@ -352,8 +466,25 @@ public class StructureUtility {
     public static PlaceResult survivalPlaceBlock(Block block, int meta, World world, int x, int y, int z, IItemSource s,
             EntityPlayer actor, Consumer<IChatComponent> chatter) {
         if (block == null) throw new NullPointerException();
+        FluidBlockPlacement fluidPlacement = resolveFluidPlacement(block, meta);
+        if (fluidPlacement != null) {
+            // A fluid block is paid for with fluid. Either it has no item form at all, or its registration asked for
+            // fluid to be preferred over the item form.
+            return FluidAutoplace.tryPlace(
+                    world,
+                    x,
+                    y,
+                    z,
+                    AutoPlaceEnvironment.fromLegacy(s, actor, chatter),
+                    FluidBlockRequirement.of(fluidPlacement, block, meta, FluidFillPolicy.EXACT_STATE));
+        }
         if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, actor)) return PlaceResult.REJECT;
         Item itemBlock = Item.getItemFromBlock(block);
+        if (itemBlock == null) {
+            // A block without an item form and without a fluid placement cannot be placed by taking a resource. This
+            // used to be a null pointer exception.
+            return PlaceResult.REJECT_CONTINUE;
+        }
         int itemMeta = itemBlock instanceof ISpecialItemBlock
                 ? ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta)
                 : meta;
@@ -727,7 +858,7 @@ public class StructureUtility {
             Function<T, TIER> getter) {
         List<String> descriptions = null;
         if (allKnownTiers != null) {
-            descriptions = new java.util.ArrayList<>();
+            descriptions = new ArrayList<>();
             for (Pair<Block, Integer> tier : allKnownTiers) {
                 Item item = Item.getItemFromBlock(tier.getLeft());
                 if (item != null) {
@@ -918,6 +1049,12 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean isFluidElement(T t) {
+                Block block = getBlock();
+                return block != null && resolveFluidPlacement(block, meta) != null;
+            }
+
+            @Override
             public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
                 if (check(t, world, x, y, z)) return PlaceResult.SKIP;
@@ -1001,6 +1138,12 @@ public class StructureUtility {
                     AutoPlaceEnvironment env) {
                 if (init()) return BlocksToPlace.create(block, meta);
                 return fallback.getBlocksToPlace(t, world, x, y, z, trigger, env);
+            }
+
+            @Override
+            public boolean isFluidElement(T t) {
+                if (init()) return resolveFluidPlacement(block, meta) != null;
+                return fallback.isFluidElement(t);
             }
 
             @Override
@@ -1226,21 +1369,13 @@ public class StructureUtility {
                 @Override
                 public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
-                    if (blocksToPlace == null) {
-                        ImmutableList.Builder<ItemStack> blocks = ImmutableList.builder();
-                        Predicate<ItemStack> predicate = s -> true;
-                        for (Entry<Block, Integer> e : blocsMap.entrySet()) {
-                            Item i = Item.getItemFromBlock(e.getKey());
-                            int meta = e.getValue();
-                            if (i instanceof ISpecialItemBlock)
-                                meta = ((ISpecialItemBlock) i).getItemMetaFromBlockMeta(e.getKey(), meta);
-                            ItemStack stack = new ItemStack(i, 1, meta);
-                            blocks.add(stack);
-                            predicate = predicate.and(ItemStackPredicate.from(stack));
-                        }
-                        blocksToPlace = new BlocksToPlace(predicate, blocks.build());
-                    }
+                    if (blocksToPlace == null) blocksToPlace = blocksToPlaceOfBlocksFlat(blocsMap);
                     return blocksToPlace;
+                }
+
+                @Override
+                public boolean isFluidElement(T t) {
+                    return hasFluidPlacementFlat(blocsMap);
                 }
             };
         } else {
@@ -1274,21 +1409,13 @@ public class StructureUtility {
                 @Override
                 public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
-                    if (blocksToPlace == null) {
-                        ImmutableList.Builder<ItemStack> blocks = ImmutableList.builder();
-                        Predicate<ItemStack> predicate = s -> true;
-                        for (Entry<Block, Integer> e : blocsMap.entrySet()) {
-                            Item i = Item.getItemFromBlock(e.getKey());
-                            int meta = e.getValue();
-                            if (i instanceof ISpecialItemBlock)
-                                meta = ((ISpecialItemBlock) i).getItemMetaFromBlockMeta(e.getKey(), meta);
-                            ItemStack stack = new ItemStack(i, 1, meta);
-                            blocks.add(stack);
-                            predicate = predicate.and(ItemStackPredicate.from(stack));
-                        }
-                        blocksToPlace = new BlocksToPlace(predicate, blocks.build());
-                    }
+                    if (blocksToPlace == null) blocksToPlace = blocksToPlaceOfBlocksFlat(blocsMap);
                     return blocksToPlace;
+                }
+
+                @Override
+                public boolean isFluidElement(T t) {
+                    return hasFluidPlacementFlat(blocsMap);
                 }
             };
         }
@@ -1344,22 +1471,13 @@ public class StructureUtility {
                 @Override
                 public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
-                    if (blocksToPlace == null) {
-                        ImmutableList.Builder<ItemStack> blocks = ImmutableList.builder();
-                        Predicate<ItemStack> predicate = s -> true;
-                        for (Entry<Block, Collection<Integer>> e : blocsMap.entrySet()) {
-                            Item i = Item.getItemFromBlock(e.getKey());
-                            for (int meta : e.getValue()) {
-                                if (i instanceof ISpecialItemBlock)
-                                    meta = ((ISpecialItemBlock) i).getItemMetaFromBlockMeta(e.getKey(), meta);
-                                ItemStack stack = new ItemStack(i, 1, meta);
-                                blocks.add(stack);
-                                predicate = predicate.and(ItemStackPredicate.from(stack));
-                            }
-                        }
-                        blocksToPlace = new BlocksToPlace(predicate, blocks.build());
-                    }
+                    if (blocksToPlace == null) blocksToPlace = blocksToPlaceOfBlocksMap(blocsMap);
                     return blocksToPlace;
+                }
+
+                @Override
+                public boolean isFluidElement(T t) {
+                    return hasFluidPlacementMap(blocsMap);
                 }
             };
         } else {
@@ -1394,22 +1512,13 @@ public class StructureUtility {
                 @Override
                 public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
-                    if (blocksToPlace == null) {
-                        ImmutableList.Builder<ItemStack> blocks = ImmutableList.builder();
-                        Predicate<ItemStack> predicate = s -> true;
-                        for (Entry<Block, Collection<Integer>> e : blocsMap.entrySet()) {
-                            Item i = Item.getItemFromBlock(e.getKey());
-                            for (int meta : e.getValue()) {
-                                if (i instanceof ISpecialItemBlock)
-                                    meta = ((ISpecialItemBlock) i).getItemMetaFromBlockMeta(e.getKey(), meta);
-                                ItemStack stack = new ItemStack(i, 1, meta);
-                                blocks.add(stack);
-                                predicate = predicate.and(ItemStackPredicate.from(stack));
-                            }
-                        }
-                        blocksToPlace = new BlocksToPlace(predicate, blocks.build());
-                    }
+                    if (blocksToPlace == null) blocksToPlace = blocksToPlaceOfBlocksMap(blocsMap);
                     return blocksToPlace;
+                }
+
+                @Override
+                public boolean isFluidElement(T t) {
+                    return hasFluidPlacementMap(blocsMap);
                 }
             };
         }
@@ -1417,6 +1526,10 @@ public class StructureUtility {
 
     /**
      * Accept a block. Spawn hint/autoplace using another.
+     * <p>
+     * A fluid block, e.g. water or lava, has no item form, and is placed by draining fluid from the autoplace
+     * environment's fluid source instead. See {@link FluidPlacementRegistry} for what a fluid block costs, and
+     * {@link #ofFluidBlock(Block, int)} for a variant that states the fluid explicitly.
      *
      * @param block        accepted block
      * @param meta         accepted meta
@@ -1435,8 +1548,14 @@ public class StructureUtility {
                 return isAir();
             }
         }
+        FluidBlockPlacement fluidPlacement = resolveFluidPlacement(block, meta);
+        if (fluidPlacement != null) {
+            return ofFluidBlock(block, meta, defaultBlock, defaultMeta, fluidPlacement, FluidFillPolicy.EXACT_STATE);
+        }
         if (block instanceof ICustomBlockSetting) {
             return new IStructureElement<T>() {
+
+                private BlocksToPlace blocksToPlace;
 
                 @Override
                 public boolean check(T t, World world, int x, int y, int z) {
@@ -1477,6 +1596,8 @@ public class StructureUtility {
             };
         } else {
             return new IStructureElement<T>() {
+
+                private BlocksToPlace blocksToPlace;
 
                 @Override
                 public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
@@ -1551,7 +1672,9 @@ public class StructureUtility {
                 @Override
                 public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
                         AutoPlaceEnvironment env) {
-                    return BlocksToPlace.create(block, meta);
+                    // What this state can be paid with never changes, so it is built once instead of on every visit.
+                    if (blocksToPlace == null) blocksToPlace = BlocksToPlace.create(block, meta);
+                    return blocksToPlace;
                 }
 
                 @Nullable
@@ -1604,6 +1727,11 @@ public class StructureUtility {
                     return BlocksToPlace.create(defaultBlock, defaultMeta);
                 }
 
+                @Override
+                public boolean isFluidElement(T t) {
+                    return resolveFluidPlacement(defaultBlock, defaultMeta) != null;
+                }
+
                 @Nullable
                 @Override
                 public List<String> getDescription(T context) {
@@ -1644,6 +1772,11 @@ public class StructureUtility {
                     return BlocksToPlace.create(defaultBlock, defaultMeta);
                 }
 
+                @Override
+                public boolean isFluidElement(T t) {
+                    return resolveFluidPlacement(defaultBlock, defaultMeta) != null;
+                }
+
                 @Nullable
                 @Override
                 public List<String> getDescription(T context) {
@@ -1674,6 +1807,160 @@ public class StructureUtility {
      */
     public static <T> IStructureElement<T> ofBlockAnyMeta(Block block, int defaultMeta) {
         return ofBlockAnyMeta(block, block, defaultMeta);
+    }
+
+    /**
+     * Accept a fluid block, e.g. a water or lava source block, and pay for it with fluid instead of with an item.
+     * <p>
+     * What one block of this state costs, and how it is written into the world, is taken from
+     * {@link FluidPlacementRegistry}, which knows about water and lava by default and recognises every Forge fluid
+     * block. Use one of the overloads below to state the fluid explicitly instead.
+     * <p>
+     * A fluid placed into a structure that is not finished yet would flow out of it, so fluid autoplace waits until the
+     * rest of the structure is in place. See {@link FluidAutoplace} for the details.
+     *
+     * @param block the fluid block
+     * @param meta  the block meta that has to be there, which is 0 for the source block of a vanilla style liquid
+     * @throws IllegalArgumentException if this block state is not a fluid block at all
+     */
+    public static <T> IStructureElement<T> ofFluidBlock(Block block, int meta) {
+        if (block == null) throw new IllegalArgumentException();
+        FluidBlockPlacement placement = FluidPlacementRegistry.resolve(block, meta);
+        if (placement == null) throw new IllegalArgumentException("Not a fluid block: " + block.getUnlocalizedName());
+        return ofFluidBlock(block, meta, placement, FluidFillPolicy.EXACT_STATE);
+    }
+
+    /**
+     * Accept a fluid block, and pay for it with the given amount of fluid.
+     *
+     * @see #ofFluidBlock(Block, int)
+     */
+    public static <T> IStructureElement<T> ofFluidBlock(Block block, int meta, FluidStack cost) {
+        return ofFluidBlock(block, meta, cost, FluidFillPolicy.EXACT_STATE);
+    }
+
+    /**
+     * Accept a fluid block, and pay for it with the given amount of fluid.
+     *
+     * @param policy how much fluid an already partially filled position has to hold to be accepted as is
+     * @see #ofFluidBlock(Block, int)
+     */
+    public static <T> IStructureElement<T> ofFluidBlock(Block block, int meta, FluidStack cost,
+            FluidFillPolicy policy) {
+        return ofFluidBlock(block, meta, FluidBlockPlacement.of(cost), policy);
+    }
+
+    /**
+     * Accept a fluid block, and pay for it the way the given placement says.
+     *
+     * @param placement what this block state costs, and how to place it
+     * @param policy    how much fluid an already partially filled position has to hold to be accepted as is
+     * @see #ofFluidBlock(Block, int)
+     */
+    public static <T> IStructureElement<T> ofFluidBlock(Block block, int meta, FluidBlockPlacement placement,
+            FluidFillPolicy policy) {
+        return ofFluidBlock(block, meta, block, meta, placement, policy);
+    }
+
+    /**
+     * The implementation behind every fluid element factory.
+     *
+     * @param block     the block the structure wants there
+     * @param meta      the block meta the structure wants there
+     * @param hintBlock block to spawn the hint with, which is not necessarily the accepted one
+     * @param hintMeta  meta to spawn the hint with
+     */
+    private static <T> IStructureElement<T> ofFluidBlock(Block block, int meta, Block hintBlock, int hintMeta,
+            FluidBlockPlacement placement, FluidFillPolicy policy) {
+        if (block == null) throw new IllegalArgumentException();
+        if (placement == null) throw new IllegalArgumentException();
+        if (policy == null) throw new IllegalArgumentException();
+        FluidBlockRequirement requirement = FluidBlockRequirement.of(placement, block, meta, policy);
+        BlocksToPlace blocksToPlace = BlocksToPlace.createFluid(requirement);
+        return new IStructureElement<T>() {
+
+            @Override
+            public boolean check(T t, World world, int x, int y, int z) {
+                return FluidAutoplace.isSatisfied(world, x, y, z, requirement);
+            }
+
+            @Override
+            public boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return check(t, world, x, y, z);
+            }
+
+            @Override
+            public boolean isFluidElement(T t) {
+                return true;
+            }
+
+            @Override
+            public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                return FluidAutoplace.place(world, x, y, z, requirement);
+            }
+
+            @Override
+            public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                StructureLibAPI.hintParticle(world, x, y, z, hintBlock, hintMeta);
+                return true;
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
+                    AutoPlaceEnvironment env) {
+                return FluidAutoplace.tryPlace(world, x, y, z, env, requirement);
+            }
+
+            @Override
+            public PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
+                    IItemSource s, EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
+                return FluidAutoplace
+                        .tryPlace(world, x, y, z, AutoPlaceEnvironment.fromLegacy(s, actor, chatter), requirement);
+            }
+
+            @Nullable
+            @Override
+            public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
+                    AutoPlaceEnvironment env) {
+                return blocksToPlace;
+            }
+
+            @Nullable
+            @Override
+            public List<String> getDescription(T context) {
+                // Translated on demand, as elements are built before the language files are loaded.
+                return Collections.singletonList(FluidAutoplace.describe(requirement));
+            }
+        };
+    }
+
+    /**
+     * Accept a fluid block, and pay for it with the given amount of the given fluid.
+     *
+     * @param fluid  the fluid one block of this state costs
+     * @param amount how much of it one block costs
+     * @param block  the fluid block
+     * @param meta   the block meta that has to be there
+     * @see #ofFluidBlock(Block, int)
+     */
+    public static <T> IStructureElement<T> ofFluid(Fluid fluid, int amount, Block block, int meta) {
+        return ofFluid(fluid, amount, block, meta, FluidFillPolicy.EXACT_STATE);
+    }
+
+    /**
+     * Accept a fluid block, and pay for it with the given amount of the given fluid.
+     *
+     * @param fluid  the fluid one block of this state costs
+     * @param amount how much of it one block costs
+     * @param block  the fluid block
+     * @param meta   the block meta that has to be there
+     * @param policy how much fluid an already partially filled position has to hold to be accepted as is
+     * @see #ofFluidBlock(Block, int)
+     */
+    public static <T> IStructureElement<T> ofFluid(Fluid fluid, int amount, Block block, int meta,
+            FluidFillPolicy policy) {
+        if (fluid == null) throw new IllegalArgumentException();
+        return ofFluidBlock(block, meta, new FluidStack(fluid, amount), policy);
     }
 
     // endregion
@@ -1735,6 +2022,11 @@ public class StructureUtility {
                             env.getActor(),
                             env.getChatter());
                 }
+
+                @Override
+                public boolean isFluidElement(T t) {
+                    return resolveFluidPlacement(defaultBlock, defaultMeta) != null;
+                }
             };
         } else {
             return new StructureElement_Bridge<T>() {
@@ -1780,6 +2072,11 @@ public class StructureUtility {
                             env.getSource(),
                             env.getActor(),
                             env.getChatter());
+                }
+
+                @Override
+                public boolean isFluidElement(T t) {
+                    return resolveFluidPlacement(defaultBlock, defaultMeta) != null;
                 }
             };
         }
@@ -1895,6 +2192,11 @@ public class StructureUtility {
                 return element.spawnHint(t, world, x, y, z, trigger);
             }
 
+            @Override
+            public boolean isFluidElement(T t) {
+                return element.isFluidElement(t);
+            }
+
             @Nullable
             @Override
             public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
@@ -1952,6 +2254,11 @@ public class StructureUtility {
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return element.spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public boolean isFluidElement(T t) {
+                return element.isFluidElement(t);
             }
 
             @Nullable
@@ -2014,6 +2321,11 @@ public class StructureUtility {
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return element.spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public boolean isFluidElement(T t) {
+                return element.isFluidElement(t);
             }
 
             @Nullable
@@ -2080,6 +2392,12 @@ public class StructureUtility {
             @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return predicate.test(t) && downstream.spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public boolean isFluidElement(T t) {
+                // A disabled element places nothing, so its position still has to be built before fluid may flow in.
+                return predicate.test(t) && downstream.isFluidElement(t);
             }
 
             @Override
@@ -2190,6 +2508,11 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean isFluidElement(T t) {
+                return elem.isFluidElement(t.getCurrentContext());
+            }
+
+            @Override
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return elem.placeBlock(t.getCurrentContext(), world, x, y, z, trigger);
             }
@@ -2288,6 +2611,12 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean isFluidElement(T t) {
+                IStructureElement<T> element = to.get();
+                return element != null && element.isFluidElement(t);
+            }
+
+            @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return to.get().spawnHint(t, world, x, y, z, trigger);
             }
@@ -2343,6 +2672,12 @@ public class StructureUtility {
             @Override
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return to.apply(t).placeBlock(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public boolean isFluidElement(T t) {
+                IStructureElement<T> element = to.apply(t);
+                return element != null && element.isFluidElement(t);
             }
 
             @Override
@@ -2563,12 +2898,18 @@ public class StructureUtility {
             }
 
             @Override
+            public boolean isFluidElement(T t) {
+                IStructureElement<T> element = to.apply(t, null);
+                return element != null && element.isFluidElement(t);
+            }
+
+            @Override
             public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return to.apply(t, trigger).spawnHint(t, world, x, y, z, trigger);
             }
 
-            @Nullable
             @Override
+            @Nullable
             public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,
                     AutoPlaceEnvironment env) {
                 return to.apply(t, trigger).getBlocksToPlace(t, world, x, y, z, trigger, env);
@@ -2757,6 +3098,13 @@ public class StructureUtility {
             @Override
             public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
                 return to.apply(t, trigger).placeBlock(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public boolean isFluidElement(T t) {
+                // check comes from toCheck, so the fluid gate has to look at the same element.
+                IStructureElement<T> element = toCheck.apply(t);
+                return element != null && element.isFluidElement(t);
             }
 
             @Override
@@ -3026,6 +3374,11 @@ public class StructureUtility {
                 // I hope a CREATIVE player know what he is doing...
                 // no warning for yah
                 return backing.placeBlock(t, world, x, y, z, ChannelDataAccessor.withChannel(trigger, channel));
+            }
+
+            @Override
+            public boolean isFluidElement(T t) {
+                return backing.isFluidElement(t);
             }
 
             @Nullable

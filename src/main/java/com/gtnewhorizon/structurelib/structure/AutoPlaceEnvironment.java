@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -12,6 +13,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
 
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.fluid.FluidSourceProviders;
+import com.gtnewhorizon.structurelib.fluid.IFluidSource;
 
 /**
  * Represent the environment in which autoplace of a single element took place.
@@ -19,6 +22,7 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 public class AutoPlaceEnvironment {
 
     private IItemSource source;
+    private IFluidSource fluidSource;
     private final EntityPlayer actor;
     private final Consumer<IChatComponent> chatter;
     private final IStructureDefinition<?> definition;
@@ -26,6 +30,9 @@ public class AutoPlaceEnvironment {
     private final ExtendedFacing facing;
     final int[] offsetABC;
     private final int[] baseOffsetABC;
+    private final int[] basePositionXYZ;
+    private final Object contextObject;
+    private final FluidRoundState fluidRoundState;
 
     public static AutoPlaceEnvironment fromLegacy(IItemSource source, EntityPlayer actor,
             Consumer<IChatComponent> chatter) {
@@ -41,12 +48,14 @@ public class AutoPlaceEnvironment {
             }
             return original;
         }
-        return new AutoPlaceEnvironment(source, actor, chatter, null, null, null, null, null);
+        return new AutoPlaceEnvironment(source, null, actor, chatter, null, null, null, null, null, null, null);
     }
 
     AutoPlaceEnvironment(EntityPlayer actor, Consumer<IChatComponent> chatter, IStructureDefinition<?> definition,
-            String piece, ExtendedFacing facing, int[] baseOffsetABC) {
+            String piece, ExtendedFacing facing, int[] baseOffsetABC, int[] basePositionXYZ, Object contextObject,
+            IFluidSource fluidSource, FluidRoundState fluidRoundState) {
         this.source = null;
+        this.fluidSource = fluidSource;
         this.actor = actor;
         this.chatter = chatter;
         this.definition = definition;
@@ -54,14 +63,37 @@ public class AutoPlaceEnvironment {
         this.facing = facing;
         this.offsetABC = new int[3];
         this.baseOffsetABC = baseOffsetABC;
+        this.basePositionXYZ = basePositionXYZ;
+        this.contextObject = contextObject;
+        this.fluidRoundState = fluidRoundState;
     }
 
-    AutoPlaceEnvironment(IItemSource source, EntityPlayer actor, Consumer<IChatComponent> chatter,
-            IStructureDefinition<?> definition, String piece, ExtendedFacing facing, int[] offsetABC,
-            int[] baseOffsetABC) {
+    AutoPlaceEnvironment(IItemSource source, IFluidSource fluidSource, EntityPlayer actor,
+            Consumer<IChatComponent> chatter, IStructureDefinition<?> definition, String piece, ExtendedFacing facing,
+            int[] offsetABC, int[] baseOffsetABC, int[] basePositionXYZ, Object contextObject) {
+        this(
+                source,
+                fluidSource,
+                actor,
+                chatter,
+                definition,
+                piece,
+                facing,
+                offsetABC,
+                baseOffsetABC,
+                basePositionXYZ,
+                contextObject,
+                null);
+    }
+
+    private AutoPlaceEnvironment(IItemSource source, IFluidSource fluidSource, EntityPlayer actor,
+            Consumer<IChatComponent> chatter, IStructureDefinition<?> definition, String piece, ExtendedFacing facing,
+            int[] offsetABC, int[] baseOffsetABC, int[] basePositionXYZ, Object contextObject,
+            FluidRoundState fluidRoundState) {
         this.source = definition != null && !(source instanceof WrappedIItemSource)
                 ? new WrappedIItemSource(this, source)
                 : source;
+        this.fluidSource = fluidSource;
         this.actor = actor;
         this.chatter = chatter;
         this.definition = definition;
@@ -69,18 +101,25 @@ public class AutoPlaceEnvironment {
         this.facing = facing;
         this.offsetABC = offsetABC;
         this.baseOffsetABC = baseOffsetABC;
+        this.basePositionXYZ = basePositionXYZ;
+        this.contextObject = contextObject;
+        this.fluidRoundState = fluidRoundState;
     }
 
     protected AutoPlaceEnvironment(AutoPlaceEnvironment parent) {
         this(
                 parent.getSource(),
+                parent.fluidSource,
                 parent.getActor(),
                 parent.getChatter(),
                 parent.definition,
                 parent.piece,
                 parent.facing,
                 parent.offsetABC,
-                parent.baseOffsetABC);
+                parent.baseOffsetABC,
+                parent.basePositionXYZ,
+                parent.contextObject,
+                parent.fluidRoundState);
     }
 
     void setSource(IItemSource source) {
@@ -99,6 +138,33 @@ public class AutoPlaceEnvironment {
      */
     public IItemSource getSource() {
         return source;
+    }
+
+    /**
+     * The fluid source this environment has been given, or null when it has none.
+     * <p>
+     * A structure element that has to place fluid blocks should ask {@link #getEffectiveFluidSource()} instead, which
+     * falls back to whatever the actor can offer when there is no explicit fluid source.
+     */
+    @Nullable
+    public IFluidSource getFluidSource() {
+        return fluidSource;
+    }
+
+    /**
+     * From where survival autoplace will drain fluid.
+     * <p>
+     * This is the fluid source this environment has been given, or what the actor can offer when the actor is a server
+     * side player: the {@linkplain com.gtnewhorizon.structurelib.fluid.FluidSourceProviders registered fluid source
+     * providers}, e.g. the ME network behind a wireless terminal the player has on them, and then the fluid containers
+     * the player is carrying. It is null when the actor isn't a server side player and no fluid source has been given,
+     * in which case fluid blocks cannot be placed at all.
+     */
+    @Nullable
+    public IFluidSource getEffectiveFluidSource() {
+        if (fluidSource != null) return fluidSource;
+        if (actor instanceof EntityPlayerMP) return FluidSourceProviders.getSourceFor((EntityPlayerMP) actor);
+        return null;
     }
 
     /**
@@ -142,32 +208,149 @@ public class AutoPlaceEnvironment {
 
     /**
      * Return a new instance with source modified to given value.
+     * <p>
+     * The returned instance shares the fluid source, and every bookkeeping about the current autoplace round, with this
+     * one.
      *
      * @param source new source
      * @return new instance
      */
     public AutoPlaceEnvironment withSource(IItemSource source) {
-        return new AutoPlaceEnvironment(source, actor, chatter, definition, piece, facing, offsetABC, baseOffsetABC);
+        return new AutoPlaceEnvironment(
+                source,
+                fluidSource,
+                actor,
+                chatter,
+                definition,
+                piece,
+                facing,
+                offsetABC,
+                baseOffsetABC,
+                basePositionXYZ,
+                contextObject,
+                fluidRoundState);
     }
 
     /**
      * Return a new instance with actor modified to given value.
+     * <p>
+     * The returned instance shares the fluid source, and every bookkeeping about the current autoplace round, with this
+     * one.
      *
      * @param actor new actor
      * @return new instance
      */
     public AutoPlaceEnvironment withActor(EntityPlayer actor) {
-        return new AutoPlaceEnvironment(source, actor, chatter, definition, piece, facing, offsetABC, baseOffsetABC);
+        return new AutoPlaceEnvironment(
+                source,
+                fluidSource,
+                actor,
+                chatter,
+                definition,
+                piece,
+                facing,
+                offsetABC,
+                baseOffsetABC,
+                basePositionXYZ,
+                contextObject,
+                fluidRoundState);
     }
 
     /**
      * Return a new instance with chatter modified to given value.
+     * <p>
+     * The returned instance shares the fluid source, and every bookkeeping about the current autoplace round, with this
+     * one.
      *
      * @param chatter new chatter
      * @return new instance
      */
     public AutoPlaceEnvironment withChatter(Consumer<IChatComponent> chatter) {
-        return new AutoPlaceEnvironment(source, actor, chatter, definition, piece, facing, offsetABC, baseOffsetABC);
+        return new AutoPlaceEnvironment(
+                source,
+                fluidSource,
+                actor,
+                chatter,
+                definition,
+                piece,
+                facing,
+                offsetABC,
+                baseOffsetABC,
+                basePositionXYZ,
+                contextObject,
+                fluidRoundState);
+    }
+
+    /**
+     * Return a new instance with an explicit fluid source.
+     * <p>
+     * This is how a multiblock that wants its fluid to come from somewhere else than the player inventory, e.g. from a
+     * tank, hands its fluid source to autoplace.
+     *
+     * @param fluidSource new fluid source
+     * @return new instance
+     */
+    public AutoPlaceEnvironment withFluidSource(@Nullable IFluidSource fluidSource) {
+        return new AutoPlaceEnvironment(
+                source,
+                fluidSource,
+                actor,
+                chatter,
+                definition,
+                piece,
+                facing,
+                offsetABC,
+                baseOffsetABC,
+                basePositionXYZ,
+                contextObject,
+                fluidRoundState);
+    }
+
+    IStructureDefinition<?> getDefinition() {
+        return definition;
+    }
+
+    String getPiece() {
+        return piece;
+    }
+
+    int[] getBaseOffsetABC() {
+        return baseOffsetABC;
+    }
+
+    @Nullable
+    int[] getBasePositionXYZ() {
+        return basePositionXYZ;
+    }
+
+    @Nullable
+    Object getContextObject() {
+        return contextObject;
+    }
+
+    /**
+     * The answer to the fluid placement gate of the current autoplace round, or null when it has not been asked yet.
+     */
+    @Nullable
+    Boolean getFluidGateResult() {
+        return fluidRoundState == null ? null : fluidRoundState.getGateResult();
+    }
+
+    void setFluidGateResult(boolean ready) {
+        if (fluidRoundState != null) fluidRoundState.setGateResult(ready);
+    }
+
+    /**
+     * Flag that at least one fluid element wanted to place its fluid, but had to wait for the structure to be built
+     * first. An autoplace round that did nothing but wait reports zero placed elements instead of reporting that the
+     * structure is done.
+     */
+    void markFluidPlacementDeferred() {
+        if (fluidRoundState != null) fluidRoundState.markDeferred();
+    }
+
+    boolean isFluidPlacementDeferred() {
+        return fluidRoundState != null && fluidRoundState.isDeferred();
     }
 
     private static class WrappedIItemSource implements IItemSource {
@@ -205,6 +388,34 @@ public class AutoPlaceEnvironment {
         public boolean takeAll(ItemStack stack, boolean simulate) {
             return delegate.takeAll(stack, simulate);
         }
+    }
+
+    /**
+     * Bookkeeping about the current autoplace round, shared by every instance {@link AutoPlaceEnvironment} hands out
+     * for itself. Implemented by the autoplace walker. Third parties should neither implement nor call this.
+     */
+    public interface FluidRoundState {
+
+        /**
+         * The answer the fluid placement gate gave earlier in this round, or null when it has not been asked yet.
+         */
+        @Nullable
+        Boolean getGateResult();
+
+        /**
+         * Remember the answer of the fluid placement gate for the rest of this round.
+         */
+        void setGateResult(boolean ready);
+
+        /**
+         * Remember that a fluid element had to wait for the structure to be built first.
+         */
+        void markDeferred();
+
+        /**
+         * Whether any fluid element had to wait for the structure to be built in this round.
+         */
+        boolean isDeferred();
     }
 
     /**
