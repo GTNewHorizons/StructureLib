@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.event.HoverEvent;
@@ -194,6 +195,9 @@ public class StructureUtility {
 
         @Override
         public boolean placeBlock(Object o, World world, int x, int y, int z, ItemStack trigger) {
+            // A position that holds a fluid is left alone, as emptying it destroys the fluid instead of just clearing
+            // the position. It is up to whatever else the structure allows there to deal with it.
+            if (holdsFluid(world, x, y, z)) return false;
             world.setBlock(x, y, z, Blocks.air, 0, 3);
             return false;
         }
@@ -203,12 +207,28 @@ public class StructureUtility {
         public PlaceResult survivalPlaceBlock(Object o, World world, int x, int y, int z, ItemStack trigger,
                 AutoPlaceEnvironment env) {
             if (check(o, world, x, y, z)) return PlaceResult.SKIP;
+            // Emptying a position that holds a fluid would destroy that fluid, which is not the same as clearing some
+            // grass out of the way. Defer instead, so that a fluid element this one is chained with, e.g. one asking
+            // for water, still gets its chance to turn the fluid into what the structure wants.
+            if (holdsFluid(world, x, y, z)) return PlaceResult.REJECT_CONTINUE;
             if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, env.getActor())) return PlaceResult.REJECT;
             // Notify the neighbours, so that e.g. a fluid next to a position that had to be emptied flows back into it.
             world.setBlock(x, y, z, Blocks.air, 0, 3);
             return PlaceResult.ACCEPT;
         }
     };
+
+    /**
+     * Whether the given position holds a fluid. Such a position is not merely occupied, as whatever removes the fluid
+     * destroys it, and a structure is often built where a fluid was placed by the player or leaked out of one.
+     */
+    private static boolean holdsFluid(World world, int x, int y, int z) {
+        Block block = world.getBlock(x, y, z);
+        if (block == null) return false;
+        if (FluidPlacementRegistry.getFluidOf(block) != null) return true;
+        Material material = block.getMaterial();
+        return material != null && material.isLiquid();
+    }
 
     @SuppressWarnings("rawtypes")
     private static final IStructureElement NOT_AIR = new StructureElement_Bridge() {
