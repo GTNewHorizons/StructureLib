@@ -216,6 +216,3 @@ structurelib.config.registries.fluidcontainerextractors.tooltip=Controls which w
 
 structurelib.config.registries.fluidsourceproviders=Fluid sources
 structurelib.config.registries.fluidsourceproviders.tooltip=Controls which additional ways of getting fluid are used during survival autoplace, e.g. an ME network the player can reach with a wireless terminal. Whatever the player is carrying is always used after these.
-
-structurelib.sortedregistry.fluidsourceproviders.0999-ae2fc=ME network (wireless terminal)
-structurelib.sortedregistry.fluidsourceproviders.0999-ae2fc.tooltip=Fills the fluid a multiblock needs straight out of the ME network behind the wireless terminal the player has on them, when the terminal is linked and in range of a wireless access point.

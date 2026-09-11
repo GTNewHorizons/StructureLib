@@ -214,6 +214,3 @@ structurelib.config.registries.fluidcontainerextractors.tooltip=该注册表控�
 
 structurelib.config.registries.fluidsourceproviders=流体来源
 structurelib.config.registries.fluidsourceproviders.tooltip=该注册表控制在生存模式自动放置时，额外从哪些途径获取流体（例如玩家可用无线终端接入的 ME 网络）。玩家随身携带的流体始终在这些之后使用。
-
-structurelib.sortedregistry.fluidsourceproviders.0999-ae2fc=ME 网络（无线终端）
-structurelib.sortedregistry.fluidsourceproviders.0999-ae2fc.tooltip=当玩家携带的无线终端已链接且在无线接入点范围内时，直接从该 ME 网络抽取多方块结构所需的流体。
