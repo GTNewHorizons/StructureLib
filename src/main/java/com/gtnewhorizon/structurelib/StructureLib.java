@@ -23,9 +23,9 @@ import org.apache.logging.log4j.Logger;
 import com.gtnewhorizon.structurelib.block.BlockHint;
 import com.gtnewhorizon.structurelib.command.CommandConfigureChannels;
 import com.gtnewhorizon.structurelib.command.CommandRegistryDebug;
-import com.gtnewhorizon.structurelib.fluid.FluidContainerExtractors;
 import com.gtnewhorizon.structurelib.fluid.FluidPlacementRegistry;
 import com.gtnewhorizon.structurelib.fluid.FluidSourceProviders;
+import com.gtnewhorizon.structurelib.fluid.FluidStackExtractors;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
@@ -116,7 +116,7 @@ public class StructureLib {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
         InventoryUtility.init();
-        FluidContainerExtractors.init();
+        FluidStackExtractors.init();
         FluidSourceProviders.init();
         FluidPlacementRegistry.init();
         ConfigurationHandler.INSTANCE.init(e.getSuggestedConfigurationFile());

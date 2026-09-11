@@ -16,6 +16,7 @@ import net.minecraftforge.fluids.IFluidBlock;
 
 import com.gtnewhorizon.gtnhlib.chat.customcomponents.ChatComponentFluid;
 import com.gtnewhorizon.gtnhlib.chat.customcomponents.ChatComponentFluidName;
+import com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil;
 import com.gtnewhorizon.structurelib.ConfigurationHandler;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
@@ -181,12 +182,14 @@ public class FluidAutoplace {
     }
 
     /**
-     * A human readable description of what a structure element expects at one position, e.g. {@code Water (1000 mB)}.
+     * Returns a human-readable description of the structure element requirement.
      */
     public static String describe(FluidBlockRequirement requirement) {
         FluidStack stack = requirement.cost();
-        return StatCollector
-                .translateToLocalFormatted("structurelib.fluid.requirement", stack.getLocalizedName(), stack.amount);
+        return StatCollector.translateToLocalFormatted(
+                "structurelib.autoplace.requirement_fluid",
+                stack.getLocalizedName(),
+                NumberFormatUtil.formatFluid(stack.amount));
     }
 
     /**

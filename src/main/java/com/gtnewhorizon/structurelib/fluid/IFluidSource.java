@@ -103,22 +103,22 @@ public interface IFluidSource {
     /**
      * Construct a fluid source from the fluid containers held by given player.
      * <p>
-     * This will be backed by {@link FluidContainerExtractors}, which covers every fluid container registered with
-     * Forge, and every container type registered by another mod through
-     * {@link FluidContainerExtractors#register(String, FluidContainerExtractor)}.
+     * This will be backed by {@link FluidStackExtractors}, which covers every fluid container registered with Forge,
+     * and every container type registered by another mod through
+     * {@link FluidStackExtractors#register(String, FluidStackExtractor)}.
      */
     static IFluidSource fromPlayer(EntityPlayerMP player) {
-        return (resource, simulate) -> FluidContainerExtractors.takeFromPlayer(player, resource, simulate);
+        return (resource, simulate) -> FluidStackExtractors.takeFromPlayer(player, resource, simulate);
     }
 
     /**
      * Construct a fluid source from given inventory. Useful for multiblocks that want to drain fluid from a nearby
      * machine instead of from the player.
      * <p>
-     * This will be backed by {@link FluidContainerExtractors}.
+     * This will be backed by {@link FluidStackExtractors}.
      */
     static IFluidSource fromInventory(IInventory inv) {
-        return (resource, simulate) -> FluidContainerExtractors.takeFromInventory(inv, resource, simulate);
+        return (resource, simulate) -> FluidStackExtractors.takeFromInventory(inv, resource, simulate);
     }
 
     /**

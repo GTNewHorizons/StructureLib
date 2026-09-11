@@ -51,6 +51,8 @@ structurelib.autoplace.error.not_enabled=§c这个多方块结构不支持在生
 structurelib.autoplace.error.no_simple_block=§c建议放置 §r%s§c ，但没有找到它
 structurelib.autoplace.error.no_item_stack=§c建议使用 §r%s§c 放置方块，但没有找到它
 structurelib.autoplace.warning.no_explicit_channel=§6这个结构依赖于不存在的子信道 §r%s§6 。已使用主信道值替代。
+structurelib.autoplace.missing_fluid=§c缺少流体：%s（%s）
+structurelib.autoplace.requirement_fluid=%s（%s）
 
 structurelib.blockhint.desc.0=帮助你搭建机器
 structurelib.blockhint.0.name=提示方块：1号
@@ -189,6 +191,11 @@ structurelib.config.registries.stackextractors.tooltip=该注册表控制在生�
 structurelib.config.registries.inventoryproviders=物品栏定位
 structurelib.config.registries.inventoryproviders.tooltip=该注册表控制在生存模式自动放置时，可用的物品栏来源。
 
+structurelib.config.registries.fluidstackextractors=流体提取器
+structurelib.config.registries.fluidstackextractors.tooltip=该注册表控制在生存模式自动放置时，如何从物品（如林业背包）提取流体库存。
+structurelib.config.registries.fluidsourceproviders=流体栏定位
+structurelib.config.registries.fluidsourceproviders.tooltip=该注册表控制在生存模式自动放置时，可用的流体来源。
+
 structurelib.configgui.enabled=已启用
 structurelib.configgui.disabled=已禁用
 structurelib.configgui.drag.tooltip=拖动该按钮以重排。
@@ -198,19 +205,11 @@ structurelib.sortedregistry.inventoryproviders.5000-main-inventory.tooltip=不�
 structurelib.sortedregistry.inventoryproviders.7000-ender-inventory=末影箱
 structurelib.sortedregistry.inventoryproviders.7000-ender-inventory.tooltip=当前玩家的末影箱。需要在主物品栏中存在类似于末影背包的东西才会实际生效。
 
-structurelib.autoplace.missing_fluid=§c缺少流体：%s（%s）
-structurelib.fluid.requirement=%s（%s mB）
+structurelib.sortedregistry.fluidstackextractors.3000-forge-fluid-container-item=Forge 流体容器物品
+structurelib.sortedregistry.fluidstackextractors.3000-forge-fluid-container-item.tooltip=实现 Forge 的 IFluidContainerItem 的容器，例如大多数模组流体容器。流体存于其 NBT 中，因此直接在原位抽取。
+structurelib.sortedregistry.fluidstackextractors.5000-forge-fluid-container-registry=Forge 流体容器注册表
+structurelib.sortedregistry.fluidstackextractors.5000-forge-fluid-container-registry.tooltip=注册到 Forge 的 FluidContainerRegistry 的容器，例如桶。整体消耗，并替换为其空容器。
 
 structurelib.config.common.autoplace.tooltip=控制生存模式自动放置如何放置方块的配置项。
 structurelib.config.common.autoplace.fluidAutoplace.tooltip=是否允许生存模式自动放置流体方块（例如多方块结构内部所需的水），从玩家的流体容器中抽取流体来支付。\n多方块结构也可以自行提供流体来源。\n此选项只关闭流体方块。多方块结构依旧可用，只是这些位置无法被自动放置填满。
 structurelib.config.common.autoplace.fluidGateMode.tooltip=在结构尚未完成时，自动放置放置流体的小心程度（否则流体会从结构中流出）。\nNONE：立即放置。\nLENIENT：只有当流体无法流出结构时才放置。\nSTRICT：只有当结构中所有非流体元件都满足后才放置流体。
-
-structurelib.sortedregistry.fluidcontainerextractors.3000-forge-fluid-container-item=Forge 流体容器物品
-structurelib.sortedregistry.fluidcontainerextractors.3000-forge-fluid-container-item.tooltip=实现 Forge 的 IFluidContainerItem 的容器，例如大多数模组流体容器。流体存于其 NBT 中，因此直接在原位抽取。
-structurelib.sortedregistry.fluidcontainerextractors.5000-forge-fluid-container-registry=Forge 流体容器注册表
-structurelib.sortedregistry.fluidcontainerextractors.5000-forge-fluid-container-registry.tooltip=注册到 Forge 的 FluidContainerRegistry 的容器，例如桶。整体消耗，并替换为其空容器。
-structurelib.config.registries.fluidcontainerextractors=流体容器提取
-structurelib.config.registries.fluidcontainerextractors.tooltip=该注册表控制在生存模式自动放置时，可从物品中抽取流体的方式。
-
-structurelib.config.registries.fluidsourceproviders=流体来源
-structurelib.config.registries.fluidsourceproviders.tooltip=该注册表控制在生存模式自动放置时，额外从哪些途径获取流体（例如玩家可用无线终端接入的 ME 网络）。玩家随身携带的流体始终在这些之后使用。

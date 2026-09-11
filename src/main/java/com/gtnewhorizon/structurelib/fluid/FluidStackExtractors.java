@@ -26,17 +26,16 @@ import com.gtnewhorizon.structurelib.util.InventoryUtility.ItemStackExtractor;
  * the fact that the registry is a {@link SortedRegistry}: entries can be reordered or disabled by the player in
  * StructureLib's config, and the ordering can be synced to the server.
  */
-public class FluidContainerExtractors {
+public class FluidStackExtractors {
 
-    private static final SortedRegistry<FluidContainerExtractor> EXTRACTORS = new SortedRegistry<>(
-            "fluidcontainerextractors");
+    private static final SortedRegistry<FluidStackExtractor> EXTRACTORS = new SortedRegistry<>("fluidstackextractors");
 
     static {
         register("3000-forge-fluid-container-item", new ForgeFluidContainerItemExtractor());
         register("5000-forge-fluid-container-registry", new ForgeFluidContainerRegistryExtractor());
     }
 
-    private FluidContainerExtractors() {}
+    private FluidStackExtractors() {}
 
     /**
      * Dummy method to force the class to initialize, and with it the builtin extractors.
@@ -50,7 +49,7 @@ public class FluidContainerExtractors {
      * @param key unique key. Matches the key shown in the config gui.
      * @param val the extractor
      */
-    public static void register(String key, FluidContainerExtractor val) {
+    public static void register(String key, FluidStackExtractor val) {
         EXTRACTORS.register(key, val);
     }
 
@@ -160,7 +159,7 @@ public class FluidContainerExtractors {
      */
     private static int takeFromStack(ItemStack stack, IInventory owner, int slot, FluidStack resource, int maxAmount,
             boolean simulate, @Nullable EntityPlayerMP player) {
-        for (FluidContainerExtractor extractor : EXTRACTORS.getPlayerOrdering(player)) {
+        for (FluidStackExtractor extractor : EXTRACTORS.getPlayerOrdering(player)) {
             if (!extractor.isValidSource(stack)) continue;
             FluidStack request = new FluidStack(resource, maxAmount);
             boolean converts = extractor.convertsContainer(stack, request);
@@ -217,7 +216,7 @@ public class FluidContainerExtractors {
      * keep their own fluid inside their NBT, so they are drained in place, and only turn into another item when their
      * item declares a container item.
      */
-    public static class ForgeFluidContainerItemExtractor implements FluidContainerExtractor {
+    public static class ForgeFluidContainerItemExtractor implements FluidStackExtractor {
 
         @Override
         public boolean isValidSource(ItemStack stack) {
@@ -254,7 +253,7 @@ public class FluidContainerExtractors {
      * Builtin extractor for containers registered with Forge's {@code FluidContainerRegistry}, e.g. buckets. Such
      * containers are consumed as a whole, and are replaced by their container item.
      */
-    public static class ForgeFluidContainerRegistryExtractor implements FluidContainerExtractor {
+    public static class ForgeFluidContainerRegistryExtractor implements FluidStackExtractor {
 
         @Override
         public boolean isValidSource(ItemStack stack) {

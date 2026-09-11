@@ -10,10 +10,10 @@ import com.gtnewhorizon.structurelib.SortedRegistry;
 /**
  * The registry of everything that can hand out fluid on a player's behalf, plus the composition that autoplace uses.
  * <p>
- * This mirrors {@link FluidContainerExtractors}: it is a {@link SortedRegistry}, so the player can reorder or disable
- * every provider in StructureLib's config, and the ordering can be synced to the server. Providers are asked in order,
- * and whatever the player is carrying comes last, so a provider that holds a lot of fluid, e.g. an ME network, is
- * drained before the player's buckets are emptied.
+ * This mirrors {@link FluidStackExtractors}: it is a {@link SortedRegistry}, so the player can reorder or disable every
+ * provider in StructureLib's config, and the ordering can be synced to the server. Providers are asked in order, and
+ * whatever the player is carrying comes last, so a provider that holds a lot of fluid, e.g. an ME network, is drained
+ * before the player's buckets are emptied.
  */
 public class FluidSourceProviders {
 

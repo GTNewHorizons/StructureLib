@@ -8,14 +8,14 @@ import net.minecraftforge.fluids.FluidStack;
 /**
  * Extract fluid from a single item stack, e.g. a bucket or a cell.
  * <p>
- * Implementations are registered in {@link FluidContainerExtractors}. StructureLib ships implementations for Forge's
+ * Implementations are registered in {@link FluidStackExtractors}. StructureLib ships implementations for Forge's
  * {@code IFluidContainerItem} and for {@code FluidContainerRegistry}, which together cover the vast majority of fluid
  * containers. Register your own implementation when your containers expose their fluid by other means, e.g. fluid
  * stored inside a backpack or inside a custom NBT layout.
  * <p>
  * All methods must be side effect free when a simulation is requested, and must never depend on a world.
  */
-public interface FluidContainerExtractor {
+public interface FluidStackExtractor {
 
     /**
      * Whether this extractor can work with given item stack. This must be a cheap, side effect free check.

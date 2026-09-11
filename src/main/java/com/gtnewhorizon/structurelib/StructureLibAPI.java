@@ -17,10 +17,10 @@ import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.fluid.FluidBlockPlacement;
-import com.gtnewhorizon.structurelib.fluid.FluidContainerExtractor;
-import com.gtnewhorizon.structurelib.fluid.FluidContainerExtractors;
 import com.gtnewhorizon.structurelib.fluid.FluidPlacementRegistry;
 import com.gtnewhorizon.structurelib.fluid.FluidSourceProviders;
+import com.gtnewhorizon.structurelib.fluid.FluidStackExtractor;
+import com.gtnewhorizon.structurelib.fluid.FluidStackExtractors;
 import com.gtnewhorizon.structurelib.fluid.IFluidSourceProvider;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
@@ -421,8 +421,8 @@ public class StructureLibAPI {
      * @param key       unique key. Matches the key shown in the config gui.
      * @param extractor the extractor
      */
-    public static void registerFluidContainerExtractor(String key, FluidContainerExtractor extractor) {
-        FluidContainerExtractors.register(key, extractor);
+    public static void registerFluidStackExtractor(String key, FluidStackExtractor extractor) {
+        FluidStackExtractors.register(key, extractor);
     }
 
     /**
