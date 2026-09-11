@@ -194,7 +194,7 @@ public class StructureUtility {
 
         @Override
         public boolean placeBlock(Object o, World world, int x, int y, int z, ItemStack trigger) {
-            world.setBlock(x, y, z, Blocks.air, 0, 2);
+            world.setBlock(x, y, z, Blocks.air, 0, 3);
             return false;
         }
 
@@ -204,7 +204,8 @@ public class StructureUtility {
                 AutoPlaceEnvironment env) {
             if (check(o, world, x, y, z)) return PlaceResult.SKIP;
             if (!StructureLibAPI.isBlockTriviallyReplaceable(world, x, y, z, env.getActor())) return PlaceResult.REJECT;
-            world.setBlock(x, y, z, Blocks.air, 0, 2);
+            // Notify the neighbours, so that e.g. a fluid next to a position that had to be emptied flows back into it.
+            world.setBlock(x, y, z, Blocks.air, 0, 3);
             return PlaceResult.ACCEPT;
         }
     };
@@ -494,6 +495,8 @@ public class StructureUtility {
                     new ChatComponentTranslation("structurelib.autoplace.missing_block", getStackChatName(stack)));
             return PlaceResult.REJECT;
         }
+        Block previousBlock = world.getBlock(x, y, z);
+        int previousMeta = world.getBlockMetadata(x, y, z);
         if (block instanceof ICustomBlockSetting blockCustom) {
             blockCustom.setBlock(world, x, y, z, meta);
         } else if (!stack.copy()
@@ -501,8 +504,9 @@ public class StructureUtility {
                     return PlaceResult.REJECT;
                 }
         if (!s.takeOne(stack, false)) {
-            // rollback
-            world.setBlockToAir(x, y, z);
+            // Roll back to what was there before, which is often a fluid that this block was placed over, so that a
+            // position is never left empty by a placement that was not paid for.
+            StructureLibAPI.restoreBlock(world, x, y, z, previousBlock, previousMeta);
         }
         return PlaceResult.ACCEPT;
     }
@@ -600,11 +604,14 @@ public class StructureUtility {
                     new ChatComponentTranslation("structurelib.autoplace.missing_block", getStackChatName(stack)));
             return PlaceResult.REJECT;
         }
+        Block previousBlock = world.getBlock(x, y, z);
+        int previousMeta = world.getBlockMetadata(x, y, z);
         if (!stack.copy().tryPlaceItemIntoWorld(actor, world, x, y, z, ForgeDirection.UP.ordinal(), 0.5f, 0.5f, 0.5f))
             return PlaceResult.REJECT;
         if (!s.takeOne(stack, false))
-            // this is bad! probably an exploit somehow. Let's nullify the block we just placed instead
-            world.setBlockToAir(x, y, z);
+            // this is bad! probably an exploit somehow. Put back what was there instead of clearing the position, as
+            // that would destroy the fluid this block was placed over.
+            StructureLibAPI.restoreBlock(world, x, y, z, previousBlock, previousMeta);
         return PlaceResult.ACCEPT;
     }
 

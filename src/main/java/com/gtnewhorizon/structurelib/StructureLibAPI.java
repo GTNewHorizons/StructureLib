@@ -2,6 +2,8 @@ package com.gtnewhorizon.structurelib;
 
 import static com.gtnewhorizon.structurelib.StructureLib.proxy;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -326,6 +328,26 @@ public class StructureLibAPI {
         // TODO extend this function a bit
         Block block = w.getBlock(x, y, z);
         return block.isAir(w, x, y, z) || block.isReplaceable(w, x, y, z);
+    }
+
+    /**
+     * Put back the block that was at a position, which is what a placement that could not be paid for should roll back
+     * to.
+     * <p>
+     * Restoring the previous state instead of clearing the position matters whenever the position held something
+     * autoplace is allowed to replace, e.g. a fluid that is not a source block: the player would otherwise be left with
+     * a hole where their fluid used to be.
+     *
+     * @param world world to write to
+     * @param x     x coord
+     * @param y     y coord
+     * @param z     z coord
+     * @param block the block that was there, or null for air
+     * @param meta  the meta that was there
+     */
+    public static void restoreBlock(World world, int x, int y, int z, @Nullable Block block, int meta) {
+        if (block == null || block.isAir(world, x, y, z)) world.setBlockToAir(x, y, z);
+        else world.setBlock(x, y, z, block, meta, 3);
     }
 
     /**

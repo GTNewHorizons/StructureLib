@@ -319,8 +319,7 @@ public class FluidAutoplace {
     }
 
     private static void restore(World world, int x, int y, int z, Block block, int meta) {
-        if (block == null || block.isAir(world, x, y, z)) world.setBlockToAir(x, y, z);
-        else world.setBlock(x, y, z, block, meta, 3);
+        StructureLibAPI.restoreBlock(world, x, y, z, block, meta);
     }
 
     private static void reportMissingFluid(AutoPlaceEnvironment env, FluidBlockRequirement requirement, int missing) {
