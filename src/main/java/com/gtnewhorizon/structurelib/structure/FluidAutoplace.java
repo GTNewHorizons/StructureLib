@@ -63,9 +63,11 @@ public class FluidAutoplace {
          */
         LENIENT,
         /**
-         * Only place the fluid once every non fluid element of the structure is satisfied. This is the default, and
-         * together with the fact that an autoplace round places a limited number of elements it effectively builds the
-         * structure first and fills it with fluid afterwards.
+         * Only place the fluid once every non fluid element of the structure is satisfied. This is the default.
+         * <p>
+         * The fluid is placed as soon as the structure can hold it, which is normally the round that finishes the
+         * structure: the fluids that round could not place yet are tried once more when it is done building, so they do
+         * not have to wait for another round.
          */
         STRICT
     }
@@ -195,9 +197,9 @@ public class FluidAutoplace {
     /**
      * Whether a fluid may be placed at this position right now.
      * <p>
-     * With {@link GateMode#STRICT} the answer is computed once per autoplace round and cached on the environment, as it
-     * costs a walk over the whole structure. That also means a fluid is at worst one round late, which is what keeps
-     * the walk cheap on big multiblocks.
+     * With {@link GateMode#STRICT} the answer is computed by a walk over the whole structure and cached for the rest of
+     * the round, as that walk is expensive. The cache is dropped as soon as the round has built something, so that the
+     * fluids which waited for it are not held back by an answer that predates those placements.
      *
      * @param world world to place in
      * @param x     x coord
@@ -302,15 +304,23 @@ public class FluidAutoplace {
 
     private static boolean placeFluidBlock(World world, int x, int y, int z, FluidBlockRequirement requirement) {
         FluidStack fluid = requirement.cost();
+        Block block = requirement.block();
         if (requirement.placer() != null) {
-            return requirement.placer().place(world, x, y, z, requirement.block(), requirement.meta(), fluid);
+            if (!requirement.placer().place(world, x, y, z, block, requirement.meta(), fluid)) return false;
+        } else {
+            // The notification flags matter here. A fluid that is put into the world silently neither flows nor tells
+            // its neighbours about itself, so it would sit where it was placed until something else happens to touch
+            // it, which for water inside a multiblock can be never.
+            if (!world.setBlock(x, y, z, block, requirement.meta(), 3)) return false;
         }
-        return world.setBlock(x, y, z, requirement.block(), requirement.meta(), 2);
+        // A fluid that is never ticked does not spread, and a fluid placed as a flowing one would never settle.
+        world.scheduleBlockUpdate(x, y, z, block, block.tickRate(world));
+        return true;
     }
 
     private static void restore(World world, int x, int y, int z, Block block, int meta) {
         if (block == null || block.isAir(world, x, y, z)) world.setBlockToAir(x, y, z);
-        else world.setBlock(x, y, z, block, meta, 2);
+        else world.setBlock(x, y, z, block, meta, 3);
     }
 
     private static void reportMissingFluid(AutoPlaceEnvironment env, FluidBlockRequirement requirement, int missing) {

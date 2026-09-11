@@ -340,6 +340,10 @@ public class AutoPlaceEnvironment {
         if (fluidRoundState != null) fluidRoundState.setGateResult(ready);
     }
 
+    void clearFluidGateResult() {
+        if (fluidRoundState != null) fluidRoundState.clearGateResult();
+    }
+
     /**
      * Flag that at least one fluid element wanted to place its fluid, but had to wait for the structure to be built
      * first. An autoplace round that did nothing but wait reports zero placed elements instead of reporting that the
@@ -406,6 +410,15 @@ public class AutoPlaceEnvironment {
          * Remember the answer of the fluid placement gate for the rest of this round.
          */
         void setGateResult(boolean ready);
+
+        /**
+         * Forget the answer of the fluid placement gate, so that it is asked again.
+         * <p>
+         * The answer describes the world as it was before this round built anything, so it has to be dropped once the
+         * round has placed something and the fluids that had to wait are retried. An implementation that keeps no
+         * answer at all can leave this alone.
+         */
+        default void clearGateResult() {}
 
         /**
          * Remember that a fluid element had to wait for the structure to be built first.

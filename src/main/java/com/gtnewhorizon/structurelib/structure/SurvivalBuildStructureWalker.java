@@ -1,10 +1,14 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
+import com.github.bsideup.jabel.Desugar;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.IStructureElement.PlaceResult;
@@ -20,6 +24,7 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T>, AutoPlaceE
 
     private Boolean fluidGateResult;
     private boolean fluidDeferred;
+    private final List<DeferredFluid<T>> deferredFluids = new ArrayList<>();
 
     private final AutoPlaceEnvironment env;
 
@@ -52,6 +57,11 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T>, AutoPlaceE
         env.offsetABC[2] = c;
         env.setSource(params.getSource());
         PlaceResult placeResult = element.survivalPlaceBlock(object, world, x, y, z, trigger, env);
+        if (placeResult == PlaceResult.REJECT_CONTINUE && element.isFluidElement(object)) {
+            // The fluid has to wait. Remember where it is, as this round may still build what it is waiting for, and
+            // then it can be placed before the round is over instead of one round later.
+            deferredFluids.add(new DeferredFluid<>(element, x, y, z, a, b, c));
+        }
         if (placeResult != PlaceResult.SKIP && placeResult != PlaceResult.REJECT_CONTINUE && built == -1) built = 0;
         switch (placeResult) {
             case SKIP:
@@ -72,6 +82,44 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T>, AutoPlaceE
             default:
                 throw new NullPointerException();
         }
+    }
+
+    /**
+     * Place the fluids that had to wait during this round, now that the round has built everything it was going to.
+     * <p>
+     * A fluid position is often visited before the blocks that are meant to hold it, so a round that finishes the
+     * structure would otherwise leave the fluid to the next round even though there is nothing left to wait for. The
+     * gate is asked again, as the answer it gave was about the world as it was before this round built anything.
+     * <p>
+     * Like the walk itself, this places at most as many elements as the round still has budget left, and whatever it
+     * cannot reach is left to the next round.
+     *
+     * @param world the world this round was run in
+     */
+    void finishRound(World world) {
+        if (deferredFluids.isEmpty()) return;
+        // A round that built nothing has not changed the answer of the gate either.
+        if (built <= 0) return;
+
+        int budget = elementBudget - built;
+        env.clearFluidGateResult();
+        for (DeferredFluid<T> deferred : deferredFluids) {
+            if (budget <= 0) break;
+            IStructureElement<T> element = deferred.element();
+            // The element has to see the same offsets and item source it saw during the walk, as elements may read
+            // channel data or take items through them.
+            env.offsetABC[0] = deferred.a();
+            env.offsetABC[1] = deferred.b();
+            env.offsetABC[2] = deferred.c();
+            env.setSource(params.getSource());
+            PlaceResult placeResult = element
+                    .survivalPlaceBlock(object, world, deferred.x(), deferred.y(), deferred.z(), trigger, env);
+            if (placeResult != PlaceResult.ACCEPT) continue;
+            if (check) element.check(object, world, deferred.x(), deferred.y(), deferred.z());
+            built += 1;
+            budget -= 1;
+        }
+        deferredFluids.clear();
     }
 
     /**
@@ -96,6 +144,11 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T>, AutoPlaceE
     }
 
     @Override
+    public void clearGateResult() {
+        fluidGateResult = null;
+    }
+
+    @Override
     public void markDeferred() {
         fluidDeferred = true;
     }
@@ -104,4 +157,10 @@ class SurvivalBuildStructureWalker<T> implements IStructureWalker<T>, AutoPlaceE
     public boolean isDeferred() {
         return fluidDeferred;
     }
+
+    /**
+     * A fluid position a round had to leave alone, kept so that it can be tried once more when the round is over.
+     */
+    @Desugar
+    private record DeferredFluid<T> (IStructureElement<T> element, int x, int y, int z, int a, int b, int c) {}
 }

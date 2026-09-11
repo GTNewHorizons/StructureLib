@@ -51,6 +51,7 @@ structurelib.autoplace.error.not_enabled=§c这个多方块结构不支持在生
 structurelib.autoplace.error.no_simple_block=§c建议放置 §r%s§c ，但没有找到它
 structurelib.autoplace.error.no_item_stack=§c建议使用 §r%s§c 放置方块，但没有找到它
 structurelib.autoplace.warning.no_explicit_channel=§6这个结构依赖于不存在的子信道 §r%s§6 。已使用主信道值替代。
+structurelib.autoplace.missing_block=§c缺少方块：%s
 structurelib.autoplace.missing_fluid=§c缺少流体：%s（%s）
 structurelib.autoplace.requirement_fluid=%s（%s）
 

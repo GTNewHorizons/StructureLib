@@ -318,6 +318,9 @@ public interface IStructureDefinition<T> {
                 basePositionC,
                 walker,
                 "survivalBuild");
+        // A fluid position is often visited before the blocks that hold it, so give the fluids that had to wait for
+        // those blocks a chance to be placed in this round rather than the next one.
+        walker.finishRound(world);
         return walker.getBuilt();
     }
 
