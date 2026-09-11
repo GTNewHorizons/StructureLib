@@ -13,6 +13,9 @@ import net.minecraft.launchwrapper.Launch;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,6 +23,9 @@ import org.apache.logging.log4j.Logger;
 import com.gtnewhorizon.structurelib.block.BlockHint;
 import com.gtnewhorizon.structurelib.command.CommandConfigureChannels;
 import com.gtnewhorizon.structurelib.command.CommandRegistryDebug;
+import com.gtnewhorizon.structurelib.fluid.FluidPlacementRegistry;
+import com.gtnewhorizon.structurelib.fluid.FluidSourceProviders;
+import com.gtnewhorizon.structurelib.fluid.FluidStackExtractors;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
@@ -109,6 +115,10 @@ public class StructureLib {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
+        InventoryUtility.init();
+        FluidStackExtractors.init();
+        FluidSourceProviders.init();
+        FluidPlacementRegistry.init();
         ConfigurationHandler.INSTANCE.init(e.getSuggestedConfigurationFile());
         GameRegistry.registerBlock(blockHint = new BlockHint(), ItemBlockHint.class, "blockhint");
         itemBlockHint = ItemBlock.getItemFromBlock(StructureLibAPI.getBlockHint());
@@ -120,8 +130,6 @@ public class StructureLib {
                 itemConstructableTrigger.getUnlocalizedName());
         proxy.preInit(e);
         NetworkRegistry.INSTANCE.registerGuiHandler(instance(), new GuiHandler());
-
-        InventoryUtility.init();
 
         ChannelDescription.set(CHANNEL_SHOW_ERROR, MOD_ID, "channels.structurelib.show_errors");
 
@@ -149,7 +157,49 @@ public class StructureLib {
                 case "register_channel_item":
                     processRegisterChannelItem(message);
                     break;
+                case "register_fluid_block_cost":
+                    processRegisterFluidBlockCost(message);
+                    break;
             }
+        }
+    }
+
+    /**
+     * Teach StructureLib what it costs to place a fluid block, without having to link against StructureLib.
+     * <p>
+     * The message must hold a compound with {@code Block} (registry name), {@code Fluid} (fluid name), optionally
+     * {@code Meta} (default 0), {@code Amount} (default one bucket) and {@code ForceFluid} (default false).
+     */
+    private void processRegisterFluidBlockCost(FMLInterModComms.IMCMessage message) {
+        if (!message.isNBTMessage()) {
+            LOGGER.warn("{} sent a register_fluid_block_cost message without any data", message.getSender());
+            return;
+        }
+        NBTTagCompound tag = message.getNBTValue();
+        String blockName = tag.getString("Block");
+        String fluidName = tag.getString("Fluid");
+        Object block = Block.blockRegistry.getObject(blockName);
+        Fluid fluid = FluidRegistry.getFluid(fluidName);
+        if (!(block instanceof Block)) {
+            LOGGER.warn("{} tried to register a fluid block cost for unknown block {}", message.getSender(), blockName);
+            return;
+        }
+        if (fluid == null) {
+            LOGGER.warn("{} tried to register a fluid block cost for unknown fluid {}", message.getSender(), fluidName);
+            return;
+        }
+        int meta = tag.getInteger("Meta");
+        int amount = tag.hasKey("Amount") ? tag.getInteger("Amount") : FluidPlacementRegistry.DEFAULT_FLUID_AMOUNT;
+        boolean forceFluid = tag.getBoolean("ForceFluid");
+        try {
+            FluidPlacementRegistry.register((Block) block, meta, new FluidStack(fluid, amount), forceFluid);
+        } catch (IllegalArgumentException e) {
+            // never let a badly formed message from another mod break the game
+            LOGGER.warn(
+                    "{} tried to register a fluid block cost for {}:{} twice",
+                    message.getSender(),
+                    blockName,
+                    meta);
         }
     }
 

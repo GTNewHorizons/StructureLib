@@ -16,6 +16,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.gtnewhorizon.structurelib.structure.FluidAutoplace;
 
 import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -33,6 +34,8 @@ public enum ConfigurationHandler {
     private int hintTransparency;
     private int autoPlaceBudget;
     private int autoPlaceInterval;
+    private boolean fluidAutoplace = true;
+    private FluidAutoplace.GateMode fluidGateMode = FluidAutoplace.GateMode.STRICT;
     private Map<String, Pair<List<String>, List<String>>> registryOrders;
 
     ConfigurationHandler() {
@@ -97,10 +100,34 @@ public enum ConfigurationHandler {
                         + "As expected, server side settings will overrides client settings.\n"
                         + "Note this relates to the wall clock, not in game ticks.\n"
                         + "Value smaller than default is likely to be perceived as no minimal interval whatsoever.");
+        fluidAutoplace = config.getBoolean(
+                "fluidAutoplace",
+                "common.autoplace",
+                true,
+                "Whether survival autoplace may place fluid blocks, e.g. the water a multiblock needs inside itself, by draining fluid from the player's fluid containers.\n"
+                        + "A multiblock can also provide its own fluid source, see IFluidSource.\n"
+                        + "This only disables fluid blocks. Multiblocks keep working, they just cannot have those positions filled by autoplace.");
+        fluidGateMode = readFluidGateMode();
 
         loadRegistryOrder();
 
         saveConfig();
+    }
+
+    private FluidAutoplace.GateMode readFluidGateMode() {
+        String value = config.getString(
+                "fluidGateMode",
+                "common.autoplace",
+                FluidAutoplace.GateMode.STRICT.name(),
+                "How careful autoplace is about placing a fluid into a structure that is not finished yet, as a fluid would flow out of it.\n"
+                        + "NONE: place the fluid right away.\n"
+                        + "LENIENT: only place the fluid when it cannot flow out of the structure.\n"
+                        + "STRICT: only place the fluid once every non fluid element of the structure is satisfied. Note that this makes a fluid at worst one auto place round late.");
+        for (FluidAutoplace.GateMode mode : FluidAutoplace.GateMode.values()) {
+            if (mode.name().equalsIgnoreCase(value)) return mode;
+        }
+        StructureLib.LOGGER.warn("Unknown fluidGateMode '{}', falling back to STRICT", value);
+        return FluidAutoplace.GateMode.STRICT;
     }
 
     void loadRegistryOrder() {
@@ -174,6 +201,20 @@ public enum ConfigurationHandler {
 
     public int getAutoPlaceInterval() {
         return autoPlaceInterval;
+    }
+
+    /**
+     * Whether survival autoplace may place fluid blocks by draining fluid from a fluid source.
+     */
+    public boolean isFluidAutoplaceEnabled() {
+        return fluidAutoplace;
+    }
+
+    /**
+     * How careful autoplace is about placing a fluid into a structure that is not finished yet.
+     */
+    public FluidAutoplace.GateMode getFluidGateMode() {
+        return fluidGateMode;
     }
 
     public Pair<List<String>, List<String>> getRegistryOrder(String name) {
