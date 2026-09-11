@@ -2,6 +2,7 @@ package com.gtnewhorizon.structurelib.fluid;
 
 import javax.annotation.Nullable;
 
+import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
 import com.github.bsideup.jabel.Desugar;
@@ -38,5 +39,66 @@ public record FluidBlockPlacement(FluidStack cost, boolean forceFluid, @Nullable
      */
     public static FluidBlockPlacement forced(FluidStack cost) {
         return new FluidBlockPlacement(cost, true, null);
+    }
+
+    /**
+     * A placement that pays {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of given fluid, prefers the item form
+     * when there is one, and places the block directly.
+     */
+    public static FluidBlockPlacement of(Fluid fluid) {
+        return of(defaultCost(fluid));
+    }
+
+    /**
+     * A placement that pays {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of given fluid, and always pays with
+     * fluid even when the block has an item form.
+     */
+    public static FluidBlockPlacement forced(Fluid fluid) {
+        return forced(defaultCost(fluid));
+    }
+
+    /**
+     * A placement that pays with given fluid, and writes the block into the world the way the given placer says.
+     * <p>
+     * Use this for a fluid block that cannot be placed with a plain block set, e.g. one that has to be filled through
+     * its own API.
+     */
+    public static FluidBlockPlacement of(FluidStack cost, @Nullable FluidBlockPlacer placer) {
+        return new FluidBlockPlacement(cost, false, placer);
+    }
+
+    /**
+     * A placement that pays with given fluid, always pays with fluid, and writes the block into the world the way the
+     * given placer says.
+     */
+    public static FluidBlockPlacement forced(FluidStack cost, @Nullable FluidBlockPlacer placer) {
+        return new FluidBlockPlacement(cost, true, placer);
+    }
+
+    /**
+     * A placement that pays {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of given fluid, and writes the block
+     * into the world the way the given placer says.
+     */
+    public static FluidBlockPlacement of(Fluid fluid, @Nullable FluidBlockPlacer placer) {
+        return of(defaultCost(fluid), placer);
+    }
+
+    /**
+     * A placement that pays {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of given fluid, always pays with fluid,
+     * and writes the block into the world the way the given placer says.
+     */
+    public static FluidBlockPlacement forced(Fluid fluid, @Nullable FluidBlockPlacer placer) {
+        return forced(defaultCost(fluid), placer);
+    }
+
+    /**
+     * What one block of given fluid costs unless something else was registered for it, which is one bucket.
+     *
+     * @param fluid the fluid to pay with
+     * @throws IllegalArgumentException if the fluid is null
+     */
+    public static FluidStack defaultCost(Fluid fluid) {
+        if (fluid == null) throw new IllegalArgumentException("fluid must not be null");
+        return new FluidStack(fluid, FluidPlacementRegistry.DEFAULT_FLUID_AMOUNT);
     }
 }

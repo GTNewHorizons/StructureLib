@@ -43,16 +43,10 @@ public class FluidPlacementRegistry {
     private static volatile int indexedFluidCount = -1;
 
     static {
-        register(Blocks.water, 0, FluidBlockPlacement.of(new FluidStack(FluidRegistry.WATER, DEFAULT_FLUID_AMOUNT)));
-        register(
-                Blocks.flowing_water,
-                0,
-                FluidBlockPlacement.of(new FluidStack(FluidRegistry.WATER, DEFAULT_FLUID_AMOUNT)));
-        register(Blocks.lava, 0, FluidBlockPlacement.of(new FluidStack(FluidRegistry.LAVA, DEFAULT_FLUID_AMOUNT)));
-        register(
-                Blocks.flowing_lava,
-                0,
-                FluidBlockPlacement.of(new FluidStack(FluidRegistry.LAVA, DEFAULT_FLUID_AMOUNT)));
+        register(Blocks.water, 0);
+        register(Blocks.flowing_water, 0);
+        register(Blocks.lava, 0);
+        register(Blocks.flowing_lava, 0);
     }
 
     private FluidPlacementRegistry() {}
@@ -72,6 +66,63 @@ public class FluidPlacementRegistry {
      */
     public static void register(Block block, int meta, FluidStack cost) {
         register(block, meta, FluidBlockPlacement.of(cost));
+    }
+
+    /**
+     * Register what it costs to place the given block state, with {@link #DEFAULT_FLUID_AMOUNT} of the fluid the block
+     * holds, preferring the item form when the block has one.
+     * <p>
+     * The amount is the whole cost of that state. A block whose meta says how full it is therefore wants one
+     * registration per meta it can be in, or no registration at all, in which case {@link #resolve(Block, int)} scales
+     * the default amount down for a partially filled block.
+     *
+     * @param block the fluid block
+     * @param meta  the block meta. {@link OreDictionary#WILDCARD_VALUE} covers every meta of this block.
+     * @throws IllegalArgumentException if the block holds no fluid, or this state is already registered
+     */
+    public static void register(Block block, int meta) {
+        register(block, meta, false);
+    }
+
+    /**
+     * Register what it costs to place the given block state, with {@link #DEFAULT_FLUID_AMOUNT} of the fluid the block
+     * holds.
+     *
+     * @param block      the fluid block
+     * @param meta       the block meta. {@link OreDictionary#WILDCARD_VALUE} covers every meta of this block.
+     * @param forceFluid whether to always pay with fluid, even when this block also has an item form
+     * @throws IllegalArgumentException if the block holds no fluid, or this state is already registered
+     */
+    public static void register(Block block, int meta, boolean forceFluid) {
+        FluidStack cost = FluidBlockPlacement.defaultCost(fluidOf(block));
+        register(block, meta, forceFluid ? FluidBlockPlacement.forced(cost) : FluidBlockPlacement.of(cost));
+    }
+
+    /**
+     * Register the whole block, i.e. every meta of it that has no registration of its own, with
+     * {@link #DEFAULT_FLUID_AMOUNT} of the fluid it holds.
+     *
+     * @param block the fluid block
+     * @throws IllegalArgumentException if the block holds no fluid, or the wildcard meta is already registered
+     */
+    public static void register(Block block) {
+        register(block, OreDictionary.WILDCARD_VALUE);
+    }
+
+    /**
+     * Register what it costs to place the given block state, with {@link #DEFAULT_FLUID_AMOUNT} of the fluid the block
+     * holds, and placed the way the given placer says.
+     * <p>
+     * Use this for a fluid block that cannot be placed with a plain block set, e.g. one that has to be filled through
+     * its own API.
+     *
+     * @param block  the fluid block
+     * @param meta   the block meta. {@link OreDictionary#WILDCARD_VALUE} covers every meta of this block.
+     * @param placer how to write the block into the world
+     * @throws IllegalArgumentException if the block holds no fluid, or this state is already registered
+     */
+    public static void register(Block block, int meta, FluidBlockPlacer placer) {
+        register(block, meta, FluidBlockPlacement.of(FluidBlockPlacement.defaultCost(fluidOf(block)), placer));
     }
 
     /**
@@ -179,6 +230,22 @@ public class FluidPlacementRegistry {
         if (material == Material.water) return FluidRegistry.WATER;
         if (material == Material.lava) return FluidRegistry.LAVA;
         return null;
+    }
+
+    /**
+     * The fluid held by given block, for the registrations that default to {@link #DEFAULT_FLUID_AMOUNT} of it.
+     *
+     * @throws IllegalArgumentException if the block is null or holds no fluid
+     */
+    private static Fluid fluidOf(Block block) {
+        Fluid fluid = getFluidOf(block);
+        if (fluid == null) {
+            throw new IllegalArgumentException(
+                    "Block " + (block == null ? "null" : block.getUnlocalizedName())
+                            + " holds no fluid,"
+                            + " register it with an explicit cost instead");
+        }
+        return fluid;
     }
 
     private static synchronized Map<Block, Fluid> indexFluidBlocks() {

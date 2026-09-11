@@ -17,6 +17,7 @@ import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.fluid.FluidBlockPlacement;
+import com.gtnewhorizon.structurelib.fluid.FluidBlockPlacer;
 import com.gtnewhorizon.structurelib.fluid.FluidPlacementRegistry;
 import com.gtnewhorizon.structurelib.fluid.FluidSourceProviders;
 import com.gtnewhorizon.structurelib.fluid.FluidStackExtractor;
@@ -410,6 +411,66 @@ public class StructureLibAPI {
      */
     public static void registerFluidBlockCost(Block block, int meta, FluidStack cost, boolean forceFluid) {
         FluidPlacementRegistry.register(block, meta, cost, forceFluid);
+    }
+
+    /**
+     * Register what it costs to place a fluid block, with {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of the
+     * fluid the block holds, preferring the item form when the block has one.
+     * <p>
+     * The amount is the whole cost of that state, so a block whose meta says how full it is wants one registration per
+     * meta it can be in, or no registration at all, in which case the default amount is scaled down for a partially
+     * filled position.
+     *
+     * @param block the fluid block
+     * @param meta  the block meta. {@link net.minecraftforge.oredict.OreDictionary#WILDCARD_VALUE} covers every meta of
+     *              this block.
+     * @throws IllegalArgumentException if the block holds no fluid, or this state is already registered
+     * @see #registerFluidBlockCost(Block, int, FluidBlockPlacement)
+     */
+    public static void registerFluidBlockCost(Block block, int meta) {
+        FluidPlacementRegistry.register(block, meta);
+    }
+
+    /**
+     * Register what it costs to place a fluid block, with {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of the
+     * fluid the block holds.
+     *
+     * @param block      the fluid block
+     * @param meta       the block meta. {@link net.minecraftforge.oredict.OreDictionary#WILDCARD_VALUE} covers every
+     *                   meta of this block.
+     * @param forceFluid whether to always pay with fluid, even when this block also has an item form
+     * @see #registerFluidBlockCost(Block, int)
+     */
+    public static void registerFluidBlockCost(Block block, int meta, boolean forceFluid) {
+        FluidPlacementRegistry.register(block, meta, forceFluid);
+    }
+
+    /**
+     * Register the whole block, i.e. every meta of it that has no registration of its own, with
+     * {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of the fluid it holds.
+     *
+     * @param block the fluid block
+     * @see #registerFluidBlockCost(Block, int)
+     */
+    public static void registerFluidBlockCost(Block block) {
+        FluidPlacementRegistry.register(block);
+    }
+
+    /**
+     * Register what it costs to place a fluid block, with {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of the
+     * fluid the block holds, and placed the way the given placer says.
+     * <p>
+     * Use this for a fluid block that cannot be placed with a plain block set, e.g. one that has to be filled through
+     * its own API.
+     *
+     * @param block  the fluid block
+     * @param meta   the block meta. {@link net.minecraftforge.oredict.OreDictionary#WILDCARD_VALUE} covers every meta
+     *               of this block.
+     * @param placer how to write the block into the world
+     * @see #registerFluidBlockCost(Block, int, FluidBlockPlacement)
+     */
+    public static void registerFluidBlockCost(Block block, int meta, FluidBlockPlacer placer) {
+        FluidPlacementRegistry.register(block, meta, placer);
     }
 
     /**

@@ -1963,6 +1963,32 @@ public class StructureUtility {
         return ofFluidBlock(block, meta, new FluidStack(fluid, amount), policy);
     }
 
+    /**
+     * Accept a fluid block, and pay for it with {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of the given fluid.
+     *
+     * @param fluid the fluid one block of this state costs
+     * @param block the fluid block
+     * @param meta  the block meta that has to be there
+     * @see #ofFluid(Fluid, int, Block, int)
+     */
+    public static <T> IStructureElement<T> ofFluid(Fluid fluid, Block block, int meta) {
+        return ofFluid(fluid, block, meta, FluidFillPolicy.EXACT_STATE);
+    }
+
+    /**
+     * Accept a fluid block, and pay for it with {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of the given fluid.
+     *
+     * @param fluid  the fluid one block of this state costs
+     * @param block  the fluid block
+     * @param meta   the block meta that has to be there
+     * @param policy how much fluid an already partially filled position has to hold to be accepted as is
+     * @see #ofFluid(Fluid, int, Block, int)
+     */
+    public static <T> IStructureElement<T> ofFluid(Fluid fluid, Block block, int meta, FluidFillPolicy policy) {
+        if (fluid == null) throw new IllegalArgumentException();
+        return ofFluidBlock(block, meta, FluidBlockPlacement.of(fluid), policy);
+    }
+
     // endregion
 
     // region adders
