@@ -200,14 +200,14 @@ structurelib.configgui.enabled=已启用
 structurelib.configgui.disabled=已禁用
 structurelib.configgui.drag.tooltip=拖动该按钮以重排。
 
-structurelib.sortedregistry.inventoryproviders.5000-main-inventory=玩家物品栏
+structurelib.sortedregistry.inventoryproviders.5000-main-inventory=5000 玩家物品栏
 structurelib.sortedregistry.inventoryproviders.5000-main-inventory.tooltip=不包括护甲栏以外的36格。
-structurelib.sortedregistry.inventoryproviders.7000-ender-inventory=末影箱
+structurelib.sortedregistry.inventoryproviders.7000-ender-inventory=7000 末影箱
 structurelib.sortedregistry.inventoryproviders.7000-ender-inventory.tooltip=当前玩家的末影箱。需要在主物品栏中存在类似于末影背包的东西才会实际生效。
 
-structurelib.sortedregistry.fluidstackextractors.3000-forge-fluid-container-item=Forge 流体容器物品
+structurelib.sortedregistry.fluidstackextractors.3000-forge-fluid-container-item=3000 Forge 流体容器物品
 structurelib.sortedregistry.fluidstackextractors.3000-forge-fluid-container-item.tooltip=实现 Forge 的 IFluidContainerItem 的容器，例如大多数模组流体容器。流体存于其 NBT 中，因此直接在原位抽取。
-structurelib.sortedregistry.fluidstackextractors.5000-forge-fluid-container-registry=Forge 流体容器注册表
+structurelib.sortedregistry.fluidstackextractors.5000-forge-fluid-container-registry=5000 Forge 流体容器注册表
 structurelib.sortedregistry.fluidstackextractors.5000-forge-fluid-container-registry.tooltip=注册到 Forge 的 FluidContainerRegistry 的容器，例如桶。整体消耗，并替换为其空容器。
 
 structurelib.config.common.autoplace.tooltip=控制生存模式自动放置如何放置方块的配置项。

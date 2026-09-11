@@ -202,14 +202,14 @@ structurelib.configgui.enabled=Enabled Entry
 structurelib.configgui.disabled=Disabled Entry
 structurelib.configgui.drag.tooltip=Drag this button to reorder this element.
 
-structurelib.sortedregistry.inventoryproviders.5000-main-inventory=Main Player Inventory
+structurelib.sortedregistry.inventoryproviders.5000-main-inventory=5000 Main Player Inventory
 structurelib.sortedregistry.inventoryproviders.5000-main-inventory.tooltip=36 slots of item in your main inventory. Armor slots excluded.
-structurelib.sortedregistry.inventoryproviders.7000-ender-inventory=Ender Chest Inventory
+structurelib.sortedregistry.inventoryproviders.7000-ender-inventory=7000 Ender Chest Inventory
 structurelib.sortedregistry.inventoryproviders.7000-ender-inventory.tooltip=Links to your vanilla ender chest inventory. Require at least one "ender backpack like" item in main inventory to work.
 
-structurelib.sortedregistry.fluidstackextractors.3000-forge-fluid-container-item=Forge fluid container item
+structurelib.sortedregistry.fluidstackextractors.3000-forge-fluid-container-item=3000 Forge fluid container item
 structurelib.sortedregistry.fluidstackextractors.3000-forge-fluid-container-item.tooltip=Containers implementing Forge's IFluidContainerItem, e.g. most modded cells. They hold their fluid in their own NBT, so they are drained in place.
-structurelib.sortedregistry.fluidstackextractors.5000-forge-fluid-container-registry=Forge fluid container registry
+structurelib.sortedregistry.fluidstackextractors.5000-forge-fluid-container-registry=5000 Forge fluid container registry
 structurelib.sortedregistry.fluidstackextractors.5000-forge-fluid-container-registry.tooltip=Containers registered with Forge's FluidContainerRegistry, e.g. buckets. They are consumed as a whole, and are replaced by their empty container.
 
 structurelib.config.common.autoplace.tooltip=Configurations that control how survival autoplace places blocks.
