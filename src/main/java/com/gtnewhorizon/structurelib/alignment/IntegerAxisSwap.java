@@ -5,7 +5,11 @@ import static java.lang.Math.abs;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import org.joml.Vector3i;
+
 import com.gtnewhorizon.structurelib.alignment.enumerable.Direction;
+import com.gtnewhorizon.structurelib.coords.CoordinateSystem;
+import com.gtnewhorizon.structurelib.coords.Position;
 import com.gtnewhorizon.structurelib.util.Vec3Impl;
 
 public class IntegerAxisSwap {
@@ -90,5 +94,33 @@ public class IntegerAxisSwap {
         out[0] = forFirstAxis.get0() * point[0] + forSecondAxis.get0() * point[1] + forThirdAxis.get0() * point[2];
         out[1] = forFirstAxis.get1() * point[0] + forSecondAxis.get1() * point[1] + forThirdAxis.get1() * point[2];
         out[2] = forFirstAxis.get2() * point[0] + forSecondAxis.get2() * point[1] + forThirdAxis.get2() * point[2];
+    }
+
+    public Vector3i translate(Vector3i point) {
+        return new Vector3i(
+                forFirstAxis.get0() * point.x() + forFirstAxis.get1() * point.y() + forFirstAxis.get2() * point.z(),
+                forSecondAxis.get0() * point.x() + forSecondAxis.get1() * point.y() + forSecondAxis.get2() * point.z(),
+                forThirdAxis.get0() * point.x() + forThirdAxis.get1() * point.y() + forThirdAxis.get2() * point.z());
+    }
+
+    public Vector3i inverseTranslate(Vector3i point) {
+        return new Vector3i(
+                forFirstAxis.get0() * point.x() + forSecondAxis.get0() * point.y() + forThirdAxis.get0() * point.z(),
+                forFirstAxis.get1() * point.x() + forSecondAxis.get1() * point.y() + forThirdAxis.get1() * point.z(),
+                forFirstAxis.get2() * point.x() + forSecondAxis.get2() * point.y() + forThirdAxis.get2() * point.z());
+    }
+
+    public <C extends CoordinateSystem<C, ?>> Position<C> translate(Position<?> point) {
+        return new Position<>(
+                forFirstAxis.get0() * point.x() + forFirstAxis.get1() * point.y() + forFirstAxis.get2() * point.z(),
+                forSecondAxis.get0() * point.x() + forSecondAxis.get1() * point.y() + forSecondAxis.get2() * point.z(),
+                forThirdAxis.get0() * point.x() + forThirdAxis.get1() * point.y() + forThirdAxis.get2() * point.z());
+    }
+
+    public <C extends CoordinateSystem<C, ?>> Position<C> inverseTranslate(Position<?> point) {
+        return new Position<>(
+                forFirstAxis.get0() * point.x() + forSecondAxis.get0() * point.y() + forThirdAxis.get0() * point.z(),
+                forFirstAxis.get1() * point.x() + forSecondAxis.get1() * point.y() + forThirdAxis.get1() * point.z(),
+                forFirstAxis.get2() * point.x() + forSecondAxis.get2() * point.y() + forThirdAxis.get2() * point.z());
     }
 }
