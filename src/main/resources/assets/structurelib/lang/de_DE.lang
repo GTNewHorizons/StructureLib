@@ -1,0 +1,27 @@
+item.structurelib.constructableTrigger.gui.browser.title=Hologramm-Projektor [?]
+item.structurelib.constructableTrigger.gui.browser.settings=Einstellungen
+item.structurelib.constructableTrigger.gui.browser.apply=Übernehmen
+item.structurelib.constructableTrigger.gui.browser.cancel=Abbrechen
+item.structurelib.constructableTrigger.gui.browser.advanced=Erweitert
+item.structurelib.constructableTrigger.gui.browser.simple=Einfach
+item.structurelib.constructableTrigger.gui.browser.reset_all=Alle zurücksetzen
+item.structurelib.constructableTrigger.gui.browser.confirm_reset=Bestätigen?
+item.structurelib.constructableTrigger.gui.browser.default=Standard
+item.structurelib.constructableTrigger.gui.browser.custom=Channel anlegen
+item.structurelib.constructableTrigger.gui.browser.empty=Keine Treffer
+item.structurelib.constructableTrigger.gui.browser.select=Einstellung auswählen
+item.structurelib.constructableTrigger.gui.browser.registered=Registrierte Items suchen
+item.structurelib.constructableTrigger.gui.browser.choose_channel=Channel des Items auswählen
+item.structurelib.constructableTrigger.gui.browser.numeric=Zahlenwert (Hilfe am Titel)
+item.structurelib.constructableTrigger.gui.browser.invalid=Zahl von 1 bis 268435455
+item.structurelib.constructableTrigger.gui.browser.raw=Channel-Wert: %s
+item.structurelib.constructableTrigger.gui.browser.default_help=Standard entfernt diesen eigenen Channel-Wert. Die normale Projektor-Logik gilt; damit wird weder ein bestimmter Block noch die Eignung für einen Multiblock zugesichert.
+item.structurelib.constructableTrigger.gui.browser.help=Wähle eine Einstellung und ein registriertes Item nach Namen oder bearbeite einen Zahlenwert. Erweitert bietet technische Werte und eigene Channels. Du kannst Items aus NEI in dieses Fenster ziehen. Übernehmen speichert; Abbrechen oder Escape verwirft Änderungen. Halte die Maus über einen Einstellungstitel für die Beschreibung. Listen lassen sich mit dem Mausrad scrollen. Registrierte Items werden nicht nach Multiblock gefiltert.
+item.structurelib.constructableTrigger.gui.browser.channel.coil=Heizspulen
+item.structurelib.constructableTrigger.gui.browser.channel.glass=Glas
+item.structurelib.constructableTrigger.gui.browser.channel.gt_hatch=Hatches
+
+item.structurelib.constructableTrigger.gui.browser.invalid_value=Ungültig: %s
+item.structurelib.constructableTrigger.gui.browser.invalid_settings=Korrigiere ungültige Channel-Werte oder setze sie vor dem Übernehmen zurück.
+item.structurelib.constructableTrigger.gui.browser.variants=Registrierte Varianten
+
