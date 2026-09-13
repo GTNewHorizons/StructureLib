@@ -24,4 +24,3 @@ item.structurelib.constructableTrigger.gui.browser.channel.gt_hatch=Hatches
 item.structurelib.constructableTrigger.gui.browser.invalid_value=Ungültig: %s
 item.structurelib.constructableTrigger.gui.browser.invalid_settings=Korrigiere ungültige Channel-Werte oder setze sie vor dem Übernehmen zurück.
 item.structurelib.constructableTrigger.gui.browser.variants=Registrierte Varianten
-
