@@ -44,6 +44,9 @@ public class StructureLibCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     @Override
     public List<String> getMixins(Set<String> loadedCoreMods) {
-        return Arrays.asList("blockChangeNotifier.MixinForgeHooks", "blockChangeNotifier.MixinWorld");
+        return Arrays.asList(
+                "blockChangeNotifier.MixinForgeHooks",
+                "blockChangeNotifier.MixinWorld",
+                "MixinGuiContainer_PickChannel");
     }
 }
