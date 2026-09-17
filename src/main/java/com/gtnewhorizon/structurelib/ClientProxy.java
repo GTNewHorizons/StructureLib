@@ -30,6 +30,7 @@ import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigElement;
@@ -40,12 +41,17 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
 import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
+import com.gtnewhorizon.structurelib.util.BogoCompat;
+import com.gtnewhorizon.structurelib.util.MiscUtils;
 
 import cpw.mods.fml.client.config.GuiConfig;
 import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.EventPriority;
@@ -53,6 +59,8 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class ClientProxy extends CommonProxy {
 
@@ -257,6 +265,11 @@ public class ClientProxy extends CommonProxy {
     public void preInit(FMLPreInitializationEvent e) {
         FMLCommonHandler.instance().bus().register(new FMLEventHandler());
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
+    }
+
+    @Override
+    public void init(FMLInitializationEvent e) {
+        if (Loader.isModLoaded("bogosorter")) MinecraftForge.EVENT_BUS.register(new BogoCompat());
     }
 
     static void markTextureUsed(IIcon icon) {
@@ -559,6 +572,32 @@ public class ClientProxy extends CommonProxy {
     }
 
     public static class ForgeEventHandler {
+
+        @SubscribeEvent
+        @SideOnly(Side.CLIENT)
+        public void onMouseEvent(MouseEvent event) {
+            final EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+
+            if (player == null || player.isDead) {
+                return;
+            }
+
+            final ItemStack heldItem = player.getHeldItem();
+
+            if (heldItem == null || !(heldItem.getItem() instanceof ItemConstructableTrigger)) return;
+
+            if (event.button != 2 || !event.buttonstate) return;
+
+            // Sink the middle click as soon as a projector is held, so vanilla pick block does not run
+            event.setCanceled(true);
+
+            ChannelPickHandler.handleWorldPick(
+                    player.worldObj,
+                    player,
+                    heldItem,
+                    MiscUtils.getHitResult(player),
+                    player.isSneaking());
+        }
 
         @SubscribeEvent
         public void onEntityJoinWorld(EntityJoinWorldEvent e) {
