@@ -53,9 +53,23 @@ public abstract class MixinGuiContainer_PickChannel {
         }
 
         ChannelPickHandler.handleMiddleClick(
+                player,
                 cursorStack,
                 hoveredStack,
                 Keyboard.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode()));
+    }
+
+    /**
+     * This mixin is to avoid the shift-to-dump-all NEI feature; it triggers on all mouse keys.
+     */
+    // @Inject(method = "mouseMovedOrUp(III)V", at = @At("HEAD"), cancellable = true)
+    private void slib$onMouseMovedOrUp(int mouseX, int mouseY, int state, CallbackInfo ci) {
+        if (state != 2) return;
+        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        if (player == null) return;
+        ItemStack cursorStack = player.inventory.getItemStack();
+        if (cursorStack == null || !(cursorStack.getItem() instanceof ItemConstructableTrigger)) return;
+        ci.cancel();
     }
 
     @Invoker("getSlotAtPosition")
