@@ -146,7 +146,11 @@ public class ChannelDataAccessor {
      */
     public static void wipeChannelData(ItemStack masterStack) {
         if (masterStack == null) throw new IllegalArgumentException();
-        if (masterStack.stackTagCompound != null) masterStack.stackTagCompound.removeTag(SECONDARY_HINT_TAG);
+        if (masterStack.stackTagCompound != null) {
+            masterStack.stackTagCompound.removeTag(SECONDARY_HINT_TAG);
+            if (masterStack.stackTagCompound.hasNoTags())
+                masterStack.stackTagCompound = null;
+        }
     }
 
     /**
