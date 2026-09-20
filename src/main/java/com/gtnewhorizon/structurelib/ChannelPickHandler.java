@@ -51,7 +51,8 @@ public final class ChannelPickHandler {
 
     private static boolean handlePick(EntityPlayer player, ItemStack holoStack, @Nullable ItemStack targetStack,
             final boolean isSneaking, final boolean onCursor) {
-        // Clear channels on shift+middle-click
+        // Clear channels on shift+middle-click. The "press again to confirm" gesture is gated client-side
+        // (see ChannelWipeConfirmation) before this method is ever called.
         if (isSneaking) {
             ChannelDataAccessor.wipeChannelData(holoStack);
             sendChannelData(player, holoStack, onCursor);
@@ -62,7 +63,10 @@ public final class ChannelPickHandler {
         if (targetStack == null) return false; // nothing hovered, cancel silently
 
         Collection<Map.Entry<String, Integer>> channels = ChannelDescription.iterate(targetStack);
-        if (channels.isEmpty()) return false; // no channel mapping, cancel silently
+        if (channels.isEmpty()) {
+            player.addChatMessage(new ChatComponentTranslation("structurelib.pickchannel.nomapping"));
+            return false;
+        }
 
         // Assuming there's only 1 channel per item for now (same behavior as drag and drop)
         Map.Entry<String, Integer> first = channels.iterator().next();

@@ -1,12 +1,12 @@
 package com.gtnewhorizon.structurelib.mixins.early;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-import org.lwjgl.input.Keyboard;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.gtnewhorizon.structurelib.ChannelPickHandler;
+import com.gtnewhorizon.structurelib.ChannelWipeConfirmation;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 
@@ -52,11 +53,10 @@ public abstract class MixinGuiContainer_PickChannel {
             StructureLib.LOGGER.error("Error while resolving hovered slot for channel pick", e);
         }
 
-        ChannelPickHandler.handleMiddleClick(
-                player,
-                cursorStack,
-                hoveredStack,
-                Keyboard.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode()));
+        boolean isSneaking = GuiScreen.isShiftKeyDown();
+        if (isSneaking && !ChannelWipeConfirmation.confirm(player)) return;
+
+        ChannelPickHandler.handleMiddleClick(player, cursorStack, hoveredStack, isSneaking);
     }
 
     @Invoker("getSlotAtPosition")
