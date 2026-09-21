@@ -1,5 +1,4 @@
 simple-cleanups-javadoc
-master
 feature/doc
 1.4.44
 1.4.43
