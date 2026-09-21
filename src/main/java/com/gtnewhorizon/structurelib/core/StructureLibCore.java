@@ -1,5 +1,6 @@
 package com.gtnewhorizon.structurelib.core;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -7,7 +8,9 @@ import java.util.Set;
 
 import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
 
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
+import cpw.mods.fml.relauncher.Side;
 
 @IFMLLoadingPlugin.MCVersion("1.7.10")
 public class StructureLibCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
@@ -44,6 +47,11 @@ public class StructureLibCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     @Override
     public List<String> getMixins(Set<String> loadedCoreMods) {
-        return Arrays.asList("blockChangeNotifier.MixinForgeHooks", "blockChangeNotifier.MixinWorld");
+        List<String> mixins = new ArrayList<>(
+                Arrays.asList("blockChangeNotifier.MixinForgeHooks", "blockChangeNotifier.MixinWorld"));
+        if (FMLLaunchHandler.side() == Side.CLIENT) {
+            mixins.add("MixinGuiContainer_PickChannel");
+        }
+        return mixins;
     }
 }

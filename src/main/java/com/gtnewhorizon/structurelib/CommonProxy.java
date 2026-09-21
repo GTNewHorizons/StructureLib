@@ -17,6 +17,7 @@ import net.minecraftforge.common.MinecraftForge;
 import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
 import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
 
+import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -63,6 +64,8 @@ public class CommonProxy {
     public void endHinting(World w) {}
 
     public void preInit(FMLPreInitializationEvent e) {}
+
+    public void init(FMLInitializationEvent e) {}
 
     public long getOverworldTime() {
         return MinecraftServer.getServer().getEntityWorld().getTotalWorldTime();

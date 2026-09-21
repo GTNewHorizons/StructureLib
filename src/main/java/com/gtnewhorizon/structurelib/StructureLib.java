@@ -33,6 +33,7 @@ import com.gtnewhorizon.structurelib.util.XSTR;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLInterModComms;
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -126,6 +127,11 @@ public class StructureLib {
         ChannelDescription.set(CHANNEL_SHOW_ERROR, MOD_ID, "channels.structurelib.show_errors");
 
         DevelopHelper.onPreInit();
+    }
+
+    @Mod.EventHandler
+    public void init(FMLInitializationEvent e) {
+        proxy.init(e);
     }
 
     @Mod.EventHandler

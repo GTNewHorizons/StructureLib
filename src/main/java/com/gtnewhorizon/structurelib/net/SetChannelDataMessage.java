@@ -23,15 +23,22 @@ import io.netty.buffer.ByteBuf;
 public class SetChannelDataMessage implements IMessage {
 
     private final List<Map.Entry<String, Integer>> data = new ArrayList<>();
+    private boolean onCursor;
 
     public SetChannelDataMessage() {}
 
     public SetChannelDataMessage(ItemStack trigger) {
+        this(trigger, false);
+    }
+
+    public SetChannelDataMessage(ItemStack trigger, final boolean onCursor) {
+        this.onCursor = onCursor;
         ChannelDataAccessor.iterateChannelData(trigger).forEach(data::add);
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
+        onCursor = buf.readBoolean();
         data.clear();
         int size = ByteBufUtils.readVarShort(buf);
         for (int i = 0; i < size; i++) {
@@ -41,6 +48,7 @@ public class SetChannelDataMessage implements IMessage {
 
     @Override
     public void toBytes(ByteBuf buf) {
+        buf.writeBoolean(onCursor);
         ByteBufUtils.writeVarShort(buf, data.size());
         for (Entry<String, Integer> e : data) {
             ByteBufUtils.writeUTF8String(buf, e.getKey());
@@ -53,11 +61,11 @@ public class SetChannelDataMessage implements IMessage {
         @Override
         public IMessage onMessage(SetChannelDataMessage message, MessageContext ctx) {
             EntityPlayerMP player = ctx.getServerHandler().playerEntity;
-            ItemStack heldItem = player.getHeldItem();
-            if (heldItem != null && heldItem.getItem() instanceof ItemConstructableTrigger) {
-                ChannelDataAccessor.wipeChannelData(heldItem);
+            ItemStack target = message.onCursor ? player.inventory.getItemStack() : player.getHeldItem();
+            if (target != null && target.getItem() instanceof ItemConstructableTrigger) {
+                ChannelDataAccessor.wipeChannelData(target);
                 for (Entry<String, Integer> e : message.data) {
-                    ChannelDataAccessor.setChannelData(heldItem, e.getKey(), e.getValue());
+                    ChannelDataAccessor.setChannelData(target, e.getKey(), e.getValue());
                 }
                 // since this is a set all channel request from the client, we would assume client already know
                 // what this would look like on the client, so no sync
@@ -65,7 +73,7 @@ public class SetChannelDataMessage implements IMessage {
                 StructureLib.LOGGER.warn(
                         "{} trying to set channel data on {}, which is not a hologram projector!",
                         player.getUniqueID(),
-                        heldItem);
+                        target);
             }
             return null;
         }
