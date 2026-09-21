@@ -2,6 +2,8 @@ package com.gtnewhorizon.structurelib;
 
 import static com.gtnewhorizon.structurelib.StructureLib.proxy;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -10,11 +12,19 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.FluidStack;
 
 import com.gtnewhorizon.gtnhlib.util.AnimatedTooltipHandler;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.IAlignmentProvider;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.fluid.FluidBlockPlacement;
+import com.gtnewhorizon.structurelib.fluid.FluidBlockPlacer;
+import com.gtnewhorizon.structurelib.fluid.FluidPlacementRegistry;
+import com.gtnewhorizon.structurelib.fluid.FluidSourceProviders;
+import com.gtnewhorizon.structurelib.fluid.FluidStackExtractor;
+import com.gtnewhorizon.structurelib.fluid.FluidStackExtractors;
+import com.gtnewhorizon.structurelib.fluid.IFluidSourceProvider;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
@@ -321,6 +331,26 @@ public class StructureLibAPI {
     }
 
     /**
+     * Put back the block that was at a position, which is what a placement that could not be paid for should roll back
+     * to.
+     * <p>
+     * Restoring the previous state instead of clearing the position matters whenever the position held something
+     * autoplace is allowed to replace, e.g. a fluid that is not a source block: the player would otherwise be left with
+     * a hole where their fluid used to be.
+     *
+     * @param world world to write to
+     * @param x     x coord
+     * @param y     y coord
+     * @param z     z coord
+     * @param block the block that was there, or null for air
+     * @param meta  the meta that was there
+     */
+    public static void restoreBlock(World world, int x, int y, int z, @Nullable Block block, int meta) {
+        if (block == null || block.isAir(world, x, y, z)) world.setBlockToAir(x, y, z);
+        else world.setBlock(x, y, z, block, meta, 3);
+    }
+
+    /**
      * Send chat to player, but throttled.
      *
      * @param throttleKey      throttle key. Must properly implement {@link Object#hashCode()} and
@@ -362,6 +392,136 @@ public class StructureLibAPI {
      */
     public static void registerChannelDescription(final String channel, final String modid, final String description) {
         ChannelDescription.set(channel, modid, description);
+    }
+
+    /**
+     * Register what it costs to place a fluid block, and how to place it.
+     * <p>
+     * Water and lava are registered by default, and every Forge fluid block is recognised automatically, so this is
+     * only needed for a fluid block that costs something else than one bucket, for a fluid block that has to be written
+     * into the world in a special way, or for a block that has an item form but should always be paid for with fluid.
+     *
+     * @param block     the fluid block
+     * @param meta      the block meta. {@link net.minecraftforge.oredict.OreDictionary#WILDCARD_VALUE} covers every
+     *                  meta of this block.
+     * @param placement what this block state costs and how to place it
+     */
+    public static void registerFluidBlockCost(Block block, int meta, FluidBlockPlacement placement) {
+        FluidPlacementRegistry.register(block, meta, placement);
+    }
+
+    /**
+     * Register what it costs to place a fluid block, preferring the item form when the block has one.
+     *
+     * @param block the fluid block
+     * @param meta  the block meta
+     * @param cost  how much fluid one block of this state costs
+     * @see #registerFluidBlockCost(Block, int, FluidBlockPlacement)
+     */
+    public static void registerFluidBlockCost(Block block, int meta, FluidStack cost) {
+        FluidPlacementRegistry.register(block, meta, cost);
+    }
+
+    /**
+     * Register what it costs to place a fluid block.
+     *
+     * @param block      the fluid block
+     * @param meta       the block meta
+     * @param cost       how much fluid one block of this state costs
+     * @param forceFluid whether to always pay with fluid, even when this block also has an item form
+     * @see #registerFluidBlockCost(Block, int, FluidBlockPlacement)
+     */
+    public static void registerFluidBlockCost(Block block, int meta, FluidStack cost, boolean forceFluid) {
+        FluidPlacementRegistry.register(block, meta, cost, forceFluid);
+    }
+
+    /**
+     * Register what it costs to place a fluid block, with {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of the
+     * fluid the block holds, preferring the item form when the block has one.
+     * <p>
+     * The amount is the whole cost of that state, so a block whose meta says how full it is wants one registration per
+     * meta it can be in, or no registration at all, in which case the default amount is scaled down for a partially
+     * filled position.
+     *
+     * @param block the fluid block
+     * @param meta  the block meta. {@link net.minecraftforge.oredict.OreDictionary#WILDCARD_VALUE} covers every meta of
+     *              this block.
+     * @throws IllegalArgumentException if the block holds no fluid, or this state is already registered
+     * @see #registerFluidBlockCost(Block, int, FluidBlockPlacement)
+     */
+    public static void registerFluidBlockCost(Block block, int meta) {
+        FluidPlacementRegistry.register(block, meta);
+    }
+
+    /**
+     * Register what it costs to place a fluid block, with {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of the
+     * fluid the block holds.
+     *
+     * @param block      the fluid block
+     * @param meta       the block meta. {@link net.minecraftforge.oredict.OreDictionary#WILDCARD_VALUE} covers every
+     *                   meta of this block.
+     * @param forceFluid whether to always pay with fluid, even when this block also has an item form
+     * @see #registerFluidBlockCost(Block, int)
+     */
+    public static void registerFluidBlockCost(Block block, int meta, boolean forceFluid) {
+        FluidPlacementRegistry.register(block, meta, forceFluid);
+    }
+
+    /**
+     * Register the whole block, i.e. every meta of it that has no registration of its own, with
+     * {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of the fluid it holds.
+     *
+     * @param block the fluid block
+     * @see #registerFluidBlockCost(Block, int)
+     */
+    public static void registerFluidBlockCost(Block block) {
+        FluidPlacementRegistry.register(block);
+    }
+
+    /**
+     * Register what it costs to place a fluid block, with {@link FluidPlacementRegistry#DEFAULT_FLUID_AMOUNT} of the
+     * fluid the block holds, and placed the way the given placer says.
+     * <p>
+     * Use this for a fluid block that cannot be placed with a plain block set, e.g. one that has to be filled through
+     * its own API.
+     *
+     * @param block  the fluid block
+     * @param meta   the block meta. {@link net.minecraftforge.oredict.OreDictionary#WILDCARD_VALUE} covers every meta
+     *               of this block.
+     * @param placer how to write the block into the world
+     * @see #registerFluidBlockCost(Block, int, FluidBlockPlacement)
+     */
+    public static void registerFluidBlockCost(Block block, int meta, FluidBlockPlacer placer) {
+        FluidPlacementRegistry.register(block, meta, placer);
+    }
+
+    /**
+     * Register a way to pull fluid out of an item, so that autoplace can pay for a fluid block with it.
+     * <p>
+     * Forge's fluid container item and Forge's fluid container registry are both supported out of the box, which covers
+     * buckets and most modded cells. Register your own extractor for a container that exposes its fluid by other means.
+     *
+     * @param key       unique key. Matches the key shown in the config gui.
+     * @param extractor the extractor
+     */
+    public static void registerFluidStackExtractor(String key, FluidStackExtractor extractor) {
+        FluidStackExtractors.register(key, extractor);
+    }
+
+    /**
+     * Register a way to hand StructureLib fluid without the player having to carry a fluid container, e.g. the ME
+     * network behind a wireless terminal the player has on them.
+     * <p>
+     * Providers are asked before the fluid containers the player is carrying, in the order the player configured, so
+     * the player can reorder or disable every provider in StructureLib's config. A provider should look up what it
+     * drains from every time it is asked for fluid rather than when it is created, as the player can walk out of range
+     * or put a terminal away between two rounds of autoplace.
+     *
+     * @param key      unique key. Matches the key shown in the config gui.
+     * @param provider the provider
+     */
+    public static void registerFluidSourceProvider(String key, IFluidSourceProvider provider) {
+        FluidSourceProviders.register(key, provider);
     }
 
     /**

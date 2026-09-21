@@ -16,6 +16,7 @@ import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.fluid.FluidSourceProviders;
 import com.gtnewhorizon.structurelib.structure.IItemSource;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
@@ -79,7 +80,13 @@ public class ConstructableUtility {
                 int built = ((ISurvivalConstructable) constructable).survivalConstruct(
                         aStack,
                         ConfigurationHandler.INSTANCE.getAutoPlaceBudget(),
-                        ISurvivalBuildEnvironment.create(IItemSource.fromPlayer(playerMP), playerMP));
+                        ISurvivalBuildEnvironment.create(
+                                IItemSource.fromPlayer(playerMP),
+                                // What the player can offer: every registered fluid source provider, e.g. the ME
+                                // network
+                                // behind a wireless terminal they have on them, and then the fluid they are carrying.
+                                FluidSourceProviders.getSourceFor(playerMP),
+                                playerMP));
                 if (built > 0) {
                     playerMP.addChatMessage(new ChatComponentTranslation("structurelib.autoplace.built_stat", built));
                 } else if (built == -1) {

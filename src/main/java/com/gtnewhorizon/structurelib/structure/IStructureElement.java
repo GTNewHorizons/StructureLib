@@ -3,6 +3,7 @@ package com.gtnewhorizon.structurelib.structure;
 import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
 import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +23,10 @@ import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
 import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.fluid.FluidBlockPlacement;
+import com.gtnewhorizon.structurelib.fluid.FluidBlockRequirement;
+import com.gtnewhorizon.structurelib.fluid.FluidFillPolicy;
+import com.gtnewhorizon.structurelib.fluid.FluidPlacementRegistry;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate;
 import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 
@@ -126,6 +131,23 @@ public interface IStructureElement<T> {
     }
 
     /**
+     * Whether this element is responsible for placing fluid blocks, e.g. an element that accepts a water block created
+     * by {@link StructureUtility#ofBlock(Block, int)} or {@link StructureUtility#ofFluidBlock(Block, int)}.
+     * <p>
+     * Autoplace uses this to keep a fluid from flowing out of a structure that is not finished yet: a fluid is only
+     * placed once every element that does not answer true has been satisfied. An element that wraps another element
+     * must forward this call, otherwise a fluid inside of it is treated as a block that still has to be built, and is
+     * never placed at all.
+     * <p>
+     * The default is false, which is the safe answer for every element that was written before fluid autoplace existed.
+     *
+     * @param t the context object, used to resolve an element that is built on demand
+     */
+    default boolean isFluidElement(T t) {
+        return false;
+    }
+
+    /**
      * Try place the block by taking resource from given {@link IItemSource}.
      * <p>
      * You might want to use
@@ -140,7 +162,7 @@ public interface IStructureElement<T> {
      * <li>call {@link #check(Object, World, int, int, int)}. If this returns {@code true}, {@link PlaceResult#SKIP}
      * will be returned without further action.</li>
      * <li>Use the {@link BlocksToPlace} retrieved earlier and passed in {@link IItemSource} to determine an item to
-     * place</li>
+     * place, or the fluid it carries to place a fluid block</li>
      * <li>Hand over control to
      * {@link StructureUtility#survivalPlaceBlock(ItemStack, NBTMode, NBTTagCompound, boolean, World, int, int, int, IItemSource, EntityPlayer, Consumer)}</li>
      * </ol>
@@ -170,6 +192,10 @@ public interface IStructureElement<T> {
             if (check(t, world, x, y, z)) return PlaceResult.SKIP;
             if (e.getStacks() == null) {
                 ItemStack taken = source.takeOne(e.getPredicate(), true);
+                if (taken == null) {
+                    return e.getFluidRequirements().isEmpty() ? PlaceResult.REJECT
+                            : FluidAutoplace.tryPlace(world, x, y, z, env, e.getFluidRequirements());
+                }
                 return StructureUtility.survivalPlaceBlock(
                         taken,
                         NBTMode.EXACT,
@@ -198,7 +224,8 @@ public interface IStructureElement<T> {
                         actor,
                         chatter);
             }
-            return PlaceResult.REJECT;
+            return e.getFluidRequirements().isEmpty() ? PlaceResult.REJECT
+                    : FluidAutoplace.tryPlace(world, x, y, z, env, e.getFluidRequirements());
         }
         if (actor instanceof EntityPlayerMP)
             return survivalPlaceBlock(t, world, x, y, z, trigger, source, (EntityPlayerMP) actor, chatter);
@@ -305,6 +332,7 @@ public interface IStructureElement<T> {
         public static final BlocksToPlace errored = createEmpty();
         private final Predicate<ItemStack> predicate;
         private final Iterable<ItemStack> stacks;
+        private final List<FluidBlockRequirement> fluidRequirements;
 
         public static BlocksToPlace createEmpty() {
             return new BlocksToPlace(s -> false, Collections.emptyList());
@@ -326,8 +354,22 @@ public interface IStructureElement<T> {
             return new BlocksToPlace(predicate, stacks);
         }
 
+        /**
+         * Accept a block state, describing what has to be paid for it.
+         * <p>
+         * A block that has no item form, e.g. a fluid block, is described by what it costs to place it with fluid. Such
+         * a block can only be placed in survival mode when fluid autoplace knows how to pay for it.
+         */
         public static BlocksToPlace create(Block block, int meta) {
+            FluidBlockPlacement placement = FluidPlacementRegistry.resolve(block, meta);
             Item itemBlock = Item.getItemFromBlock(block);
+            if (itemBlock == null) {
+                if (placement == null) return createEmpty();
+                return createFluid(FluidBlockRequirement.of(placement, block, meta, FluidFillPolicy.EXACT_STATE));
+            }
+            if (placement != null && placement.forceFluid()) {
+                return createFluid(FluidBlockRequirement.of(placement, block, meta, FluidFillPolicy.EXACT_STATE));
+            }
             if (itemBlock instanceof ISpecialItemBlock) {
                 meta = ((ISpecialItemBlock) itemBlock).getItemMetaFromBlockMeta(block, meta);
             }
@@ -348,9 +390,33 @@ public interface IStructureElement<T> {
             return new BlocksToPlace(predicate, null);
         }
 
+        /**
+         * Describe a block state that is paid for with fluid instead of with an item.
+         */
+        public static BlocksToPlace createFluid(FluidBlockRequirement... requirements) {
+            return createFluid(Arrays.asList(requirements));
+        }
+
+        /**
+         * Describe block states that are paid for with fluid instead of with an item.
+         */
+        public static BlocksToPlace createFluid(Iterable<FluidBlockRequirement> requirements) {
+            List<FluidBlockRequirement> list = new ArrayList<>();
+            for (FluidBlockRequirement requirement : requirements) {
+                if (requirement != null) list.add(requirement);
+            }
+            return new BlocksToPlace(s -> false, Collections.emptyList(), list);
+        }
+
         BlocksToPlace(Predicate<ItemStack> predicate, Iterable<ItemStack> stacks) {
+            this(predicate, stacks, Collections.emptyList());
+        }
+
+        BlocksToPlace(Predicate<ItemStack> predicate, Iterable<ItemStack> stacks,
+                List<FluidBlockRequirement> fluidRequirements) {
             this.predicate = predicate;
             this.stacks = stacks;
+            this.fluidRequirements = fluidRequirements;
         }
 
         /**
@@ -376,6 +442,19 @@ public interface IStructureElement<T> {
         @Nullable
         public Iterable<ItemStack> getStacks() {
             return stacks;
+        }
+
+        /**
+         * Get the block states that this one is known to accept, and that have to be paid for with fluid.
+         * <p>
+         * Suitable for use with {@link FluidAutoplace#tryPlace(World, int, int, int, AutoPlaceEnvironment, Iterable)}.
+         * Item forms are tried first, so this is only consulted when no item was found.
+         *
+         * @return a possibly empty list. never null. do not mutate it.
+         */
+        @Nonnull
+        public List<FluidBlockRequirement> getFluidRequirements() {
+            return fluidRequirements;
         }
     }
 }
