@@ -1,5 +1,6 @@
 simple-cleanups-javadoc
 feature/doc
+1.4.45
 1.4.44
 1.4.43
 1.4.42
