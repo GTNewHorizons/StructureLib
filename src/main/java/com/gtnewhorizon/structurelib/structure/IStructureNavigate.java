@@ -10,36 +10,36 @@ import net.minecraft.world.World;
 /**
  * Use StructureUtility to instantiate
  */
-interface IStructureNavigate<T> extends IStructureElement<T> {
+interface IStructureNavigate extends IStructureElement<Object> {
 
     @Override
-    default boolean check(T t, World world, int x, int y, int z) {
+    default boolean check(Object t, World world, int x, int y, int z) {
         return true;
     }
 
     @Override
-    default boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
+    default boolean couldBeValid(Object t, World world, int x, int y, int z, ItemStack trigger) {
         return true;
     }
 
     @Override
-    default boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+    default boolean spawnHint(Object t, World world, int x, int y, int z, ItemStack trigger) {
         return true;
     }
 
     @Override
-    default boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+    default boolean placeBlock(Object t, World world, int x, int y, int z, ItemStack trigger) {
         return true;
     }
 
     @Override
-    default PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger, IItemSource s,
+    default PlaceResult survivalPlaceBlock(Object t, World world, int x, int y, int z, ItemStack trigger, IItemSource s,
             EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
         return PlaceResult.SKIP;
     }
 
     @Override
-    default PlaceResult survivalPlaceBlock(T t, World world, int x, int y, int z, ItemStack trigger,
+    default PlaceResult survivalPlaceBlock(Object t, World world, int x, int y, int z, ItemStack trigger,
             AutoPlaceEnvironment env) {
         return PlaceResult.SKIP;
     }

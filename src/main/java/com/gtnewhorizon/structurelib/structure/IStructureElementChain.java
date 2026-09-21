@@ -21,11 +21,11 @@ import com.google.common.collect.Iterables;
  */
 public interface IStructureElementChain<T> extends IStructureElement<T> {
 
-    IStructureElement<T>[] fallbacks();
+    IStructureElement<? super T>[] fallbacks();
 
     @Override
     default boolean check(T t, World world, int x, int y, int z) {
-        for (IStructureElement<T> fallback : fallbacks()) {
+        for (IStructureElement<? super T> fallback : fallbacks()) {
             if (fallback.check(t, world, x, y, z)) {
                 return true;
             }
@@ -35,7 +35,7 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
 
     @Override
     default boolean couldBeValid(T t, World world, int x, int y, int z, ItemStack trigger) {
-        for (IStructureElement<T> fallback : fallbacks()) {
+        for (IStructureElement<? super T> fallback : fallbacks()) {
             if (fallback.couldBeValid(t, world, x, y, z, trigger)) {
                 return true;
             }
@@ -45,7 +45,7 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
 
     @Override
     default boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
-        for (IStructureElement<T> fallback : fallbacks()) {
+        for (IStructureElement<? super T> fallback : fallbacks()) {
             if (fallback.spawnHint(t, world, x, y, z, trigger)) {
                 return true;
             }
@@ -55,7 +55,7 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
 
     @Override
     default boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
-        for (IStructureElement<T> fallback : fallbacks()) {
+        for (IStructureElement<? super T> fallback : fallbacks()) {
             if (fallback.placeBlock(t, world, x, y, z, trigger)) {
                 return true;
             }
@@ -67,7 +67,7 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
     @Override
     default List<String> getDescription(T context) {
         Set<String> descriptions = new LinkedHashSet<>();
-        for (IStructureElement<T> fallback : fallbacks()) {
+        for (IStructureElement<? super T> fallback : fallbacks()) {
             List<String> desc = fallback.getDescription(context);
             if (desc != null) {
                 descriptions.addAll(desc);
@@ -82,7 +82,7 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
             AutoPlaceEnvironment env) {
         Predicate<ItemStack> predicate = null;
         List<Iterable<ItemStack>> is = new ArrayList<>();
-        for (IStructureElement<T> fallback : fallbacks()) {
+        for (IStructureElement<? super T> fallback : fallbacks()) {
             BlocksToPlace e = fallback.getBlocksToPlace(t, world, x, y, z, trigger, env);
             if (e == null) continue;
             if (predicate == null) predicate = e.getPredicate();
@@ -99,7 +99,7 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
             EntityPlayerMP actor, Consumer<IChatComponent> chatter) {
         boolean allContinue = true;
         List<IChatComponent> bufferedNoise = new ArrayList<>();
-        for (IStructureElement<T> fallback : fallbacks()) {
+        for (IStructureElement<? super T> fallback : fallbacks()) {
             PlaceResult result = fallback.survivalPlaceBlock(t, world, x, y, z, trigger, s, actor, bufferedNoise::add);
             switch (result) {
                 case REJECT_CONTINUE:
@@ -124,7 +124,7 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
             AutoPlaceEnvironment env) {
         boolean allContinue = true;
         List<IChatComponent> bufferedNoise = new ArrayList<>();
-        for (IStructureElement<T> fallback : fallbacks()) {
+        for (IStructureElement<? super T> fallback : fallbacks()) {
             PlaceResult result = fallback
                     .survivalPlaceBlock(t, world, x, y, z, trigger, env.withChatter(bufferedNoise::add));
             switch (result) {

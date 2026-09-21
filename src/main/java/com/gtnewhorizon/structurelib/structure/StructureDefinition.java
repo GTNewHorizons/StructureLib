@@ -16,17 +16,17 @@ import com.gtnewhorizon.structurelib.util.Vec3Impl;
 
 public class StructureDefinition<T> implements IStructureDefinition<T> {
 
-    private final Map<Character, IStructureElement<T>> elements;
+    private final Map<Character, IStructureElement<? super T>> elements;
     private final Map<String, String> shapes;
-    private final Map<String, IStructureElement<T>[]> structures;
+    private final Map<String, IStructureElement<? super T>[]> structures;
     private final Map<String, Set<Vec3Impl>> occupiedSpaces;
 
     public static <B> Builder<B> builder() {
         return new Builder<>();
     }
 
-    private StructureDefinition(Map<Character, IStructureElement<T>> elements, Map<String, String> shapes,
-            Map<String, IStructureElement<T>[]> structures, Map<String, Set<Vec3Impl>> occupiedSpaces) {
+    private StructureDefinition(Map<Character, IStructureElement<? super T>> elements, Map<String, String> shapes,
+            Map<String, IStructureElement<? super T>[]> structures, Map<String, Set<Vec3Impl>> occupiedSpaces) {
         this.elements = elements;
         this.shapes = shapes;
         this.structures = structures;
@@ -40,7 +40,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         private static final char C = '\uC000';
         private char d = '\uD000';
         private final Map<Vec3Impl, Character> navigates;
-        private final Map<Character, IStructureElement<T>> elements;
+        private final Map<Character, IStructureElement<? super T>> elements;
         private final Map<String, String> shapes;
         private final Map<String, Set<Vec3Impl>> occupiedSpaces;
 
@@ -51,7 +51,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
             occupiedSpaces = new HashMap<>();
         }
 
-        public Map<Character, IStructureElement<T>> getElements() {
+        public Map<Character, IStructureElement<? super T>> getElements() {
             return elements;
         }
 
@@ -181,18 +181,18 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
          * @deprecated use the unboxed version
          */
         @Deprecated
-        public Builder<T> addElement(Character name, IStructureElement<T> structurePiece) {
+        public Builder<T> addElement(Character name, IStructureElement<? super T> structurePiece) {
             elements.putIfAbsent(name, structurePiece);
             return this;
         }
 
-        public Builder<T> addElement(char name, IStructureElement<T> structurePiece) {
+        public Builder<T> addElement(char name, IStructureElement<? super T> structurePiece) {
             elements.putIfAbsent(name, structurePiece);
             return this;
         }
 
         public IStructureDefinition<T> build() {
-            Map<String, IStructureElement<T>[]> structures = compileStructureMap();
+            Map<String, IStructureElement<? super T>[]> structures = compileStructureMap();
             return new StructureDefinition<>(
                     new HashMap<>(elements),
                     new HashMap<>(shapes),
@@ -201,7 +201,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         }
 
         @SuppressWarnings("unchecked")
-        private Map<String, IStructureElement<T>[]> compileElementSetMap() {
+        private Map<String, IStructureElement<? super T>[]> compileElementSetMap() {
             Set<Integer> missing = findMissing();
             if (missing.isEmpty()) {
                 return shapes.entrySet().stream().collect(
@@ -217,7 +217,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         }
 
         @SuppressWarnings("unchecked")
-        private Map<String, IStructureElement<T>[]> compileStructureMap() {
+        private Map<String, IStructureElement<? super T>[]> compileStructureMap() {
             Set<Integer> missing = findMissing();
             if (missing.isEmpty()) {
                 return shapes.entrySet().stream().collect(
@@ -238,7 +238,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         }
     }
 
-    public Map<Character, IStructureElement<T>> getElements() {
+    public Map<Character, IStructureElement<? super T>> getElements() {
         return elements;
     }
 
@@ -246,13 +246,13 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         return shapes;
     }
 
-    public Map<String, IStructureElement<T>[]> getStructures() {
+    public Map<String, IStructureElement<? super T>[]> getStructures() {
         return structures;
     }
 
     @Override
-    public IStructureElement<T>[] getStructureFor(String name) {
-        IStructureElement<T>[] elements = structures.get(name);
+    public IStructureElement<? super T>[] getStructureFor(String name) {
+        IStructureElement<? super T>[] elements = structures.get(name);
         if (elements == null) throw new NoSuchElementException(name);
         return elements;
     }
