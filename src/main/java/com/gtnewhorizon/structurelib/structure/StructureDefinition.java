@@ -5,6 +5,7 @@ import static com.gtnewhorizon.structurelib.structure.StructureUtility.notAir;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.step;
 
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -19,14 +20,14 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
     private final Map<Character, IStructureElement<T>> elements;
     private final Map<String, String> shapes;
     private final Map<String, IStructureElement<T>[]> structures;
-    private final Map<String, Set<Vec3Impl>> occupiedSpaces;
+    private final Map<String, OccupiedSpace> occupiedSpaces;
 
     public static <B> Builder<B> builder() {
         return new Builder<>();
     }
 
     private StructureDefinition(Map<Character, IStructureElement<T>> elements, Map<String, String> shapes,
-            Map<String, IStructureElement<T>[]> structures, Map<String, Set<Vec3Impl>> occupiedSpaces) {
+            Map<String, IStructureElement<T>[]> structures, Map<String, OccupiedSpace> occupiedSpaces) {
         this.elements = elements;
         this.shapes = shapes;
         this.structures = structures;
@@ -42,7 +43,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         private final Map<Vec3Impl, Character> navigates;
         private final Map<Character, IStructureElement<T>> elements;
         private final Map<String, String> shapes;
-        private final Map<String, Set<Vec3Impl>> occupiedSpaces;
+        private final Map<String, OccupiedSpace> occupiedSpaces;
 
         private Builder() {
             navigates = new HashMap<>();
@@ -95,7 +96,19 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
                 }
                 builder.setLength(builder.length() - 1);
             }
-            Set<Vec3Impl> occupiedSpace = new HashSet<>();
+            int sizeA = 0;
+            int sizeB = 0;
+            long occupiedCount = 0;
+            for (String[] strings : structurePiece) {
+                sizeB = Math.max(sizeB, strings.length);
+                for (String string : strings) {
+                    sizeA = Math.max(sizeA, string.length());
+                    for (int i = 0; i < string.length(); i++) {
+                        if (string.charAt(i) != ' ') occupiedCount++;
+                    }
+                }
+            }
+            OccupiedSpace occupiedSpace = new OccupiedSpace(sizeA, sizeB, structurePiece.length, occupiedCount);
             // these track the global current location
             int aa = 0, bb = 0, cc = 0;
             // these track the vec3 towards next meaningful element
@@ -109,7 +122,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
                 } else if (ch == '~') {
                     builder.setCharAt(i, A);
                     ch = A;
-                    occupiedSpace.add(Vec3Impl.getFromPool(aa, bb, cc));
+                    occupiedSpace.add(aa, bb, cc);
                 }
                 if (ch == A) {
                     aa++;
@@ -135,13 +148,13 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
                         addElement(navigate, step(vec3));
                     }
                     builder.setCharAt(i - 1, navigate);
-                    occupiedSpace.add(Vec3Impl.getFromPool(aa, bb, cc));
+                    occupiedSpace.add(aa, bb, cc);
                     aa++;
                     a = 0;
                     b = 0;
                     c = 0;
                 } else {
-                    occupiedSpace.add(Vec3Impl.getFromPool(aa, bb, cc));
+                    occupiedSpace.add(aa, bb, cc);
                     aa++;
                 }
             }
@@ -259,8 +272,49 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
 
     @Override
     public boolean isContainedInStructure(String name, int offsetA, int offsetB, int offsetC) {
-        Set<Vec3Impl> occupiedSpace = occupiedSpaces.get(name);
+        OccupiedSpace occupiedSpace = occupiedSpaces.get(name);
         if (occupiedSpace == null) throw new NoSuchElementException(name);
-        return occupiedSpace.contains(new Vec3Impl(offsetA, offsetB, offsetC));
+        return occupiedSpace.contains(offsetA, offsetB, offsetC);
+    }
+
+    private static class OccupiedSpace {
+
+        private final int sizeA;
+        private final int sizeB;
+        private final int sizeC;
+        private final BitSet occupied;
+        private final Set<Vec3Impl> sparseOccupied;
+
+        private OccupiedSpace(int sizeA, int sizeB, int sizeC, long occupiedCount) {
+            this.sizeA = sizeA;
+            this.sizeB = sizeB;
+            this.sizeC = sizeC;
+            long volume = (long) sizeA * sizeB * sizeC;
+            if (volume <= Integer.MAX_VALUE && volume <= Math.max(1024L, occupiedCount * 256L)) {
+                occupied = new BitSet((int) volume);
+                sparseOccupied = null;
+            } else {
+                occupied = null;
+                sparseOccupied = new HashSet<>();
+            }
+        }
+
+        private void add(int a, int b, int c) {
+            if (occupied != null) {
+                occupied.set(index(a, b, c));
+            } else {
+                sparseOccupied.add(new Vec3Impl(a, b, c));
+            }
+        }
+
+        private boolean contains(int a, int b, int c) {
+            if (a < 0 || b < 0 || c < 0 || a >= sizeA || b >= sizeB || c >= sizeC) return false;
+            if (occupied != null) return occupied.get(index(a, b, c));
+            return sparseOccupied.contains(new Vec3Impl(a, b, c));
+        }
+
+        private int index(int a, int b, int c) {
+            return (c * sizeB + b) * sizeA + a;
+        }
     }
 }
