@@ -137,9 +137,9 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
                 if (!p_146195_1_ && isFocused() && !StringUtils.isBlank(getText())) {
                     int result;
                     try {
-                        result = Math.max(Integer.parseInt(getText()), 1);
+                        result = Math.max(Integer.parseInt(getText()), 0);
                     } catch (NumberFormatException e) {
-                        result = 1;
+                        result = 0;
                     }
                     setText(String.valueOf(result));
                 }
@@ -239,10 +239,12 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         int delta = Mouse.getEventDWheel();
         if (delta != 0) {
             if (isMouseOverValue()) {
+                if (!isInteger(value.getText())) return;
+                int current = getValue();
                 if (delta > 0) {
-                    value.setText(String.valueOf(getValue() + 1));
+                    value.setText(String.valueOf(current == Integer.MAX_VALUE ? current : current + 1));
                 } else {
-                    value.setText(String.valueOf(Math.max(getValue() - 1, 1)));
+                    value.setText(String.valueOf(current == 0 ? 0 : current - 1));
                 }
             } else {
                 list.handleDWheel(delta);
@@ -282,7 +284,7 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
                     key.setText(autoCompleteList.getSelectedElement());
                     key.setFocused(false);
                     value.setFocused(true);
-                    value.setText("1");
+                    value.setText("0");
                     value.setSelectionPos(0);
                     return;
                 }
@@ -322,17 +324,21 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
                 : I18n.format(I18N_PREFIX + "add");
         getButtonList().get(ADD_BTN).enabled = !StringUtils.isBlank(key.getText())
                 && !StringUtils.isBlank(value.getText())
-                && Integer.parseInt(value.getText()) > 0;
+                && isInteger(value.getText());
         getButtonList().get(UNSET_BTN).enabled = existing && !StringUtils.isBlank(value.getText());
 
         autoCompleteList.reset();
     }
 
     private int getValue() {
+        return Integer.parseInt(value.getText());
+    }
+
+    private static boolean isInteger(String text) {
         try {
-            return Integer.parseInt(value.getText());
+            return Integer.parseInt(text) >= 0;
         } catch (NumberFormatException e) {
-            return -1;
+            return false;
         }
     }
 
@@ -342,7 +348,7 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         switch (btn.id) {
             case ADD_BTN:
                 int value = getValue();
-                if (value <= 0) return;
+                if (value < 0) return;
                 ChannelDataAccessor.setChannelData(trigger, key.getText(), value);
                 break;
             case UNSET_BTN:

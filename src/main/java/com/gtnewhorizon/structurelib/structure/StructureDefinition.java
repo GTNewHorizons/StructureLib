@@ -6,6 +6,8 @@ import static com.gtnewhorizon.structurelib.structure.StructureUtility.step;
 
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -21,17 +23,27 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
     private final Map<String, String> shapes;
     private final Map<String, IStructureElement<T>[]> structures;
     private final Map<String, OccupiedSpace> occupiedSpaces;
+    private final Map<String, IChannelDefinition> channelDefinitions;
+    private final Set<String> explicitChannels;
+    private final Collection<IChannelDefinition> channelDefinitionValues;
+    private final Collection<IChannelDefinition> explicitChannelDefinitions;
 
     public static <B> Builder<B> builder() {
         return new Builder<>();
     }
 
     private StructureDefinition(Map<Character, IStructureElement<T>> elements, Map<String, String> shapes,
-            Map<String, IStructureElement<T>[]> structures, Map<String, OccupiedSpace> occupiedSpaces) {
+            Map<String, IStructureElement<T>[]> structures, Map<String, OccupiedSpace> occupiedSpaces,
+            Map<String, IChannelDefinition> channelDefinitions, Set<String> explicitChannels) {
         this.elements = elements;
         this.shapes = shapes;
         this.structures = structures;
         this.occupiedSpaces = occupiedSpaces;
+        this.channelDefinitions = Collections.unmodifiableMap(new HashMap<>(channelDefinitions));
+        this.explicitChannels = Collections.unmodifiableSet(new HashSet<>(explicitChannels));
+        this.channelDefinitionValues = Collections.unmodifiableCollection(this.channelDefinitions.values());
+        this.explicitChannelDefinitions = Collections.unmodifiableList(
+                this.explicitChannels.stream().map(this.channelDefinitions::get).collect(Collectors.toList()));
     }
 
     public static class Builder<T> {
@@ -44,12 +56,16 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         private final Map<Character, IStructureElement<T>> elements;
         private final Map<String, String> shapes;
         private final Map<String, OccupiedSpace> occupiedSpaces;
+        private final Map<String, IChannelDefinition> channels;
+        private final Set<String> explicitChannels;
 
         private Builder() {
             navigates = new HashMap<>();
             elements = new HashMap<>();
             shapes = new HashMap<>();
             occupiedSpaces = new HashMap<>();
+            channels = new HashMap<>();
+            explicitChannels = new HashSet<>();
         }
 
         public Map<Character, IStructureElement<T>> getElements() {
@@ -195,22 +211,47 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
          */
         @Deprecated
         public Builder<T> addElement(Character name, IStructureElement<T> structurePiece) {
-            elements.putIfAbsent(name, structurePiece);
+            if (elements.putIfAbsent(name, structurePiece) == null) registerElementChannel(structurePiece);
             return this;
         }
 
         public Builder<T> addElement(char name, IStructureElement<T> structurePiece) {
-            elements.putIfAbsent(name, structurePiece);
+            if (elements.putIfAbsent(name, structurePiece) == null) registerElementChannel(structurePiece);
             return this;
         }
 
+        public Builder<T> addChannel(IChannelDefinition definition) {
+            ChannelDefinitions.validate(definition);
+            channels.put(definition.getChannel(), definition);
+            explicitChannels.add(definition.getChannel());
+            return this;
+        }
+
+        public Builder<T> addChannel(String channel, int minimumValue, int maximumValue) {
+            return addChannel(ChannelDefinitions.bounded(channel, minimumValue, maximumValue));
+        }
+
+        private void registerElementChannel(IStructureElement<T> structurePiece) {
+            if (structurePiece instanceof IChannelAwareElement<?>) {
+                String channel = ((IChannelAwareElement<?>) structurePiece).getChannel();
+                if (!explicitChannels.contains(channel)) {
+                    channels.putIfAbsent(channel, ChannelDefinitions.unbounded(channel));
+                }
+            }
+        }
+
         public IStructureDefinition<T> build() {
+            for (IStructureElement<T> element : elements.values()) {
+                registerElementChannel(element);
+            }
             Map<String, IStructureElement<T>[]> structures = compileStructureMap();
             return new StructureDefinition<>(
                     new HashMap<>(elements),
                     new HashMap<>(shapes),
                     structures,
-                    occupiedSpaces);
+                    occupiedSpaces,
+                    channels,
+                    explicitChannels);
         }
 
         @SuppressWarnings("unchecked")
@@ -261,6 +302,21 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
 
     public Map<String, IStructureElement<T>[]> getStructures() {
         return structures;
+    }
+
+    @Override
+    public Collection<IChannelDefinition> getChannelDefinitions() {
+        return channelDefinitionValues;
+    }
+
+    @Override
+    public Collection<IChannelDefinition> getExplicitChannelDefinitions() {
+        return explicitChannelDefinitions;
+    }
+
+    @Override
+    public IChannelDefinition getChannelDefinition(String channel) {
+        return channelDefinitions.get(channel);
     }
 
     @Override

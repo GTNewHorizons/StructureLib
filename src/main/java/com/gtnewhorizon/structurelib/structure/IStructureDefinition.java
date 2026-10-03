@@ -3,6 +3,8 @@ package com.gtnewhorizon.structurelib.structure;
 import static com.gtnewhorizon.structurelib.structure.IStructureWalker.ignoreBlockUnloaded;
 import static com.gtnewhorizon.structurelib.structure.IStructureWalker.skipBlockUnloaded;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Function;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -55,6 +57,48 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
  * @param <T> Type of the context object. Usually this will be the multiblock controller.
  */
 public interface IStructureDefinition<T> {
+
+    /**
+     * Returns channel definitions declared by this structure.
+     *
+     * @return an immutable or otherwise read-only channel collection
+     */
+    default Collection<IChannelDefinition> getChannelDefinitions() {
+        return Collections.emptyList();
+    }
+
+    /**
+     * Returns channel definitions explicitly added by the structure builder.
+     *
+     * @return explicitly declared channel definitions
+     */
+    default Collection<IChannelDefinition> getExplicitChannelDefinitions() {
+        return getChannelDefinitions();
+    }
+
+    /**
+     * Finds a channel definition by identifier.
+     *
+     * @param channel channel identifier
+     * @return channel definition, or {@code null} when it is not declared
+     */
+    default IChannelDefinition getChannelDefinition(String channel) {
+        for (IChannelDefinition definition : getChannelDefinitions()) {
+            if (definition.getChannel().equals(channel)) return definition;
+        }
+        return null;
+    }
+
+    /**
+     * Reads one channel using the standard trigger-item channel semantics.
+     *
+     * @param trigger trigger item containing channel data
+     * @param channel channel identifier
+     * @return stored channel data, or the trigger stack size when absent
+     */
+    default int getChannelData(ItemStack trigger, String channel) {
+        return ChannelDataAccessor.getChannelData(trigger, channel);
+    }
 
     /**
      * Used internally

@@ -4,6 +4,7 @@ import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
 import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 import static java.lang.Integer.MIN_VALUE;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -727,7 +728,7 @@ public class StructureUtility {
             Function<T, TIER> getter) {
         List<String> descriptions = null;
         if (allKnownTiers != null) {
-            descriptions = new java.util.ArrayList<>();
+            descriptions = new ArrayList<>();
             for (Pair<Block, Integer> tier : allKnownTiers) {
                 Item item = Item.getItemFromBlock(tier.getLeft());
                 if (item != null) {
@@ -2992,7 +2993,12 @@ public class StructureUtility {
      * See channels.md in docs folder
      */
     public static <T> IStructureElement<T> withChannel(String channel, IStructureElement<T> backing) {
-        return new IStructureElement<T>() {
+        return new IChannelAwareElement<>() {
+
+            @Override
+            public String getChannel() {
+                return channel;
+            }
 
             public boolean check(T t, World world, int x, int y, int z) {
                 return backing.check(t, world, x, y, z);
