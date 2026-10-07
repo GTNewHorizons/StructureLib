@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -2995,9 +2996,11 @@ public class StructureUtility {
     public static <T> IStructureElement<T> withChannel(String channel, IStructureElement<T> backing) {
         return new IChannelAwareElement<>() {
 
+            private final Collection<String> channels = channelsFor(backing, channel);
+
             @Override
-            public String getChannel() {
-                return channel;
+            public Collection<String> getChannels() {
+                return channels;
             }
 
             public boolean check(T t, World world, int x, int y, int z) {
@@ -3070,6 +3073,15 @@ public class StructureUtility {
                 return backing.getDescription(context);
             }
         };
+    }
+
+    private static <T> Collection<String> channelsFor(IStructureElement<T> backing, String channel) {
+        Set<String> channels = new LinkedHashSet<>();
+        channels.add(channel);
+        if (backing instanceof IChannelAwareElement<?>) {
+            channels.addAll(((IChannelAwareElement<?>) backing).getChannels());
+        }
+        return Collections.unmodifiableSet(channels);
     }
     // endregion
 

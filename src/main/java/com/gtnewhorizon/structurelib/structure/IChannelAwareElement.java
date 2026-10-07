@@ -1,16 +1,18 @@
 package com.gtnewhorizon.structurelib.structure;
 
+import java.util.Collection;
+
 /**
- * Identifies the channel selected by a structure element wrapper.
+ * Identifies the channels selected by structure element wrappers.
  *
  * @param <T> structure context type
  */
 public interface IChannelAwareElement<T> extends IStructureElement<T> {
 
     /**
-     * Returns the channel used by this element.
+     * Returns the channels used by this element.
      *
-     * @return lower-case channel identifier
+     * @return lower-case channel identifiers
      */
-    String getChannel();
+    Collection<String> getChannels();
 }

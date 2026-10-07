@@ -11,6 +11,47 @@ package com.gtnewhorizon.structurelib.structure;
 public interface IChannelDefinition {
 
     /**
+     * Creates a channel with a bounded inclusive range and clamping normalization.
+     *
+     * @param channel      channel identifier
+     * @param minimumValue inclusive minimum value
+     * @param maximumValue inclusive maximum value
+     * @return bounded channel definition
+     */
+    static IChannelDefinition bounded(String channel, int minimumValue, int maximumValue) {
+        if (minimumValue < 0 || maximumValue < minimumValue) {
+            throw new IllegalArgumentException("Invalid channel bounds");
+        }
+        return new IChannelDefinition() {
+
+            @Override
+            public String getChannel() {
+                return channel;
+            }
+
+            @Override
+            public int getMinimumValue() {
+                return minimumValue;
+            }
+
+            @Override
+            public int getMaximumValue() {
+                return maximumValue;
+            }
+        };
+    }
+
+    /**
+     * Creates a channel accepting every non-negative integer.
+     *
+     * @param channel channel identifier
+     * @return unbounded channel definition
+     */
+    static IChannelDefinition unbounded(String channel) {
+        return () -> channel;
+    }
+
+    /**
      * Returns the lower-case channel identifier.
      *
      * @return channel identifier

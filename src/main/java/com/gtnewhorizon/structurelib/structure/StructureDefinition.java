@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -221,22 +222,38 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         }
 
         public Builder<T> addChannel(IChannelDefinition definition) {
-            ChannelDefinitions.validate(definition);
+            validateChannelDefinition(definition);
             channels.put(definition.getChannel(), definition);
             explicitChannels.add(definition.getChannel());
             return this;
         }
 
         public Builder<T> addChannel(String channel, int minimumValue, int maximumValue) {
-            return addChannel(ChannelDefinitions.bounded(channel, minimumValue, maximumValue));
+            return addChannel(IChannelDefinition.bounded(channel, minimumValue, maximumValue));
         }
 
         private void registerElementChannel(IStructureElement<T> structurePiece) {
             if (structurePiece instanceof IChannelAwareElement<?>) {
-                String channel = ((IChannelAwareElement<?>) structurePiece).getChannel();
-                if (!explicitChannels.contains(channel)) {
-                    channels.putIfAbsent(channel, ChannelDefinitions.unbounded(channel));
+                for (String channel : ((IChannelAwareElement<?>) structurePiece).getChannels()) {
+                    validateChannelName(channel);
+                    if (!explicitChannels.contains(channel)) {
+                        channels.putIfAbsent(channel, IChannelDefinition.unbounded(channel));
+                    }
                 }
+            }
+        }
+
+        private void validateChannelDefinition(IChannelDefinition definition) {
+            if (definition == null) throw new IllegalArgumentException("Channel definition cannot be null");
+            validateChannelName(definition.getChannel());
+            if (definition.getMinimumValue() < 0 || definition.getMaximumValue() < definition.getMinimumValue()) {
+                throw new IllegalArgumentException("Invalid channel definition values");
+            }
+        }
+
+        private void validateChannelName(String channel) {
+            if (channel == null || channel.isEmpty() || !channel.toLowerCase(Locale.ROOT).equals(channel)) {
+                throw new IllegalArgumentException("Channel name must be non-empty and lower case");
             }
         }
 

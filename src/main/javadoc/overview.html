@@ -186,7 +186,7 @@ StructureLib API documentation.
 IStructureDefinition.&lt;Controller&gt;builder()
         .addChannel("height", 3, 100)
         .addChannel("length", 4, 50)
-        .addChannel(ChannelDefinitions.unbounded("widget"))
+        .addChannel(IChannelDefinition.unbounded("widget"))
         .addElement('A', ...)
         .build();
 </pre>
