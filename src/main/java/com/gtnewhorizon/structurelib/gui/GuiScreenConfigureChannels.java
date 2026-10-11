@@ -244,7 +244,7 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
                 if (delta > 0) {
                     value.setText(String.valueOf(current == Integer.MAX_VALUE ? current : current + 1));
                 } else {
-                    value.setText(String.valueOf(current == 0 ? 0 : current - 1));
+                    value.setText(String.valueOf(current == Integer.MIN_VALUE ? current : current - 1));
                 }
             } else {
                 list.handleDWheel(delta);
@@ -336,7 +336,8 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
 
     private static boolean isInteger(String text) {
         try {
-            return Integer.parseInt(text) >= 0;
+            Integer.parseInt(text);
+            return true;
         } catch (NumberFormatException e) {
             return false;
         }
@@ -348,8 +349,11 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         switch (btn.id) {
             case ADD_BTN:
                 int value = getValue();
-                if (value < 0) return;
-                ChannelDataAccessor.setChannelData(trigger, key.getText(), value);
+                if (value < 1) {
+                    ChannelDataAccessor.unsetChannelData(trigger, key.getText());
+                } else {
+                    ChannelDataAccessor.setChannelData(trigger, key.getText(), value);
+                }
                 break;
             case UNSET_BTN:
                 ChannelDataAccessor.unsetChannelData(trigger, key.getText());

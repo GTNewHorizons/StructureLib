@@ -109,11 +109,11 @@ public class ChannelDataAccessor {
      * 
      * @param masterStack trigger stack to check
      * @param channel     channel identifier. Note: all channel identifiers are supposed to be lower case and not empty.
-     * @param data        non-negative subchannel data
+     * @param data        positive subchannel data
      */
     public static void setChannelData(ItemStack masterStack, String channel, int data) {
         if (StringUtils.isEmpty(channel) || masterStack == null) throw new IllegalArgumentException();
-        if (data < 0) throw new IllegalArgumentException("Channel data cannot be negative");
+        if (data < 1) throw new IllegalArgumentException("Channel data must be positive");
         if (StructureLibAPI.isDebugEnabled() && !channel.toLowerCase(Locale.ROOT).equals(channel))
             throw new IllegalArgumentException("Channel name can be lower case ONLY");
         if (masterStack.stackTagCompound == null) masterStack.stackTagCompound = new NBTTagCompound();

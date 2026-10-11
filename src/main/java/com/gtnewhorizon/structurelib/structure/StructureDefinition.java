@@ -246,7 +246,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         private void validateChannelDefinition(IChannelDefinition definition) {
             if (definition == null) throw new IllegalArgumentException("Channel definition cannot be null");
             validateChannelName(definition.getChannel());
-            if (definition.getMinimumValue() < 0 || definition.getMaximumValue() < definition.getMinimumValue()) {
+            if (definition.getMinimumValue() < 1 || definition.getMaximumValue() < definition.getMinimumValue()) {
                 throw new IllegalArgumentException("Invalid channel definition values");
             }
         }

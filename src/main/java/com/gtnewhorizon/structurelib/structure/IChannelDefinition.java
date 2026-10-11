@@ -19,7 +19,7 @@ public interface IChannelDefinition {
      * @return bounded channel definition
      */
     static IChannelDefinition bounded(String channel, int minimumValue, int maximumValue) {
-        if (minimumValue < 0 || maximumValue < minimumValue) {
+        if (minimumValue < 1 || maximumValue < minimumValue) {
             throw new IllegalArgumentException("Invalid channel bounds");
         }
         return new IChannelDefinition() {
@@ -42,7 +42,7 @@ public interface IChannelDefinition {
     }
 
     /**
-     * Creates a channel accepting every non-negative integer.
+     * Creates a channel accepting every positive integer.
      *
      * @param channel channel identifier
      * @return unbounded channel definition
@@ -59,12 +59,12 @@ public interface IChannelDefinition {
     String getChannel();
 
     /**
-     * Returns the smallest value advertised by this definition. The default is {@code 0}.
+     * Returns the smallest value advertised by this definition. The default is {@code 1}.
      *
      * @return minimum value
      */
     default int getMinimumValue() {
-        return 0;
+        return 1;
     }
 
     /**
