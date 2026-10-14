@@ -2994,7 +2994,7 @@ public class StructureUtility {
      * See channels.md in docs folder
      */
     public static <T> IStructureElement<T> withChannel(String channel, IStructureElement<T> backing) {
-        return new IChannelAwareElement<>() {
+        return new IStructureElement<>() {
 
             private final Collection<String> channels = channelsFor(backing, channel);
 
@@ -3078,9 +3078,7 @@ public class StructureUtility {
     private static <T> Collection<String> channelsFor(IStructureElement<T> backing, String channel) {
         Set<String> channels = new LinkedHashSet<>();
         channels.add(channel);
-        if (backing instanceof IChannelAwareElement<?>) {
-            channels.addAll(((IChannelAwareElement<?>) backing).getChannels());
-        }
+        channels.addAll(backing.getChannels());
         return Collections.unmodifiableSet(channels);
     }
     // endregion

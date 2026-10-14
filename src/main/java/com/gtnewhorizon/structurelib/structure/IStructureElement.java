@@ -4,6 +4,7 @@ import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
 import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -32,6 +33,15 @@ import com.gtnewhorizon.structurelib.util.ItemStackPredicate.NBTMode;
 public interface IStructureElement<T> {
 
     boolean check(T t, World world, int x, int y, int z);
+
+    /**
+     * Returns the channels used by this element.
+     *
+     * @return lower-case channel identifiers
+     */
+    default Collection<String> getChannels() {
+        return Collections.emptySet();
+    }
 
     /**
      * Pure (stateless and side effect free) function to test if current block could be valid. Used to give user hints

@@ -233,12 +233,10 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         }
 
         private void registerElementChannel(IStructureElement<T> structurePiece) {
-            if (structurePiece instanceof IChannelAwareElement<?>) {
-                for (String channel : ((IChannelAwareElement<?>) structurePiece).getChannels()) {
-                    validateChannelName(channel);
-                    if (!explicitChannels.contains(channel)) {
-                        channels.putIfAbsent(channel, IChannelDefinition.unbounded(channel));
-                    }
+            for (String channel : structurePiece.getChannels()) {
+                validateChannelName(channel);
+                if (!explicitChannels.contains(channel)) {
+                    channels.putIfAbsent(channel, IChannelDefinition.unbounded(channel));
                 }
             }
         }
