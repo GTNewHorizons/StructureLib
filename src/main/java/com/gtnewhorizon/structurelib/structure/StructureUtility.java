@@ -4,12 +4,14 @@ import static com.gtnewhorizon.structurelib.StructureLib.LOGGER;
 import static com.gtnewhorizon.structurelib.StructureLib.PANIC_MODE;
 import static java.lang.Integer.MIN_VALUE;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -727,7 +729,7 @@ public class StructureUtility {
             Function<T, TIER> getter) {
         List<String> descriptions = null;
         if (allKnownTiers != null) {
-            descriptions = new java.util.ArrayList<>();
+            descriptions = new ArrayList<>();
             for (Pair<Block, Integer> tier : allKnownTiers) {
                 Item item = Item.getItemFromBlock(tier.getLeft());
                 if (item != null) {
@@ -2992,7 +2994,14 @@ public class StructureUtility {
      * See channels.md in docs folder
      */
     public static <T> IStructureElement<T> withChannel(String channel, IStructureElement<T> backing) {
-        return new IStructureElement<T>() {
+        return new IStructureElement<>() {
+
+            private final Collection<String> channels = channelsFor(backing, channel);
+
+            @Override
+            public Collection<String> getChannels() {
+                return channels;
+            }
 
             public boolean check(T t, World world, int x, int y, int z) {
                 return backing.check(t, world, x, y, z);
@@ -3064,6 +3073,13 @@ public class StructureUtility {
                 return backing.getDescription(context);
             }
         };
+    }
+
+    private static <T> Collection<String> channelsFor(IStructureElement<T> backing, String channel) {
+        Set<String> channels = new LinkedHashSet<>();
+        channels.add(channel);
+        channels.addAll(backing.getChannels());
+        return Collections.unmodifiableSet(channels);
     }
     // endregion
 

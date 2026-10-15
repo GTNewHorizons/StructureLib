@@ -38,7 +38,9 @@ public class ChannelDataAccessor {
      * If given subchannel does not exist, masterStack may or may not be returned to save performance. Code within
      * StructureLib can depend on this behavior, you cannot.
      *
-     * @param masterStack trigger item. can be the return value of another {@link #withChannel(ItemStack, String)} call
+     * @param masterStack trigger item. can be the return value of another
+     *                    {@link com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor#withChannel(net.minecraft.item.ItemStack, String)}
+     *                    call
      * @param channel     subchannel to use. will use current master channel data instead if this channel does not exist
      *                    Note: all channel identifiers are supposed to be lower case and not empty.
      * @return a trigger item with new master channel
@@ -107,13 +109,13 @@ public class ChannelDataAccessor {
      * 
      * @param masterStack trigger stack to check
      * @param channel     channel identifier. Note: all channel identifiers are supposed to be lower case and not empty.
-     * @param data        subchannel data. should always be a positive value
+     * @param data        positive subchannel data
      */
     public static void setChannelData(ItemStack masterStack, String channel, int data) {
         if (StringUtils.isEmpty(channel) || masterStack == null) throw new IllegalArgumentException();
+        if (data < 1) throw new IllegalArgumentException("Channel data must be positive");
         if (StructureLibAPI.isDebugEnabled() && !channel.toLowerCase(Locale.ROOT).equals(channel))
             throw new IllegalArgumentException("Channel name can be lower case ONLY");
-        if (data <= 0) throw new IllegalArgumentException();
         if (masterStack.stackTagCompound == null) masterStack.stackTagCompound = new NBTTagCompound();
         NBTTagCompound main = masterStack.stackTagCompound;
         if (!main.hasKey(SECONDARY_HINT_TAG, TAG_COMPOUND)) main.setTag(SECONDARY_HINT_TAG, new NBTTagCompound());

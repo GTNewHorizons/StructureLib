@@ -174,6 +174,37 @@ StructureLib API documentation.
     master channel.
 </p>
 
+<h3>Metadata-only channels</h3>
+
+<p>
+    A channel does not need to represent a block or an element in a structure shape. Structure definitions can declare
+    metadata-only channels for values such as a widget selection or a variable structure height. These declarations are
+    independent of <code>addElement</code> and do not require a fake block or a shape character.
+</p>
+
+<pre>
+IStructureDefinition.&lt;Controller&gt;builder()
+        .addChannel("height", 3, 100)
+        .addChannel("length", 4, 50)
+        .addChannel(IChannelDefinition.unbounded("widget"))
+        .addElement('A', ...)
+        .build();
+</pre>
+
+<p>
+    Channel values are still stored as integers in the trigger item's <code>channels</code> NBT compound. The
+    generic channel GUI has no active structure definition, so it edits integers and does not impose one
+    structure's range on every other structure using the same channel name. Structure-aware code reads values through
+    <code>IStructureDefinition#getChannelData</code>, which uses the definition's default when the subchannel is absent
+    and then applies that definition's local normalization policy.
+</p>
+
+<p>
+    Existing elements wrapped with <code>StructureUtility.withChannel</code> are discovered automatically. An explicit
+    channel declaration supplies its local range and normalization policy for that structure. The same channel name may
+    therefore use different ranges in different structure definitions.
+</p>
+
 <h3>why is this called channel?</h3>
 
 Just give me a better name and I'd do the renaming.

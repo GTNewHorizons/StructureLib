@@ -26,7 +26,7 @@ public class CommandConfigureChannels extends CommandBase {
     public String getCommandUsage(ICommandSender p_71518_1_) {
         return "/sl_channel <wipe/getall>\n" + "/sl_channel <get/unset> <channel name>\n"
                 + "/sl_channel <set> <channel name> <value>\n"
-                + "<channel name> can have space in it. <value> must be positive integer";
+                + "<channel name> can have space in it. Values below 1 clear the channel";
     }
 
     @Override
@@ -108,11 +108,14 @@ public class CommandConfigureChannels extends CommandBase {
                     throw new WrongUsageException("%s not a valid value", args[args.length - 1]);
                 }
 
-                if (value <= 0) throw new WrongUsageException("%s not a valid value", args[args.length - 1]);
-
-                ChannelDataAccessor.setChannelData(heldItem, channel, value);
+                if (value < 1) {
+                    ChannelDataAccessor.unsetChannelData(heldItem, channel);
+                } else {
+                    ChannelDataAccessor.setChannelData(heldItem, channel, value);
+                }
                 player.inventoryContainer.detectAndSendChanges();
-                sender.addChatMessage(new ChatComponentText(channel + " value: " + value));
+                sender.addChatMessage(
+                        new ChatComponentText(value < 1 ? channel + " no value" : channel + " value: " + value));
                 break;
         }
     }

@@ -5,8 +5,12 @@ import static com.gtnewhorizon.structurelib.structure.StructureUtility.notAir;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.step;
 
 import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -19,18 +23,28 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
     private final Map<Character, IStructureElement<T>> elements;
     private final Map<String, String> shapes;
     private final Map<String, IStructureElement<T>[]> structures;
-    private final Map<String, Set<Vec3Impl>> occupiedSpaces;
+    private final Map<String, OccupiedSpace> occupiedSpaces;
+    private final Map<String, IChannelDefinition> channelDefinitions;
+    private final Set<String> explicitChannels;
+    private final Collection<IChannelDefinition> channelDefinitionValues;
+    private final Collection<IChannelDefinition> explicitChannelDefinitions;
 
     public static <B> Builder<B> builder() {
         return new Builder<>();
     }
 
     private StructureDefinition(Map<Character, IStructureElement<T>> elements, Map<String, String> shapes,
-            Map<String, IStructureElement<T>[]> structures, Map<String, Set<Vec3Impl>> occupiedSpaces) {
+            Map<String, IStructureElement<T>[]> structures, Map<String, OccupiedSpace> occupiedSpaces,
+            Map<String, IChannelDefinition> channelDefinitions, Set<String> explicitChannels) {
         this.elements = elements;
         this.shapes = shapes;
         this.structures = structures;
         this.occupiedSpaces = occupiedSpaces;
+        this.channelDefinitions = Collections.unmodifiableMap(new HashMap<>(channelDefinitions));
+        this.explicitChannels = Collections.unmodifiableSet(new HashSet<>(explicitChannels));
+        this.channelDefinitionValues = Collections.unmodifiableCollection(this.channelDefinitions.values());
+        this.explicitChannelDefinitions = Collections.unmodifiableList(
+                this.explicitChannels.stream().map(this.channelDefinitions::get).collect(Collectors.toList()));
     }
 
     public static class Builder<T> {
@@ -42,13 +56,17 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
         private final Map<Vec3Impl, Character> navigates;
         private final Map<Character, IStructureElement<T>> elements;
         private final Map<String, String> shapes;
-        private final Map<String, Set<Vec3Impl>> occupiedSpaces;
+        private final Map<String, OccupiedSpace> occupiedSpaces;
+        private final Map<String, IChannelDefinition> channels;
+        private final Set<String> explicitChannels;
 
         private Builder() {
             navigates = new HashMap<>();
             elements = new HashMap<>();
             shapes = new HashMap<>();
             occupiedSpaces = new HashMap<>();
+            channels = new HashMap<>();
+            explicitChannels = new HashSet<>();
         }
 
         public Map<Character, IStructureElement<T>> getElements() {
@@ -95,7 +113,19 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
                 }
                 builder.setLength(builder.length() - 1);
             }
-            Set<Vec3Impl> occupiedSpace = new HashSet<>();
+            int sizeA = 0;
+            int sizeB = 0;
+            long occupiedCount = 0;
+            for (String[] strings : structurePiece) {
+                sizeB = Math.max(sizeB, strings.length);
+                for (String string : strings) {
+                    sizeA = Math.max(sizeA, string.length());
+                    for (int i = 0; i < string.length(); i++) {
+                        if (string.charAt(i) != ' ') occupiedCount++;
+                    }
+                }
+            }
+            OccupiedSpace occupiedSpace = new OccupiedSpace(sizeA, sizeB, structurePiece.length, occupiedCount);
             // these track the global current location
             int aa = 0, bb = 0, cc = 0;
             // these track the vec3 towards next meaningful element
@@ -109,7 +139,7 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
                 } else if (ch == '~') {
                     builder.setCharAt(i, A);
                     ch = A;
-                    occupiedSpace.add(Vec3Impl.getFromPool(aa, bb, cc));
+                    occupiedSpace.add(aa, bb, cc);
                 }
                 if (ch == A) {
                     aa++;
@@ -135,13 +165,13 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
                         addElement(navigate, step(vec3));
                     }
                     builder.setCharAt(i - 1, navigate);
-                    occupiedSpace.add(Vec3Impl.getFromPool(aa, bb, cc));
+                    occupiedSpace.add(aa, bb, cc);
                     aa++;
                     a = 0;
                     b = 0;
                     c = 0;
                 } else {
-                    occupiedSpace.add(Vec3Impl.getFromPool(aa, bb, cc));
+                    occupiedSpace.add(aa, bb, cc);
                     aa++;
                 }
             }
@@ -182,22 +212,61 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
          */
         @Deprecated
         public Builder<T> addElement(Character name, IStructureElement<T> structurePiece) {
-            elements.putIfAbsent(name, structurePiece);
+            if (elements.putIfAbsent(name, structurePiece) == null) registerElementChannel(structurePiece);
             return this;
         }
 
         public Builder<T> addElement(char name, IStructureElement<T> structurePiece) {
-            elements.putIfAbsent(name, structurePiece);
+            if (elements.putIfAbsent(name, structurePiece) == null) registerElementChannel(structurePiece);
             return this;
         }
 
+        public Builder<T> addChannel(IChannelDefinition definition) {
+            validateChannelDefinition(definition);
+            channels.put(definition.getChannel(), definition);
+            explicitChannels.add(definition.getChannel());
+            return this;
+        }
+
+        public Builder<T> addChannel(String channel, int minimumValue, int maximumValue) {
+            return addChannel(IChannelDefinition.bounded(channel, minimumValue, maximumValue));
+        }
+
+        private void registerElementChannel(IStructureElement<T> structurePiece) {
+            for (String channel : structurePiece.getChannels()) {
+                validateChannelName(channel);
+                if (!explicitChannels.contains(channel)) {
+                    channels.putIfAbsent(channel, IChannelDefinition.unbounded(channel));
+                }
+            }
+        }
+
+        private void validateChannelDefinition(IChannelDefinition definition) {
+            if (definition == null) throw new IllegalArgumentException("Channel definition cannot be null");
+            validateChannelName(definition.getChannel());
+            if (definition.getMinimumValue() < 1 || definition.getMaximumValue() < definition.getMinimumValue()) {
+                throw new IllegalArgumentException("Invalid channel definition values");
+            }
+        }
+
+        private void validateChannelName(String channel) {
+            if (channel == null || channel.isEmpty() || !channel.toLowerCase(Locale.ROOT).equals(channel)) {
+                throw new IllegalArgumentException("Channel name must be non-empty and lower case");
+            }
+        }
+
         public IStructureDefinition<T> build() {
+            for (IStructureElement<T> element : elements.values()) {
+                registerElementChannel(element);
+            }
             Map<String, IStructureElement<T>[]> structures = compileStructureMap();
             return new StructureDefinition<>(
                     new HashMap<>(elements),
                     new HashMap<>(shapes),
                     structures,
-                    occupiedSpaces);
+                    occupiedSpaces,
+                    channels,
+                    explicitChannels);
         }
 
         @SuppressWarnings("unchecked")
@@ -251,6 +320,21 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
     }
 
     @Override
+    public Collection<IChannelDefinition> getChannelDefinitions() {
+        return channelDefinitionValues;
+    }
+
+    @Override
+    public Collection<IChannelDefinition> getExplicitChannelDefinitions() {
+        return explicitChannelDefinitions;
+    }
+
+    @Override
+    public IChannelDefinition getChannelDefinition(String channel) {
+        return channelDefinitions.get(channel);
+    }
+
+    @Override
     public IStructureElement<T>[] getStructureFor(String name) {
         IStructureElement<T>[] elements = structures.get(name);
         if (elements == null) throw new NoSuchElementException(name);
@@ -259,8 +343,49 @@ public class StructureDefinition<T> implements IStructureDefinition<T> {
 
     @Override
     public boolean isContainedInStructure(String name, int offsetA, int offsetB, int offsetC) {
-        Set<Vec3Impl> occupiedSpace = occupiedSpaces.get(name);
+        OccupiedSpace occupiedSpace = occupiedSpaces.get(name);
         if (occupiedSpace == null) throw new NoSuchElementException(name);
-        return occupiedSpace.contains(new Vec3Impl(offsetA, offsetB, offsetC));
+        return occupiedSpace.contains(offsetA, offsetB, offsetC);
+    }
+
+    private static class OccupiedSpace {
+
+        private final int sizeA;
+        private final int sizeB;
+        private final int sizeC;
+        private final BitSet occupied;
+        private final Set<Vec3Impl> sparseOccupied;
+
+        private OccupiedSpace(int sizeA, int sizeB, int sizeC, long occupiedCount) {
+            this.sizeA = sizeA;
+            this.sizeB = sizeB;
+            this.sizeC = sizeC;
+            long volume = (long) sizeA * sizeB * sizeC;
+            if (volume <= Integer.MAX_VALUE && volume <= Math.max(1024L, occupiedCount * 256L)) {
+                occupied = new BitSet((int) volume);
+                sparseOccupied = null;
+            } else {
+                occupied = null;
+                sparseOccupied = new HashSet<>();
+            }
+        }
+
+        private void add(int a, int b, int c) {
+            if (occupied != null) {
+                occupied.set(index(a, b, c));
+            } else {
+                sparseOccupied.add(new Vec3Impl(a, b, c));
+            }
+        }
+
+        private boolean contains(int a, int b, int c) {
+            if (a < 0 || b < 0 || c < 0 || a >= sizeA || b >= sizeB || c >= sizeC) return false;
+            if (occupied != null) return occupied.get(index(a, b, c));
+            return sparseOccupied.contains(new Vec3Impl(a, b, c));
+        }
+
+        private int index(int a, int b, int c) {
+            return (c * sizeB + b) * sizeA + a;
+        }
     }
 }
