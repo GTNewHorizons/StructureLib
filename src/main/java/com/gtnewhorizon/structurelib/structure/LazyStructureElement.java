@@ -48,6 +48,12 @@ class LazyStructureElement<T> implements IStructureElementDeferred<T> {
         return get(t).spawnHint(t, world, x, y, z, trigger);
     }
 
+    @Override
+    public boolean isFluidElement(T t) {
+        IStructureElement<T> element = get(t);
+        return element != null && element.isFluidElement(t);
+    }
+
     @Nullable
     @Override
     public BlocksToPlace getBlocksToPlace(T t, World world, int x, int y, int z, ItemStack trigger,

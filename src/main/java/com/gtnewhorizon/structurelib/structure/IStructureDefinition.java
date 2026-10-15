@@ -12,6 +12,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
+import com.gtnewhorizon.structurelib.ConfigurationHandler;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
@@ -347,6 +348,7 @@ public interface IStructureDefinition<T> {
                 piece,
                 extendedFacing,
                 new int[] { basePositionA, basePositionB, basePositionC },
+                new int[] { basePositionX, basePositionY, basePositionZ },
                 check);
         StructureUtility.iterateV2(
                 getStructureFor(piece),
@@ -360,6 +362,9 @@ public interface IStructureDefinition<T> {
                 basePositionC,
                 walker,
                 "survivalBuild");
+        // A fluid position is often visited before the blocks that hold it, so give the fluids that had to wait for
+        // those blocks a chance to be placed in this round rather than the next one.
+        walker.finishRound(world);
         return walker.getBuilt();
     }
 
@@ -462,7 +467,7 @@ public interface IStructureDefinition<T> {
                             return true;
                         }),
                         "spawnHint");
-            } else {
+            } else if (ConfigurationHandler.INSTANCE.getFluidGateMode() == FluidAutoplace.GateMode.NONE) {
                 StructureUtility.iterateV2(
                         elements,
                         world,
@@ -478,6 +483,40 @@ public interface IStructureDefinition<T> {
                             return true;
                         }),
                         "placeBlock");
+            } else {
+                // Build everything that isn't a fluid first, then fill the structure with fluid. That way a fluid has
+                // something holding it by the time it is placed. This is the creative mode counterpart of the fluid
+                // placement gate that survival autoplace uses.
+                StructureUtility.iterateV2(
+                        elements,
+                        world,
+                        extendedFacing,
+                        basePositionX,
+                        basePositionY,
+                        basePositionZ,
+                        basePositionA,
+                        basePositionB,
+                        basePositionC,
+                        ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
+                            if (!e.isFluidElement(object)) e.placeBlock(object, world, x, y, z, trigger);
+                            return true;
+                        }),
+                        "placeBlock");
+                StructureUtility.iterateV2(
+                        elements,
+                        world,
+                        extendedFacing,
+                        basePositionX,
+                        basePositionY,
+                        basePositionZ,
+                        basePositionA,
+                        basePositionB,
+                        basePositionC,
+                        ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
+                            if (e.isFluidElement(object)) e.placeBlock(object, world, x, y, z, trigger);
+                            return true;
+                        }),
+                        "placeFluid");
             }
         }
         return true;

@@ -15,6 +15,7 @@ import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
 import com.google.common.collect.Iterables;
+import com.gtnewhorizon.structurelib.fluid.FluidBlockRequirement;
 
 /**
  * Use StructureUtility to instantiate
@@ -53,6 +54,18 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
         return false;
     }
 
+    /**
+     * A chain counts as a fluid element as soon as one of its fallbacks is one, as the fluid it places is paid for with
+     * fluid even though another fallback might have been satisfied by an item.
+     */
+    @Override
+    default boolean isFluidElement(T t) {
+        for (IStructureElement<T> fallback : fallbacks()) {
+            if (fallback.isFluidElement(t)) return true;
+        }
+        return false;
+    }
+
     @Override
     default boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
         for (IStructureElement<T> fallback : fallbacks()) {
@@ -82,6 +95,7 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
             AutoPlaceEnvironment env) {
         Predicate<ItemStack> predicate = null;
         List<Iterable<ItemStack>> is = new ArrayList<>();
+        List<FluidBlockRequirement> fluids = new ArrayList<>();
         for (IStructureElement<T> fallback : fallbacks()) {
             BlocksToPlace e = fallback.getBlocksToPlace(t, world, x, y, z, trigger, env);
             if (e == null) continue;
@@ -89,9 +103,10 @@ public interface IStructureElementChain<T> extends IStructureElement<T> {
             else predicate = predicate.or(e.getPredicate());
             Iterable<ItemStack> stacks = e.getStacks();
             if (stacks != null) is.add(stacks);
+            fluids.addAll(e.getFluidRequirements());
         }
         if (predicate == null) return null;
-        return new BlocksToPlace(predicate, Iterables.concat(is));
+        return new BlocksToPlace(predicate, Iterables.concat(is), fluids);
     }
 
     @Override

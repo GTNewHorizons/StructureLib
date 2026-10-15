@@ -97,6 +97,19 @@ public class InventoryUtility {
         return stackExtractors.getPlayerOrdering(player).iterator();
     }
 
+    /**
+     * Every inventory registered for the given player, in the order the player configured.
+     * <p>
+     * This is the set of inventories {@link #takeFromInventory(EntityPlayerMP, ItemStack, boolean)} walks, exposed so
+     * that a walk that is not item based, e.g. StructureLib taking fluid out of a container a player carries, can cover
+     * the same inventories without having to register anything of its own.
+     *
+     * @param player the player whose inventories to walk
+     */
+    public static Iterable<InventoryProvider<?>> getInventoryProviders(EntityPlayerMP player) {
+        return inventoryProviders.getPlayerOrdering(player);
+    }
+
     public static <Inv extends IInventory> InventoryProvider<InventoryIterable<Inv>> newInventoryProvider(
             Function<EntityPlayerMP, ? extends Inv> extractor) {
         return new InventoryProvider<InventoryIterable<Inv>>() {
@@ -120,6 +133,12 @@ public class InventoryUtility {
             @Override
             public boolean isAPIImplemented(APIType type) {
                 return type == APIType.MAIN;
+            }
+
+            @Override
+            @Nullable
+            public IInventory getInventory(ItemStack source, @Nullable EntityPlayerMP player) {
+                return extractor.apply(source);
             }
 
             @Override
@@ -299,6 +318,23 @@ public class InventoryUtility {
 
         default boolean isValidSource(ItemStack is, EntityPlayerMP player) {
             return true;
+        }
+
+        /**
+         * The inventory held by the given item stack, if it holds one.
+         * <p>
+         * An extractor for an item that contains an inventory is registered once for item extraction, and can hand that
+         * same inventory out here, so a walk that is not item based, e.g. StructureLib looking for a fluid container a
+         * player put in their backpack, reaches the backpack contents as well. Returning null is fine and means this
+         * extractor cannot hand out the inventory itself.
+         *
+         * @param source item stack that might hold an inventory
+         * @param player the player the stack belongs to, or null when it does not come from a player
+         * @return the inventory inside the given stack, or null
+         */
+        @Nullable
+        default IInventory getInventory(ItemStack source, @Nullable EntityPlayerMP player) {
+            return null;
         }
 
         /**
