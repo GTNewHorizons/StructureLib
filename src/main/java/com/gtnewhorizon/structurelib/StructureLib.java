@@ -125,6 +125,7 @@ public class StructureLib {
         InventoryUtility.init();
 
         ChannelDescription.set(CHANNEL_SHOW_ERROR, MOD_ID, "channels.structurelib.show_errors");
+        ChannelDescription.set(StructureLibAPI.CHANNEL_TIER, MOD_ID, "channels.structurelib.tier");
 
         DevelopHelper.onPreInit();
     }
