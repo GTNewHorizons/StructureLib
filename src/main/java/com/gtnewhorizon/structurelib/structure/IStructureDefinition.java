@@ -12,6 +12,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
+import com.gtnewhorizon.structurelib.ConfigurationHandler;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
@@ -443,6 +444,8 @@ public interface IStructureDefinition<T> {
             return success;
         } else {
             if (hintsOnly) {
+                // elements are not strictly required to have a side effect free check, hence the opt out
+                final boolean skipCorrectlyPlaced = ConfigurationHandler.INSTANCE.isSkipCorrectlyPlacedHints();
                 StructureUtility.iterateV2(
                         elements,
                         world,
@@ -453,14 +456,27 @@ public interface IStructureDefinition<T> {
                         basePositionA,
                         basePositionB,
                         basePositionC,
-                        ignoreBlockUnloaded((e, w, x, y, z, a, b, c) -> {
-                            e.spawnHint(object, world, x, y, z, trigger);
-                            if (ChannelDataAccessor.hasSubChannel(trigger, StructureLibAPI.CHANNEL_SHOW_ERROR)
-                                    && !e.couldBeValid(object, world, x, y, z, trigger)) {
-                                StructureLibAPI.markHintParticleError(StructureLib.getCurrentPlayer(), world, x, y, z);
+                        new IStructureWalker<T>() {
+
+                            @Override
+                            public boolean visit(IStructureElement<T> e, World w, int x, int y, int z, int a, int b,
+                                    int c) {
+                                if (skipCorrectlyPlaced && e.check(object, w, x, y, z)) return true;
+                                e.spawnHint(object, w, x, y, z, trigger);
+                                if (ChannelDataAccessor.hasSubChannel(trigger, StructureLibAPI.CHANNEL_SHOW_ERROR)
+                                        && !e.couldBeValid(object, w, x, y, z, trigger)) {
+                                    StructureLibAPI.markHintParticleError(StructureLib.getCurrentPlayer(), w, x, y, z);
+                                }
+                                return true;
                             }
-                            return true;
-                        }),
+
+                            @Override
+                            public boolean blockNotLoaded(IStructureElement<T> e, World w, int x, int y, int z, int a,
+                                    int b, int c) {
+                                e.spawnHint(object, w, x, y, z, trigger);
+                                return true;
+                            }
+                        },
                         "spawnHint");
             } else {
                 StructureUtility.iterateV2(
