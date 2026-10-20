@@ -22,6 +22,7 @@ import com.gtnewhorizon.structurelib.command.CommandConfigureChannels;
 import com.gtnewhorizon.structurelib.command.CommandRegistryDebug;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
+import com.gtnewhorizon.structurelib.item.ItemDebugConstructableTrigger;
 import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
 import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
@@ -99,6 +100,7 @@ public class StructureLib {
     static Item itemBlockHint;
     static Item itemFrontRotationTool;
     static Item itemConstructableTrigger;
+    static Item itemDebugConstructableTrigger;
     public static final CreativeTabs creativeTab = new CreativeTabs("structurelib") {
 
         @Override
@@ -119,6 +121,9 @@ public class StructureLib {
         GameRegistry.registerItem(
                 itemConstructableTrigger = new ItemConstructableTrigger(),
                 itemConstructableTrigger.getUnlocalizedName());
+        GameRegistry.registerItem(
+                itemDebugConstructableTrigger = new ItemDebugConstructableTrigger(),
+                itemDebugConstructableTrigger.getUnlocalizedName());
         proxy.preInit(e);
         NetworkRegistry.INSTANCE.registerGuiHandler(instance(), new GuiHandler());
 

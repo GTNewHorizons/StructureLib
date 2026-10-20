@@ -16,6 +16,7 @@ import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
+import com.gtnewhorizon.structurelib.item.ItemDebugConstructableTrigger;
 import com.gtnewhorizon.structurelib.structure.IItemSource;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
@@ -73,7 +74,7 @@ public class ConstructableUtility {
         if (aPlayer instanceof EntityPlayerMP playerMP) {
             // server side and sneaking (already checked above)
             // do construct
-            if (aPlayer.capabilities.isCreativeMode) {
+            if (aPlayer.capabilities.isCreativeMode || aStack.getItem() instanceof ItemDebugConstructableTrigger) {
                 constructable.construct(aStack, false);
             } else if (constructable instanceof ISurvivalConstructable) {
                 int built = ((ISurvivalConstructable) constructable).survivalConstruct(
