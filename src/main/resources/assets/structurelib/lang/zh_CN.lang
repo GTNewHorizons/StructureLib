@@ -181,6 +181,12 @@ structurelib.config.client.hologram.maxCoexisting=最多可以同时存在的全
 structurelib.config.client.hologram.maxCoexisting.tooltip=这决定最多可以同时存在多少台机器的全息投影。一般一次使用全息投影仪右键生成的所有机器结构细节被视为一个全息投影。当同时存在多个全息投影，并超过此数量时，再次使用全息投影仪会移除旧有的全息投影。
 structurelib.config.client.hologram.removeColliding=移除冲突的全息投影
 structurelib.config.client.hologram.removeColliding.tooltip=当新的全息投影与已存在的全息投影冲突时，开启此选项时会移除已存在的全息投影。
+structurelib.config.client.hologram.maxRenderRadius=全息投影最大渲染半径
+structurelib.config.client.hologram.maxRenderRadius.tooltip=只保留并渲染玩家指定距离内的投影方块。
+structurelib.config.client.hologram.maxRenderCount=全息投影最大渲染数量
+structurelib.config.client.hologram.maxRenderCount.tooltip=所有全息投影合计保留并渲染的投影方块数量上限。已正确放置的方块不会被投影，也不计入此上限。当全息投影超过此上限时，优先保留离玩家最近的方块。
+structurelib.config.client.hologram.skipCorrectlyPlaced=跳过已正确放置的方块
+structurelib.config.client.hologram.skipCorrectlyPlaced.tooltip=不再投影已经正确放置的方块，从而把渲染额度全部用在真正缺失的方块上。这需要在生成全息投影时检查每一个结构元素。结构元素并不强制要求其检查无副作用，因此若某个多方块在投影时出现异常，可关闭此选项。
 
 structurelib.config.registries=注册表
 structurelib.config.registries.tooltip=StructureLib 使用注册表来管理其部分功能。每个注册表中的每一个元素都可以被单独排序、禁用。需要时，注册表的内容将被同步至服务端。
