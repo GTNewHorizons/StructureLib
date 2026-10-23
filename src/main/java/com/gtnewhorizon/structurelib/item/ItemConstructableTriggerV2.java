@@ -62,16 +62,12 @@ public class ItemConstructableTriggerV2 extends ItemConstructableTrigger {
         boolean wireless = ProjectorMode.isWireless(stack);
         boolean dismantle = ProjectorMode.get(stack) == ProjectorMode.DISMANTLE;
 
-        tooltip.add(
-                translateToLocal(
-                        dismantle ? "item.structurelib.constructableTrigger.mode.selected.dismantle"
-                                : "item.structurelib.constructableTrigger.mode.selected.build"));
+        tooltip.add(translateToLocal(
+                dismantle ? "item.structurelib.constructableTrigger.mode.selected.dismantle"
+                        : "item.structurelib.constructableTrigger.mode.selected.build"));
         if (wireless) tooltip.add(translateToLocal("item.structurelib.constructableTrigger.mode.wireless"));
 
-        tooltip.add(
-                translateToLocalFormatted(
-                        "item.structurelib.constructableTriggerV2.tier",
-                        ProjectorTier.getTier(stack)));
+        tooltip.add(translateToLocalFormatted("item.structurelib.constructableTriggerV2.tier", ProjectorTier.getTier(stack)));
 
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.mode.separator"));
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.mode.build"));
