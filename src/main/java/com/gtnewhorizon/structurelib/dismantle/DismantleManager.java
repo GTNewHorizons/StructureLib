@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -124,7 +125,8 @@ public enum DismantleManager {
                     bind(input.player, input.target);
                     break;
                 case DismantleInputMessage.UNLINK:
-                    if (ProjectorMode.isWireless(input.player.getHeldItem())) unlink(input.player, true);
+                    if (ProjectorMode.isWireless(input.player.getHeldItem()))
+                        unlink(input.player, true);
                     break;
                 case DismantleInputMessage.REMOTE_BUILD:
                     buildLinked(input.player);
@@ -137,26 +139,22 @@ public enum DismantleManager {
                             // A remote prompt is only valid when a live wireless link exists.
                             WirelessLink link = ProjectorMode.isWireless(promptStack) ? validLink(input.player) : null;
                             if (link != null) promptDismantle(input.player, link.controller);
-                        } else if (input.player.worldObj.blockExists(input.target.x, input.target.y, input.target.z)
-                                && input.player
-                                        .getDistanceSq(input.target.x + 0.5, input.target.y + 0.5, input.target.z + 0.5)
-                                        <= 36) {
-                                            MovingObjectPosition sight = rayTraceController(input.player);
-                                            if (sight != null
-                                                    && sight.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK
-                                                    && sight.blockX == input.target.x
-                                                    && sight.blockY == input.target.y
-                                                    && sight.blockZ == input.target.z) {
-                                                TileEntity tile = input.player.worldObj
-                                                        .getTileEntity(input.target.x, input.target.y, input.target.z);
-                                                if (tile != null
-                                                        && ConstructableUtility.getConstructable(tile, sight.sideHit)
-                                                                != null) {
-                                                    unlinkIfOtherController(input.player, input.target);
-                                                    promptDismantle(input.player, tile);
-                                                }
-                                            }
-                                        }
+                        } else if (input.player.worldObj.blockExists(
+                                input.target.x, input.target.y, input.target.z)
+                                && input.player.getDistanceSq(
+                                        input.target.x + 0.5, input.target.y + 0.5, input.target.z + 0.5) <= 36) {
+                            MovingObjectPosition sight = rayTraceController(input.player);
+                            if (sight != null && sight.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK
+                                    && sight.blockX == input.target.x && sight.blockY == input.target.y
+                                    && sight.blockZ == input.target.z) {
+                                TileEntity tile = input.player.worldObj.getTileEntity(
+                                        input.target.x, input.target.y, input.target.z);
+                                if (tile != null && ConstructableUtility.getConstructable(tile, sight.sideHit) != null) {
+                                    unlinkIfOtherController(input.player, input.target);
+                                    promptDismantle(input.player, tile);
+                                }
+                            }
+                        }
                     }
                     break;
                 case DismantleInputMessage.RELEASE:
@@ -226,11 +224,9 @@ public enum DismantleManager {
     private boolean valid(Hold hold) {
         EntityPlayerMP player = hold.player;
         ItemStack held = player.getHeldItem();
-        if (player.isDead || player.dimension != hold.dimension
-                || player.inventory.currentItem != hold.slot
+        if (player.isDead || player.dimension != hold.dimension || player.inventory.currentItem != hold.slot
                 || !player.isSneaking()
-                || held == null
-                || !ItemStack.areItemStacksEqual(held, hold.stack)
+                || held == null || !ItemStack.areItemStacksEqual(held, hold.stack)
                 || ProjectorMode.get(held) != ProjectorMode.DISMANTLE
                 || ProjectorMode.isWireless(held) != hold.wireless)
             return false;
@@ -240,14 +236,11 @@ public enum DismantleManager {
             return link != null && p.equals(link.target)
                     && ConstructableUtility.getConstructable(link.controller, link.side) != null;
         }
-        if (player.getDistanceSq(p.x + 0.5, p.y + 0.5, p.z + 0.5) > 36 || !player.worldObj.blockExists(p.x, p.y, p.z))
-            return false;
+        if (player.getDistanceSq(p.x + 0.5, p.y + 0.5, p.z + 0.5) > 36
+                || !player.worldObj.blockExists(p.x, p.y, p.z)) return false;
         MovingObjectPosition sight = rayTraceController(player);
         if (sight == null || sight.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK
-                || sight.blockX != p.x
-                || sight.blockY != p.y
-                || sight.blockZ != p.z)
-            return false;
+                || sight.blockX != p.x || sight.blockY != p.y || sight.blockZ != p.z) return false;
         TileEntity target = player.worldObj.getTileEntity(p.x, p.y, p.z);
         return target != null && ConstructableUtility.getConstructable(target, sight.sideHit) != null;
     }
@@ -264,9 +257,8 @@ public enum DismantleManager {
             MovingObjectPosition sight = rayTraceController(hold.player);
             constructable = controller == null || sight == null
                     || sight.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK
-                    || sight.blockX != p.x
-                    || sight.blockY != p.y
-                    || sight.blockZ != p.z ? null : ConstructableUtility.getConstructable(controller, sight.sideHit);
+                    || sight.blockX != p.x || sight.blockY != p.y || sight.blockZ != p.z ? null
+                    : ConstructableUtility.getConstructable(controller, sight.sideHit);
         }
         if (constructable == null) {
             say(hold.player, "structurelib.dismantle.unsupported");
@@ -282,14 +274,30 @@ public enum DismantleManager {
             say(hold.player, "structurelib.dismantle.no_network");
             return null;
         }
-        StructureCapture capture = StructureCapture
-                .collect(constructable, ProjectorTier.forStructure(hold.stack), world, p);
+        StructureCapture capture = StructureCapture.collect(constructable, ProjectorTier.forStructure(hold.stack), world, p);
         if (capture == null) {
             say(hold.player, "structurelib.dismantle.unsupported");
             return null;
         }
+        Set<Position> shared = null;
+        if (ConfigurationHandler.INSTANCE.isDismantleProtectSharedBlocks()) {
+            shared = SharedBlockProtection.findShared(world, controller, capture, ProjectorTier.forStructure(hold.stack));
+            if (shared == null) {
+                say(hold.player, "structurelib.dismantle.shared_scan_failed");
+                return null;
+            }
+            if (!shared.isEmpty()) say(hold.player, "structurelib.dismantle.shared_preserved", shared.size());
+        }
         Queue<Candidate> queue = new ArrayDeque<>();
-        for (Candidate candidate : capture.getCandidates()) queue.add(candidate);
+        for (Candidate candidate : capture.getCandidates()) {
+            if (shared == null || !shared.contains(candidate.pos)) queue.add(candidate);
+        }
+        if (queue.isEmpty()) {
+            say(hold.player, "structurelib.dismantle.no_unshared_blocks");
+            WirelessLink link = links.get(hold.player.getUniqueID());
+            if (link != null && link.target.equals(p)) unlink(hold.player, true);
+            return null;
+        }
         say(hold.player, "structurelib.dismantle.started");
         return new Job(hold.player, controller, p, queue, storage);
     }
@@ -308,18 +316,18 @@ public enum DismantleManager {
     }
 
     /**
-     * Fail before capturing or removing anything when a machine is running. GT5 is optional to StructureLib, so resolve
-     * the conventional controller methods without linking its classes. The God Forge has a separate visual renderer
-     * which physically replaces its rings; even when processing is off, its rings must be restored by disabling the
-     * renderer first.
+     * Fail before capturing or removing anything when a machine is running. GT5 is optional to
+     * StructureLib, so resolve the conventional controller methods without linking its classes.
+     * The God Forge has a separate visual renderer which physically replaces its rings; even
+     * when processing is off, its rings must be restored by disabling the renderer first.
      *
      * @return localization key explaining the block, or null when dismantle may proceed.
      */
     private static String dismantleBlockedReason(TileEntity controller) {
         if (controller == null) return null;
         Object meta = invokeNoArgs(controller, "getMetaTileEntity");
-        if (meta != null
-                && "tectech.thing.metaTileEntity.multi.godforge.MTEForgeOfGods".equals(meta.getClass().getName())) {
+        if (meta != null && "tectech.thing.metaTileEntity.multi.godforge.MTEForgeOfGods"
+                .equals(meta.getClass().getName())) {
             try {
                 Field field = meta.getClass().getDeclaredField("data");
                 field.setAccessible(true);
@@ -348,17 +356,13 @@ public enum DismantleManager {
 
     private void bind(EntityPlayerMP player, Position requested) {
         ItemStack projector = player.getHeldItem();
-        if (projector == null || !(projector.getItem() instanceof ItemConstructableTriggerV2) || player.isSneaking())
-            return;
+        if (projector == null || !(projector.getItem() instanceof ItemConstructableTriggerV2)
+                || player.isSneaking()) return;
         if (!player.worldObj.blockExists(requested.x, requested.y, requested.z)
-                || player.getDistanceSq(requested.x + 0.5, requested.y + 0.5, requested.z + 0.5) > 36)
-            return;
+                || player.getDistanceSq(requested.x + 0.5, requested.y + 0.5, requested.z + 0.5) > 36) return;
         MovingObjectPosition sight = rayTraceController(player);
         if (sight == null || sight.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK
-                || sight.blockX != requested.x
-                || sight.blockY != requested.y
-                || sight.blockZ != requested.z)
-            return;
+                || sight.blockX != requested.x || sight.blockY != requested.y || sight.blockZ != requested.z) return;
         TileEntity controller = player.worldObj.getTileEntity(requested.x, requested.y, requested.z);
         if (controller == null || ConstructableUtility.getConstructable(controller, sight.sideHit) == null) return;
         ProjectorMode.setWireless(projector, true);
@@ -366,26 +370,17 @@ public enum DismantleManager {
         holds.remove(player.getUniqueID());
         player.inventory.markDirty();
         player.inventoryContainer.detectAndSendChanges();
-        StructureLib.sendWirelessLink(
-                new WirelessLinkMessage(true, requested.x, requested.y, requested.z, player.dimension, sight.sideHit),
-                player);
-        say(
-                player,
-                "structurelib.wireless.linked",
-                controller.getBlockType().getLocalizedName(),
-                requested.x,
-                requested.y,
-                requested.z,
-                player.dimension);
+        StructureLib.sendWirelessLink(new WirelessLinkMessage(true, requested.x, requested.y, requested.z,
+                player.dimension, sight.sideHit), player);
+        say(player, "structurelib.wireless.linked", controller.getBlockType().getLocalizedName(),
+                requested.x, requested.y, requested.z, player.dimension);
     }
 
     private WirelessLink validLink(EntityPlayerMP player) {
         WirelessLink link = links.get(player.getUniqueID());
         if (link == null) return null;
-        if (player.isDead || player.dimension != link.dimension
-                || player.worldObj != link.world
-                || player.inventory.currentItem != link.slot
-                || player.getHeldItem() == null
+        if (player.isDead || player.dimension != link.dimension || player.worldObj != link.world
+                || player.inventory.currentItem != link.slot || player.getHeldItem() == null
                 || !ItemStack.areItemStacksEqual(player.getHeldItem(), link.projector)
                 || !link.world.blockExists(link.target.x, link.target.y, link.target.z)
                 || link.world.getTileEntity(link.target.x, link.target.y, link.target.z) != link.controller) {
@@ -421,10 +416,7 @@ public enum DismantleManager {
         if (link != null && !link.target.equals(other)) {
             MovingObjectPosition sight = rayTraceController(player);
             if (sight == null || sight.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK
-                    || sight.blockX != other.x
-                    || sight.blockY != other.y
-                    || sight.blockZ != other.z)
-                return;
+                    || sight.blockX != other.x || sight.blockY != other.y || sight.blockZ != other.z) return;
             TileEntity tile = player.worldObj.getTileEntity(other.x, other.y, other.z);
             if (tile != null && ConstructableUtility.getConstructable(tile, sight.sideHit) != null)
                 unlink(player, true);
@@ -436,24 +428,22 @@ public enum DismantleManager {
         WirelessLink link = links.get(playerMP.getUniqueID());
         if (link == null || (world == link.world && link.target.equals(new Position(x, y, z)))) return;
         TileEntity tile = world.getTileEntity(x, y, z);
-        if (tile != null && ConstructableUtility.getConstructable(tile, side) != null) unlink(playerMP, true);
+        if (tile != null && ConstructableUtility.getConstructable(tile, side) != null)
+            unlink(playerMP, true);
     }
 
     private void buildLinked(EntityPlayerMP player) {
         ItemStack held = player.getHeldItem();
-        if (held == null || !ProjectorMode.isWireless(held)
-                || ProjectorMode.get(held) != ProjectorMode.BUILD
-                || !player.isSneaking())
-            return;
+        if (held == null || !ProjectorMode.isWireless(held) || ProjectorMode.get(held) != ProjectorMode.BUILD
+                || !player.isSneaking()) return;
         if (jobs.containsKey(player.getUniqueID())) return;
         WirelessLink link = validLink(player);
         if (link == null) {
             say(player, "structurelib.wireless.no_link");
             return;
         }
-        if (ConstructableUtility
-                .handleRemote(held, player, link.world, link.target.x, link.target.y, link.target.z, link.side))
-            unlink(player, true);
+        if (ConstructableUtility.handleRemote(held, player, link.world, link.target.x, link.target.y,
+                link.target.z, link.side)) unlink(player, true);
     }
 
     public void onCompletedBuild(EntityPlayerMP player) {
@@ -565,15 +555,16 @@ public enum DismantleManager {
             for (int i = 0; i < budget && !remaining.isEmpty(); i++) {
                 Candidate next = remaining.peek();
                 Position p = next.pos;
-                if (!world.blockExists(p.x, p.y, p.z) || world.getBlock(p.x, p.y, p.z) != next.block
+                if (!world.blockExists(p.x, p.y, p.z)
+                        || world.getBlock(p.x, p.y, p.z) != next.block
                         || world.getBlockMetadata(p.x, p.y, p.z) != next.metadata) {
                     say(player, "structurelib.dismantle.changed");
                     return false;
                 }
                 Block block = next.block;
                 List<ItemStack> drops = block.getDrops(world, p.x, p.y, p.z, next.metadata, 0);
-                if (drops == null || drops.isEmpty()
-                        || drops.stream().anyMatch(s -> s == null || s.getItem() == null || s.stackSize <= 0)) {
+                if (drops == null || drops.isEmpty() || drops.stream()
+                        .anyMatch(s -> s == null || s.getItem() == null || s.stackSize <= 0)) {
                     say(player, "structurelib.dismantle.no_drop");
                     return false;
                 }
@@ -582,13 +573,7 @@ public enum DismantleManager {
                     return false;
                 }
                 BlockEvent.BreakEvent breakEvent = new BlockEvent.BreakEvent(
-                        p.x,
-                        p.y,
-                        p.z,
-                        world,
-                        block,
-                        next.metadata,
-                        player);
+                        p.x, p.y, p.z, world, block, next.metadata, player);
                 if (MinecraftForge.EVENT_BUS.post(breakEvent)) {
                     say(player, "structurelib.dismantle.protected");
                     return false;
@@ -603,8 +588,8 @@ public enum DismantleManager {
                         ItemStack unreturned = residual.copy();
                         player.inventory.addItemStackToInventory(unreturned);
                         if (unreturned.stackSize > 0) {
-                            world.spawnEntityInWorld(
-                                    new EntityItem(world, origin.x + 0.5, origin.y + 1.0, origin.z + 0.5, unreturned));
+                            world.spawnEntityInWorld(new EntityItem(
+                                    world, origin.x + 0.5, origin.y + 1.0, origin.z + 0.5, unreturned));
                         }
                     }
                     say(player, "structurelib.dismantle.storage_full");

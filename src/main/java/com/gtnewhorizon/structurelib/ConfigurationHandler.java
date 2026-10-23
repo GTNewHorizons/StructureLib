@@ -34,6 +34,9 @@ public enum ConfigurationHandler {
     private int autoPlaceBudget;
     private int autoPlaceInterval;
     private int dismantleHoldTicks;
+    private boolean dismantleProtectSharedBlocks;
+    private int dismantleSharedScanRadius;
+    private int dismantleSharedScanLimit;
     private Map<String, Pair<List<String>, List<String>>> registryOrders;
 
     ConfigurationHandler() {
@@ -106,6 +109,29 @@ public enum ConfigurationHandler {
                 1200,
                 "Number of continuous server ticks (20 ticks = 1 second) required to confirm dismantling."
                         + " The server setting is authoritative; values below 20 are disallowed.");
+        dismantleProtectSharedBlocks = config.getBoolean(
+                "dismantleProtectSharedBlocks",
+                "common.hologram",
+                true,
+                "Experimental: Before dismantling, preserve matching casing blocks belonging to other formed GT"
+                        + " multiblocks whose controllers are loaded. If the scan cannot finish safely, dismantling"
+                        + " will not start. Does not guarantee protection for unsupported multiblocks.");
+        dismantleSharedScanRadius = config.getInt(
+                "dismantleSharedScanRadius",
+                "common.hologram",
+                48,
+                0,
+                256,
+                "Additional blocks around the selected multiblock's bounding box searched for formed GT controllers."
+                        + " Increase this for very large machines; a larger area can make scanning slower.");
+        dismantleSharedScanLimit = config.getInt(
+                "dismantleSharedScanLimit",
+                "common.hologram",
+                32,
+                1,
+                256,
+                "Maximum number of nearby formed GT controllers to inspect before dismantling is stopped."
+                        + " This limits lag from shared-block scanning.");
 
         loadRegistryOrder();
 
@@ -187,6 +213,18 @@ public enum ConfigurationHandler {
 
     public int getDismantleHoldTicks() {
         return dismantleHoldTicks;
+    }
+
+    public boolean isDismantleProtectSharedBlocks() {
+        return dismantleProtectSharedBlocks;
+    }
+
+    public int getDismantleSharedScanRadius() {
+        return dismantleSharedScanRadius;
+    }
+
+    public int getDismantleSharedScanLimit() {
+        return dismantleSharedScanLimit;
     }
 
     public Pair<List<String>, List<String>> getRegistryOrder(String name) {

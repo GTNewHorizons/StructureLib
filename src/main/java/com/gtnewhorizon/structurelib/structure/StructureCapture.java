@@ -15,8 +15,9 @@ import com.gtnewhorizon.structurelib.alignment.constructable.IConstructable;
 import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 
 /**
- * Record the actual structure pieces emitted by construct(hintsOnly=true). This is deliberately fail-closed:
- * unknown/unloaded/invalid positions abort the entire dismantle before even a single block can be removed.
+ * Record the actual structure pieces emitted by construct(hintsOnly=true).
+ * This is deliberately fail-closed: unknown/unloaded/invalid positions abort the
+ * entire dismantle before even a single block can be removed.
  */
 public final class StructureCapture {
 
@@ -26,19 +27,64 @@ public final class StructureCapture {
     private final Set<Position> unmatched = new LinkedHashSet<>();
     private final World world;
     private final Position controller;
+    /** When non-null, inspect only positions belonging to a different, already captured structure. */
+    private final Set<Position> overlapFilter;
     private boolean invalid;
     private int visits;
     private String failureReason;
 
     private StructureCapture(World world, Position controller) {
+        this(world, controller, null);
+    }
+
+    private StructureCapture(World world, Position controller, Set<Position> overlapFilter) {
         this.world = world;
         this.controller = controller;
+        this.overlapFilter = overlapFilter;
     }
 
     public static StructureCapture collect(IConstructable constructable, ItemStack trigger, World world,
             Position controller) {
         if (world.isRemote || ACTIVE.get() != null) return null;
         StructureCapture capture = new StructureCapture(world, controller);
+        invokeCapture(capture, constructable, trigger);
+        // Some multiblocks (e.g. a God Forge with additional rings) describe the same position in
+        // several pieces: an air placeholder in one piece can be a casing in another. Only reject
+        // occupied positions after every piece has had a chance to identify them. Never dismantle
+        // a position that was not positively checked by at least one structure element.
+        if (!capture.unmatched.isEmpty()) {
+            capture.invalid = true;
+            Position unknown = capture.unmatched.iterator().next();
+            Block block = world.getBlock(unknown.x, unknown.y, unknown.z);
+            capture.failureReason = "No structure piece recognizes the block at " + unknown.x + "," + unknown.y
+                    + "," + unknown.z + " (" + Block.blockRegistry.getNameForObject(block) + ":"
+                    + world.getBlockMetadata(unknown.x, unknown.y, unknown.z) + ")";
+        }
+        if (capture.invalid || capture.visits == 0 || capture.candidates.isEmpty()) {
+            StructureLib.LOGGER.warn(
+                    "Structure capture rejected at ({}, {}, {}), tier {}, visited {}, candidates {}: {}",
+                    controller.x, controller.y, controller.z, trigger.stackSize, capture.visits,
+                    capture.candidates.size(), capture.failureReason == null ? "no candidates" : capture.failureReason);
+            return null;
+        }
+        return capture;
+    }
+
+    /**
+     * Check just the positions of the primary multiblock against another controller's hint traversal.
+     * No blocks outside {@code positions} are evaluated or stored. A null result means the traversal
+     * was not trustworthy, while an empty set means it finished without recognizing an overlap.
+     */
+    public static Set<Position> collectOverlaps(IConstructable constructable, ItemStack trigger, World world,
+            Position controller, Set<Position> positions) {
+        if (world.isRemote || ACTIVE.get() != null || positions.isEmpty()) return null;
+        StructureCapture capture = new StructureCapture(world, controller, positions);
+        invokeCapture(capture, constructable, trigger);
+        if (capture.invalid || capture.visits == 0) return null;
+        return new LinkedHashSet<>(capture.candidates.keySet());
+    }
+
+    private static void invokeCapture(StructureCapture capture, IConstructable constructable, ItemStack trigger) {
         ACTIVE.set(capture);
         try {
             constructable.construct(trigger.copy(), true);
@@ -49,76 +95,49 @@ public final class StructureCapture {
         } finally {
             ACTIVE.remove();
         }
-        // Some multiblocks (e.g. a God Forge with additional rings) describe the same position in
-        // several pieces: an air placeholder in one piece can be a casing in another. Only reject
-        // occupied positions after every piece has had a chance to identify them. Never dismantle
-        // a position that was not positively checked by at least one structure element.
-        if (!capture.unmatched.isEmpty()) {
-            capture.invalid = true;
-            Position unknown = capture.unmatched.iterator().next();
-            Block block = world.getBlock(unknown.x, unknown.y, unknown.z);
-            capture.failureReason = "No structure piece recognizes the block at " + unknown.x
-                    + ","
-                    + unknown.y
-                    + ","
-                    + unknown.z
-                    + " ("
-                    + Block.blockRegistry.getNameForObject(block)
-                    + ":"
-                    + world.getBlockMetadata(unknown.x, unknown.y, unknown.z)
-                    + ")";
-        }
-        if (capture.invalid || capture.visits == 0 || capture.candidates.isEmpty()) {
-            StructureLib.LOGGER.warn(
-                    "Structure capture rejected at ({}, {}, {}), tier {}, visited {}, candidates {}: {}",
-                    controller.x,
-                    controller.y,
-                    controller.z,
-                    trigger.stackSize,
-                    capture.visits,
-                    capture.candidates.size(),
-                    capture.failureReason == null ? "no candidates" : capture.failureReason);
-            return null;
-        }
-        return capture;
     }
 
     /** Only called from the server's real, normally client-only hint traversal. */
-    public static <T> boolean intercept(T object, IStructureElement<T>[] elements, World world, ExtendedFacing facing,
-            int x, int y, int z, int a, int b, int c) {
+    public static <T> boolean intercept(T object, IStructureElement<T>[] elements, World world,
+            ExtendedFacing facing, int x, int y, int z, int a, int b, int c) {
         StructureCapture capture = ACTIVE.get();
         if (capture == null || capture.world != world) return false;
-        boolean full = StructureUtility.iterateV2(elements, world, facing, x, y, z, a, b, c, new IStructureWalker<T>() {
+        boolean full = StructureUtility.iterateV2(
+                elements, world, facing, x, y, z, a, b, c, new IStructureWalker<T>() {
 
-            @Override
-            public boolean visit(IStructureElement<T> element, World w, int px, int py, int pz, int pa, int pb,
-                    int pc) {
-                if (++capture.visits > 100000) {
-                    capture.invalid = true;
-                    capture.failureReason = "Traversal exceeded the safety limit at " + px + "," + py + "," + pz;
-                    return false;
-                }
-                Position pos = new Position(px, py, pz);
-                if (pos.equals(capture.controller) || element instanceof IStructureElementNoPlacement) return true;
-                Block block = world.getBlock(px, py, pz);
-                if (block == Blocks.air) return true;
-                if (!element.check(object, w, px, py, pz)) {
-                    if (!capture.candidates.containsKey(pos)) capture.unmatched.add(pos);
-                    return true;
-                }
-                capture.unmatched.remove(pos);
-                capture.candidates.putIfAbsent(pos, new Candidate(pos, block, world.getBlockMetadata(px, py, pz)));
-                return true;
-            }
+                    @Override
+                    public boolean visit(IStructureElement<T> element, World w, int px, int py, int pz,
+                            int pa, int pb, int pc) {
+                        if (++capture.visits > 100000) {
+                            capture.invalid = true;
+                            capture.failureReason = "Traversal exceeded the safety limit at " + px + "," + py + "," + pz;
+                            return false;
+                        }
+                        Position pos = new Position(px, py, pz);
+                        if (pos.equals(capture.controller) || element instanceof IStructureElementNoPlacement
+                                || (capture.overlapFilter != null && !capture.overlapFilter.contains(pos))) return true;
+                        Block block = world.getBlock(px, py, pz);
+                        if (block == Blocks.air) return true;
+                        if (!element.check(object, w, px, py, pz)) {
+                            if (capture.overlapFilter == null && !capture.candidates.containsKey(pos))
+                                capture.unmatched.add(pos);
+                            return true;
+                        }
+                        capture.unmatched.remove(pos);
+                        capture.candidates.putIfAbsent(pos, new Candidate(pos, block, world.getBlockMetadata(px, py, pz)));
+                        return true;
+                    }
 
-            @Override
-            public boolean blockNotLoaded(IStructureElement<T> element, World w, int px, int py, int pz, int pa, int pb,
-                    int pc) {
-                capture.invalid = true;
-                capture.failureReason = "Unloaded chunk at " + px + "," + py + "," + pz;
-                return false;
-            }
-        }, "dismantleCapture");
+                    @Override
+                    public boolean blockNotLoaded(IStructureElement<T> element, World w, int px, int py, int pz,
+                            int pa, int pb, int pc) {
+                        if (capture.overlapFilter != null
+                                && !capture.overlapFilter.contains(new Position(px, py, pz))) return true;
+                        capture.invalid = true;
+                        capture.failureReason = "Unloaded chunk at " + px + "," + py + "," + pz;
+                        return false;
+                    }
+                }, "dismantleCapture");
         if (!full) capture.invalid = true;
         return true;
     }

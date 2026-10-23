@@ -1,7 +1,6 @@
 package com.gtnewhorizon.structurelib.item;
 
 import static com.gtnewhorizon.structurelib.StructureLibAPI.MOD_ID;
-import static net.minecraft.util.EnumChatFormatting.BLUE;
 import static net.minecraft.util.StatCollector.translateToLocal;
 import static net.minecraft.util.StatCollector.translateToLocalFormatted;
 
@@ -80,12 +79,12 @@ public class ItemConstructableTriggerV2 extends ItemConstructableTrigger {
                     .forEach(tooltip::add);
         } else {
             tooltip.add(translateToLocal("item.structurelib.constructableTrigger.desc.0"));
-            tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.1"));
-            tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.2"));
-            tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.3"));
-            tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTriggerV2.tier.desc"));
+            tooltip.add(translateToLocal("item.structurelib.constructableTrigger.desc.1"));
+            tooltip.add(translateToLocal("item.structurelib.constructableTrigger.desc.2"));
+            tooltip.add(translateToLocal("item.structurelib.constructableTriggerV2.build.desc.3"));
+            tooltip.add(translateToLocal("item.structurelib.constructableTriggerV2.tier.desc"));
             if (ChannelDataAccessor.hasSubChannel(stack))
-                tooltip.add(translateToLocal("item.structurelib.constructableTrigger.desc.5"));
+                tooltip.add(translateToLocal("item.structurelib.constructableTriggerV2.desc.5"));
         }
         if (wireless) tooltip.add(translateToLocal("item.structurelib.constructableTrigger.wireless.desc.1"));
         if (!dismantle && !wireless) {
@@ -100,6 +99,7 @@ public class ItemConstructableTriggerV2 extends ItemConstructableTrigger {
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.dismantle.desc.1"));
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.dismantle.desc.3"));
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.dismantle.desc.4"));
+        tooltip.add(translateToLocal("item.structurelib.constructableTrigger.dismantle.desc.7"));
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.dismantle.desc.5"));
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.dismantle.desc.6"));
 
