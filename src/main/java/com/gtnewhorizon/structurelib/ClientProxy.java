@@ -25,9 +25,12 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.profiler.Profiler;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IIcon;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.MouseEvent;
@@ -38,10 +41,16 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
 import com.gtnewhorizon.structurelib.entity.fx.WeightlessParticleFX;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTriggerV2;
+import com.gtnewhorizon.structurelib.item.ProjectorMode;
+import com.gtnewhorizon.structurelib.net.DismantleInputMessage;
 import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
 
@@ -97,6 +106,55 @@ public class ClientProxy extends CommonProxy {
      * A throttle map for local player. Integrated server will use the throttle map in super class instead.
      */
     private static final Map<Object, Long> localThrottleMap = new HashMap<>();
+
+    /** Only server-confirmed links are previewable; coordinates are not saved to the item. */
+    private static volatile WirelessTarget wirelessTarget;
+
+    /** Set by a network handler; consumed on the client tick thread. */
+    private static volatile boolean dismantleHoldResolved;
+
+    @Override
+    public void acceptWirelessLink(boolean linked, int x, int y, int z, int dimension, int side) {
+        wirelessTarget = linked ? new WirelessTarget(x, y, z, dimension, side) : null;
+    }
+
+    @Override
+    public void acceptDismantleHoldResolved() {
+        dismantleHoldResolved = true;
+    }
+
+    private static void previewWireless(EntityPlayer player, ItemStack projector) {
+        WirelessTarget target = wirelessTarget;
+        if (target == null || player.dimension != target.dimension) return;
+        if (!player.worldObj.blockExists(target.x, target.y, target.z)) {
+            player.addChatMessage(new ChatComponentTranslation("structurelib.wireless.preview_unloaded"));
+            return;
+        }
+        TileEntity tile = player.worldObj.getTileEntity(target.x, target.y, target.z);
+        if (tile == null || ConstructableUtility.getConstructable(tile, target.side) == null) {
+            player.addChatMessage(new ChatComponentTranslation("structurelib.wireless.preview_unloaded"));
+            return;
+        }
+        // Identical client-side hint and structure-description code path to direct right click.
+        ConstructableUtility.handle(projector, player, player.worldObj, target.x, target.y, target.z, target.side);
+    }
+
+    private static final class WirelessTarget {
+
+        final int x;
+        final int y;
+        final int z;
+        final int dimension;
+        final int side;
+
+        WirelessTarget(int x, int y, int z, int dimension, int side) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.dimension = dimension;
+            this.side = side;
+        }
+    }
 
     @Override
     public void hintParticleTinted(World w, int x, int y, int z, IIcon[] icons, short[] RGBa) {
@@ -495,6 +553,11 @@ public class ClientProxy extends CommonProxy {
 
         static boolean connected = false;
         static boolean configSent = false;
+        private boolean dismantleHeld;
+        private boolean dismantleAnimationResolved;
+        private int dismantleAnimationTicks;
+        private ItemStack animatedProjector;
+        private long lastWirelessBuildMillis;
 
         private void resetPlayerLocation() {
             lastPlayerPos.xCoord = Minecraft.getMinecraft().thePlayer.posX;
@@ -511,6 +574,13 @@ public class ClientProxy extends CommonProxy {
         @SubscribeEvent
         public void onPlayerLogOut(FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
             connected = false;
+            wirelessTarget = null;
+            dismantleHoldResolved = false;
+            stopDismantleAnimation(Minecraft.getMinecraft().thePlayer);
+            dismantleHeld = false;
+            dismantleAnimationResolved = false;
+            dismantleAnimationTicks = 0;
+            lastWirelessBuildMillis = 0;
         }
 
         @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -524,6 +594,8 @@ public class ClientProxy extends CommonProxy {
         @SubscribeEvent
         public void onClientTick(ClientTickEvent e) {
             if (e.phase == Phase.END && Minecraft.getMinecraft().thePlayer != null) {
+                tickDismantleInput();
+                tickWirelessBuildInput();
                 Vec3 playerPos = Minecraft.getMinecraft().thePlayer.getPosition(1);
                 boolean sortRequired = false;
                 // The allGroups is implicitly sorted by creationTime
@@ -560,6 +632,95 @@ public class ClientProxy extends CommonProxy {
                 }
             }
         }
+
+        private void tickDismantleInput() {
+            Minecraft mc = Minecraft.getMinecraft();
+            EntityPlayer player = mc.thePlayer;
+            ItemStack held = player.getHeldItem();
+            MovingObjectPosition hit = mc.objectMouseOver;
+            boolean remote = held != null && ProjectorMode.isWireless(held)
+                    && ProjectorMode.get(held) == ProjectorMode.DISMANTLE
+                    && wirelessTarget != null
+                    && wirelessTarget.dimension == player.dimension
+                    && (hit == null || hit.typeOfHit == MovingObjectPosition.MovingObjectType.MISS);
+            boolean direct = held != null && ProjectorMode.get(held) == ProjectorMode.DISMANTLE
+                    && hit != null
+                    && hit.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK;
+            if (direct) {
+                TileEntity controller = player.worldObj.getTileEntity(hit.blockX, hit.blockY, hit.blockZ);
+                direct = controller != null && ConstructableUtility.getConstructable(controller, hit.sideHit) != null;
+            }
+            boolean valid = mc.currentScreen == null && held != null
+                    && held.getItem() instanceof ItemConstructableTriggerV2
+                    && (remote || direct)
+                    && Mouse.isButtonDown(1)
+                    && player.isSneaking();
+            if (dismantleHoldResolved) {
+                dismantleHoldResolved = false;
+                dismantleAnimationResolved = true;
+            }
+            if (valid && !dismantleHeld) {
+                dismantleAnimationResolved = false;
+                dismantleAnimationTicks = 0;
+            }
+            if (valid && !dismantleAnimationResolved) {
+                // A cancelled right-click in the air (wireless mode) can clear vanilla's use-item state.
+                // Restore the bow pose as needed, preserving elapsed draw time instead of restarting it.
+                if (player.getItemInUse() != held) {
+                    int remaining = Math.max(1, held.getMaxItemUseDuration() - dismantleAnimationTicks);
+                    player.setItemInUse(held, remaining);
+                }
+                animatedProjector = held;
+                if (dismantleAnimationTicks < held.getMaxItemUseDuration() - 1) dismantleAnimationTicks++;
+            }
+            if (valid) {
+                StructureLib.sendToServer(
+                        new DismantleInputMessage(
+                                DismantleInputMessage.HOLD,
+                                remote ? DismantleInputMessage.REMOTE_TARGET_X : hit.blockX,
+                                remote ? 0 : hit.blockY,
+                                remote ? 0 : hit.blockZ));
+            } else if (dismantleHeld) {
+                StructureLib.sendToServer(new DismantleInputMessage(DismantleInputMessage.RELEASE, 0, 0, 0));
+            }
+            if (!valid || dismantleAnimationResolved) stopDismantleAnimation(player);
+            if (!valid) dismantleAnimationTicks = 0;
+            dismantleHeld = valid;
+        }
+
+        private void stopDismantleAnimation(EntityPlayer player) {
+            // Only clear the pose that we started, never another item's use animation.
+            if (player != null && animatedProjector != null && player.getItemInUse() == animatedProjector)
+                player.clearItemInUse();
+            animatedProjector = null;
+        }
+
+        private void tickWirelessBuildInput() {
+            Minecraft mc = Minecraft.getMinecraft();
+            EntityPlayer player = mc.thePlayer;
+            ItemStack held = player.getHeldItem();
+            MovingObjectPosition hit = mc.objectMouseOver;
+            boolean air = hit == null || hit.typeOfHit == MovingObjectPosition.MovingObjectType.MISS;
+            boolean valid = mc.currentScreen == null && held != null
+                    && held.getItem() instanceof ItemConstructableTriggerV2
+                    && ProjectorMode.get(held) == ProjectorMode.BUILD
+                    && ProjectorMode.isWireless(held)
+                    && wirelessTarget != null
+                    && wirelessTarget.dimension == player.dimension
+                    && air
+                    && player.isSneaking()
+                    && Mouse.isButtonDown(1);
+            if (!valid) {
+                lastWirelessBuildMillis = 0;
+                return;
+            }
+            long now = System.currentTimeMillis();
+            long interval = Math.max(200L, ConfigurationHandler.INSTANCE.getAutoPlaceInterval());
+            if (lastWirelessBuildMillis == 0 || now - lastWirelessBuildMillis >= interval) {
+                StructureLib.sendToServer(new DismantleInputMessage(DismantleInputMessage.REMOTE_BUILD, 0, 0, 0));
+                lastWirelessBuildMillis = now;
+            }
+        }
     }
 
     public static class ForgeEventHandler {
@@ -576,6 +737,74 @@ public class ClientProxy extends CommonProxy {
             final ItemStack heldItem = player.getHeldItem();
 
             if (heldItem == null || !(heldItem.getItem() instanceof ItemConstructableTrigger)) return;
+
+            if (heldItem.getItem() instanceof ItemConstructableTriggerV2) {
+                MovingObjectPosition hit = Minecraft.getMinecraft().objectMouseOver;
+                boolean air = hit == null || hit.typeOfHit == MovingObjectPosition.MovingObjectType.MISS;
+                ProjectorMode mode = ProjectorMode.get(heldItem);
+                if (event.button == 0 && event.buttonstate) {
+                    boolean ctrl = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)
+                            || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+                    if (air) {
+                        event.setCanceled(true);
+                        if (ProjectorMode.isWireless(heldItem)) {
+                            if (player.isSneaking()) StructureLib
+                                    .sendToServer(new DismantleInputMessage(DismantleInputMessage.UNLINK, 0, 0, 0));
+                            else if (!ctrl) StructureLib
+                                    .sendToServer(new DismantleInputMessage(DismantleInputMessage.TOGGLE, 0, 0, 0));
+                        } else if (!ctrl && !player.isSneaking()) {
+                            StructureLib.sendToServer(new DismantleInputMessage(DismantleInputMessage.TOGGLE, 0, 0, 0));
+                        }
+                        return;
+                    }
+                    if (!ctrl && !player.isSneaking() && hit.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                        TileEntity tile = player.worldObj.getTileEntity(hit.blockX, hit.blockY, hit.blockZ);
+                        if (tile != null && ConstructableUtility.getConstructable(tile, hit.sideHit) != null) {
+                            event.setCanceled(true);
+                            StructureLib.sendToServer(
+                                    new DismantleInputMessage(
+                                            DismantleInputMessage.BIND,
+                                            hit.blockX,
+                                            hit.blockY,
+                                            hit.blockZ));
+                            return;
+                        }
+                    }
+                }
+
+                if (event.button == 1 && event.buttonstate) {
+                    if (ProjectorMode.isWireless(heldItem) && air) {
+                        event.setCanceled(true);
+                        if (mode == ProjectorMode.BUILD) {
+                            if (wirelessTarget != null && wirelessTarget.dimension == player.dimension) {
+                                previewWireless(player, heldItem);
+                                // Repeated wireless construction is sent by the client tick handler
+                                // for as long as Sneak + Right Click remains held.
+                            }
+                        } else if (!player.isSneaking()) {
+                            StructureLib.sendToServer(
+                                    new DismantleInputMessage(
+                                            DismantleInputMessage.PROMPT,
+                                            DismantleInputMessage.REMOTE_TARGET_X,
+                                            0,
+                                            0));
+                        }
+                        return;
+                    }
+                    if (mode == ProjectorMode.DISMANTLE && !player.isSneaking()
+                            && !air
+                            && hit.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                        TileEntity tile = player.worldObj.getTileEntity(hit.blockX, hit.blockY, hit.blockZ);
+                        if (tile != null && ConstructableUtility.getConstructable(tile, hit.sideHit) != null)
+                            StructureLib.sendToServer(
+                                    new DismantleInputMessage(
+                                            DismantleInputMessage.PROMPT,
+                                            hit.blockX,
+                                            hit.blockY,
+                                            hit.blockZ));
+                    }
+                }
+            }
 
             if (event.button != 2 || !event.buttonstate) return;
 
@@ -603,6 +832,7 @@ public class ClientProxy extends CommonProxy {
         @SubscribeEvent
         public void onWorldLoad(WorldEvent.Load e) {
             if (e.world.isRemote) {
+                wirelessTarget = null;
                 // flush hints. we are in a different world now.
                 allHintsForRender.clear();
                 allGroups.clear();
@@ -616,6 +846,16 @@ public class ClientProxy extends CommonProxy {
         @SubscribeEvent
         public void onRenderWorldLast(RenderWorldLastEvent e) {
             if (allHintsForRender.isEmpty()) return;
+
+            // Keep existing build hints cached, but hide them while dismantling.
+            // They become visible again as soon as the projector returns to Build mode.
+            EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+            if (player != null) {
+                ItemStack held = player.getHeldItem();
+                if (held != null && held.getItem() instanceof ItemConstructableTrigger
+                        && ProjectorMode.get(held) == ProjectorMode.DISMANTLE)
+                    return;
+            }
 
             // seriously, I'm not a OpenGL expert, so I'm probably doing a lot of very stupid stuff here.
             // Please consider contributing patches if you find something to optimize.

@@ -33,6 +33,7 @@ public enum ConfigurationHandler {
     private int hintTransparency;
     private int autoPlaceBudget;
     private int autoPlaceInterval;
+    private int dismantleHoldTicks;
     private Map<String, Pair<List<String>, List<String>>> registryOrders;
 
     ConfigurationHandler() {
@@ -97,6 +98,14 @@ public enum ConfigurationHandler {
                         + "As expected, server side settings will overrides client settings.\n"
                         + "Note this relates to the wall clock, not in game ticks.\n"
                         + "Value smaller than default is likely to be perceived as no minimal interval whatsoever.");
+        dismantleHoldTicks = config.getInt(
+                "dismantleHoldTicks",
+                "common.hologram",
+                60,
+                20,
+                1200,
+                "Number of continuous server ticks (20 ticks = 1 second) required to confirm dismantling."
+                        + " The server setting is authoritative; values below 20 are disallowed.");
 
         loadRegistryOrder();
 
@@ -174,6 +183,10 @@ public enum ConfigurationHandler {
 
     public int getAutoPlaceInterval() {
         return autoPlaceInterval;
+    }
+
+    public int getDismantleHoldTicks() {
+        return dismantleHoldTicks;
     }
 
     public Pair<List<String>, List<String>> getRegistryOrder(String name) {

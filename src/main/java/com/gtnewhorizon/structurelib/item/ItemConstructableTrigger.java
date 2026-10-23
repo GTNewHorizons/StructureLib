@@ -29,7 +29,7 @@ public class ItemConstructableTrigger extends Item {
     @Override
     public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
         if (getMovingObjectPositionFromPlayer(world, player, true) == null) {
-            // channel gui is opened from server and config gui from client
+            // Channel GUI is opened by the server; registry config GUI by the client.
             if (!world.isRemote && !player.isSneaking()) {
                 player.openGui(StructureLib.instance(), 0, world, player.inventory.currentItem, 0, 0);
             } else if (world.isRemote && player.isSneaking()) {
@@ -55,13 +55,6 @@ public class ItemConstructableTrigger extends Item {
             ChannelDataAccessor.iterateChannelData(stack).map(e -> e.getKey() + ": " + e.getValue())
                     .forEach(tooltip::add);
         } else {
-            // Tooltip text:
-            // Triggers Constructable Interface
-            // Shows multiblock construction details,
-            // just Use on a multiblock controller.
-            // (Sneak Use in creative to build)
-            // Quantity affects tier/mode/type
-
             tooltip.add(translateToLocal("item.structurelib.constructableTrigger.desc.0"));
             tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.1"));
             tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.2"));

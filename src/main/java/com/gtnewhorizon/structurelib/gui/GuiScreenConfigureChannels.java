@@ -36,6 +36,8 @@ import com.gtnewhorizon.structurelib.ChannelDescription;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.gui.GuiScrollableList.IGuiScreen;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTriggerV2;
+import com.gtnewhorizon.structurelib.item.ProjectorTier;
 
 import codechicken.nei.VisiblityData;
 import codechicken.nei.api.INEIGuiHandler;
@@ -61,7 +63,7 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
     private final GuiAutoCompleteList autoCompleteList;
     private final Map<String, List<String>> tooltipSplitCache = new HashMap<>();
     private final TIntObjectMap<Map<String, String>> trimCache = new TIntObjectHashMap<>();
-    private GuiTextField key, value;
+    private GuiTextField key, value, tier;
     protected int guiTop, guiLeft;
     private List<String> info;
     private boolean wipePending = false;
@@ -164,6 +166,24 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
             }
         };
 
+        if (hasTierField()) {
+            tier = new GuiTextField(fontRendererObj, guiLeft + 128, guiTop + 195, 35, 14) {
+
+                @Override
+                public void writeText(String text) {
+                    if (text != null && text.codePoints().allMatch(Character::isDigit)) super.writeText(text);
+                }
+
+                @Override
+                public void setFocused(boolean focused) {
+                    if (!focused && isFocused()) normalizeTier();
+                    super.setFocused(focused);
+                }
+            };
+            tier.setMaxStringLength(10);
+            tier.setText(String.valueOf(ProjectorTier.getTier(trigger)));
+        }
+
         list.onGuiInit(this);
         autoCompleteList.onGuiInit(this);
 
@@ -198,7 +218,24 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
 
     @Override
     public int getYSize() {
-        return 188;
+        return hasTierField() ? 218 : 188;
+    }
+
+    private boolean hasTierField() {
+        return trigger != null && trigger.getItem() instanceof ItemConstructableTriggerV2;
+    }
+
+    private int getTierInput() {
+        if (tier == null) return 1;
+        try {
+            return Math.max(1, Integer.parseInt(tier.getText()));
+        } catch (NumberFormatException ignored) {
+            return ProjectorTier.getTier(trigger);
+        }
+    }
+
+    private void normalizeTier() {
+        if (tier != null) tier.setText(String.valueOf(getTierInput()));
     }
 
     @Override
@@ -256,6 +293,7 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         super.mouseClicked(mX, mY, button);
         key.mouseClicked(mX, mY, button);
         value.mouseClicked(mX, mY, button);
+        if (tier != null) tier.mouseClicked(mX, mY, button);
     }
 
     @Override
@@ -271,13 +309,21 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
 
                     key.setFocused(false);
                     value.setFocused(true);
+                } else if (tier != null && value.isFocused()) {
+                    value.setFocused(false);
+                    tier.setFocused(true);
                 } else {
+                    if (tier != null) tier.setFocused(false);
                     key.setFocused(true);
                     value.setFocused(false);
                 }
                 return;
             case Keyboard.KEY_RETURN:
             case Keyboard.KEY_NUMPADENTER:
+                if (tier != null && tier.isFocused()) {
+                    tier.setFocused(false);
+                    return;
+                }
                 if (key.isFocused() && autoCompleteList.getSelectedElement() != null) {
                     key.setText(autoCompleteList.getSelectedElement());
                     key.setFocused(false);
@@ -306,7 +352,8 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
                 }
                 break;
         }
-        if (key.textboxKeyTyped(aChar, aKey) || value.textboxKeyTyped(aChar, aKey)) {
+        if (key.textboxKeyTyped(aChar, aKey) || value.textboxKeyTyped(aChar, aKey)
+                || (tier != null && tier.textboxKeyTyped(aChar, aKey))) {
             updateButtons();
             return;
         }
@@ -372,6 +419,10 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
     public void onGuiClosed() {
         super.onGuiClosed();
         Keyboard.enableRepeatEvents(false);
+        if (tier != null) {
+            normalizeTier();
+            ProjectorTier.setTier(trigger, getTierInput());
+        }
         StructureLib.instance().proxy().uploadChannels(trigger);
     }
 
@@ -380,6 +431,7 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         super.updateScreen();
         key.updateCursorCounter();
         value.updateCursorCounter();
+        if (tier != null) tier.updateCursorCounter();
         if (wipePending && System.currentTimeMillis() - wipePendingTime > WIPE_CONFIRM_TIMEOUT_MS) {
             wipePending = false;
             getButtonList().get(WIPE_BTN).displayString = I18n.format(I18N_PREFIX + "wipe");
@@ -391,13 +443,18 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         mc.renderEngine.bindTexture(new ResourceLocation("structurelib", "textures/gui/channels.png"));
         int topLeftX = (this.width - this.getXSize()) / 2;
         int topLeftY = (this.height - this.getYSize()) / 2;
-        drawTexturedModalRect(topLeftX, topLeftY, 0, 0, getXSize(), getYSize());
+        drawTexturedModalRect(topLeftX, topLeftY, 0, 0, getXSize(), 188);
         list.drawScreen(mX, mY, partialTick);
         fontRendererObj.drawString(I18n.format(I18N_PREFIX + "title"), guiLeft + 12, guiTop + 9, 0);
         fontRendererObj.drawString(I18n.format(I18N_PREFIX + "key"), guiLeft + 12, guiTop + 122, 0);
         key.drawTextBox();
         fontRendererObj.drawString(I18n.format(I18N_PREFIX + "value"), guiLeft + 12, guiTop + 142, 0);
         value.drawTextBox();
+        if (tier != null) {
+            drawRect(guiLeft, guiTop + 188, guiLeft + getXSize(), guiTop + 218, 0xff181818);
+            fontRendererObj.drawString(I18n.format(I18N_PREFIX + "tier"), guiLeft + 12, guiTop + 198, 0xffffff);
+            tier.drawTextBox();
+        }
     }
 
     @Override

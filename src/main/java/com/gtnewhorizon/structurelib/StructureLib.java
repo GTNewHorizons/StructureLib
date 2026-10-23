@@ -6,13 +6,18 @@ import static com.gtnewhorizon.structurelib.StructureLibAPI.MOD_ID;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,18 +25,24 @@ import org.apache.logging.log4j.Logger;
 import com.gtnewhorizon.structurelib.block.BlockHint;
 import com.gtnewhorizon.structurelib.command.CommandConfigureChannels;
 import com.gtnewhorizon.structurelib.command.CommandRegistryDebug;
+import com.gtnewhorizon.structurelib.dismantle.DismantleManager;
 import com.gtnewhorizon.structurelib.item.ItemBlockHint;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
+import com.gtnewhorizon.structurelib.item.ItemConstructableTriggerV2;
 import com.gtnewhorizon.structurelib.item.ItemDebugConstructableTrigger;
 import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
+import com.gtnewhorizon.structurelib.net.DismantleHoldResolvedMessage;
+import com.gtnewhorizon.structurelib.net.DismantleInputMessage;
 import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
 import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
 import com.gtnewhorizon.structurelib.net.UpdateHintParticleMessage;
+import com.gtnewhorizon.structurelib.net.WirelessLinkMessage;
 import com.gtnewhorizon.structurelib.util.InventoryUtility;
 import com.gtnewhorizon.structurelib.util.XSTR;
 
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -79,6 +90,13 @@ public class StructureLib {
         net.registerMessage(SetChannelDataMessage.Handler.class, SetChannelDataMessage.class, 3, Side.SERVER);
         net.registerMessage(ErrorHintParticleMessage.Handler.class, ErrorHintParticleMessage.class, 4, Side.CLIENT);
         net.registerMessage(RegistryOrderSyncMessage.Handler.class, RegistryOrderSyncMessage.class, 5, Side.SERVER);
+        net.registerMessage(DismantleInputMessage.Handler.class, DismantleInputMessage.class, 6, Side.SERVER);
+        net.registerMessage(WirelessLinkMessage.Handler.class, WirelessLinkMessage.class, 7, Side.CLIENT);
+        net.registerMessage(
+                DismantleHoldResolvedMessage.Handler.class,
+                DismantleHoldResolvedMessage.class,
+                8,
+                Side.CLIENT);
 
         try {
             DEBUG_MODE = Boolean.parseBoolean(System.getProperty("structurelib.debug"));
@@ -100,6 +118,7 @@ public class StructureLib {
     static Item itemBlockHint;
     static Item itemFrontRotationTool;
     static Item itemConstructableTrigger;
+    static Item itemConstructableTriggerV2;
     static Item itemDebugConstructableTrigger;
     public static final CreativeTabs creativeTab = new CreativeTabs("structurelib") {
 
@@ -112,6 +131,7 @@ public class StructureLib {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
+        FMLCommonHandler.instance().bus().register(DismantleManager.INSTANCE);
         ConfigurationHandler.INSTANCE.init(e.getSuggestedConfigurationFile());
         GameRegistry.registerBlock(blockHint = new BlockHint(), ItemBlockHint.class, "blockhint");
         itemBlockHint = ItemBlock.getItemFromBlock(StructureLibAPI.getBlockHint());
@@ -121,6 +141,9 @@ public class StructureLib {
         GameRegistry.registerItem(
                 itemConstructableTrigger = new ItemConstructableTrigger(),
                 itemConstructableTrigger.getUnlocalizedName());
+        GameRegistry.registerItem(
+                itemConstructableTriggerV2 = new ItemConstructableTriggerV2(),
+                "constructableTriggerMKII");
         GameRegistry.registerItem(
                 itemDebugConstructableTrigger = new ItemDebugConstructableTrigger(),
                 itemDebugConstructableTrigger.getUnlocalizedName());
@@ -142,6 +165,46 @@ public class StructureLib {
     @Mod.EventHandler
     public void loadComplete(FMLLoadCompleteEvent e) {
         proxy.loadComplete(e);
+        registerProjectorMKIIRecipe();
+    }
+
+    /**
+     * GTNH-only upgrade recipe. Resolve ingredients by registry name instead of their world-dependent numeric NEI IDs.
+     * Five shapeless ingredients require a 3x3 crafting table. Only an uncharged MKI Matter Manipulator is accepted.
+     */
+    private static void registerProjectorMKIIRecipe() {
+        Item monitorCover = GameRegistry.findItem("gregtech", "gt.metaitem.01");
+        Block openComputersHologram = GameRegistry.findBlock("OpenComputers", "hologram1");
+        Item matterManipulatorMK1 = GameRegistry.findItem("matter-manipulator", "itemMatterManipulator1");
+        if (monitorCover == null || OreDictionary.getOres("circuitZPM").isEmpty()
+                || openComputersHologram == null
+                || matterManipulatorMK1 == null) {
+            LOGGER.warn("Skipping Projector MKII recipe: a required GTNH crafting ingredient is unavailable");
+            return;
+        }
+        // Both hologram projectors and the uncharged Matter Manipulator MKI are consumed.
+        GameRegistry.addRecipe(
+                new ShapelessOreRecipe(
+                        new ItemStack(itemConstructableTriggerV2),
+                        new ItemStack(monitorCover, 1, 32740),
+                        "circuitZPM",
+                        new ItemStack(itemConstructableTrigger),
+                        new ItemStack(openComputersHologram),
+                        new ItemStack(matterManipulatorMK1)) {
+
+                    @Override
+                    public boolean matches(InventoryCrafting crafting, World world) {
+                        if (!super.matches(crafting, world)) return false;
+                        for (int i = 0; i < crafting.getSizeInventory(); i++) {
+                            ItemStack ingredient = crafting.getStackInSlot(i);
+                            if (ingredient != null && ingredient.getItem() == matterManipulatorMK1) {
+                                NBTTagCompound tag = ingredient.getTagCompound();
+                                return tag == null || tag.getDouble("charge") == 0.0D;
+                            }
+                        }
+                        return false;
+                    }
+                });
     }
 
     @Mod.EventHandler
@@ -210,6 +273,19 @@ public class StructureLib {
 
     public static StructureLib instance() {
         return INSTANCE;
+    }
+
+    /** Client-only input messages are sent over StructureLib's existing channel. */
+    public static void sendToServer(DismantleInputMessage message) {
+        net.sendToServer(message);
+    }
+
+    public static void sendWirelessLink(WirelessLinkMessage message, EntityPlayerMP player) {
+        net.sendTo(message, player);
+    }
+
+    public static void sendDismantleHoldResolved(EntityPlayerMP player) {
+        net.sendTo(new DismantleHoldResolvedMessage(), player);
     }
 
     public CommonProxy proxy() {

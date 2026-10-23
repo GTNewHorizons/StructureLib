@@ -63,6 +63,12 @@ public class CommonProxy {
 
     public void endHinting(World w) {}
 
+    /** Client-only acknowledgment of a server-validated wireless link. */
+    public void acceptWirelessLink(boolean linked, int x, int y, int z, int dimension, int side) {}
+
+    /** Client-only end-of-hold notification; no-op on a dedicated server. */
+    public void acceptDismantleHoldResolved() {}
+
     public void preInit(FMLPreInitializationEvent e) {}
 
     public void init(FMLInitializationEvent e) {}

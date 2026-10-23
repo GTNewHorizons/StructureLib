@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import com.gtnewhorizon.structurelib.StructureLibAPI;
+import com.gtnewhorizon.structurelib.item.ProjectorTier;
 
 /**
  * Provide accessor methods for channel data from trigger item.
@@ -100,7 +101,7 @@ public class ChannelDataAccessor {
             throw new IllegalArgumentException("Channel name can be lower case ONLY");
         if (!masterStack.hasTagCompound() || !masterStack.stackTagCompound.hasKey(SECONDARY_HINT_TAG, TAG_COMPOUND)
                 || !masterStack.stackTagCompound.getCompoundTag(SECONDARY_HINT_TAG).hasKey(channel, NBT.TAG_INT))
-            return masterStack.stackSize;
+            return ProjectorTier.getTier(masterStack);
         return masterStack.stackTagCompound.getCompoundTag(SECONDARY_HINT_TAG).getInteger(channel);
     }
 

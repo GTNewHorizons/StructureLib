@@ -283,6 +283,13 @@ public class StructureLibAPI {
     }
 
     /**
+     * Get the upgraded hologram projector with dismantle and wireless controls.
+     */
+    public static Item getV2HologramItem() {
+        return StructureLib.itemConstructableTriggerV2;
+    }
+
+    /**
      * Check if structure debug mode is on.
      *
      * @return true if debug mode is on

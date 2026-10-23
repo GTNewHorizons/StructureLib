@@ -403,6 +403,18 @@ public interface IStructureDefinition<T> {
     static <T> boolean iterate(T object, ItemStack trigger, IStructureElement<T>[] elements, World world,
             ExtendedFacing extendedFacing, int basePositionX, int basePositionY, int basePositionZ, int basePositionA,
             int basePositionB, int basePositionC, boolean hintsOnly, Boolean checkBlocksIfNotNullForceCheckAllIfTrue) {
+        if (hintsOnly && StructureCapture.intercept(
+                object,
+                elements,
+                world,
+                extendedFacing,
+                basePositionX,
+                basePositionY,
+                basePositionZ,
+                basePositionA,
+                basePositionB,
+                basePositionC))
+            return true;
         if (!world.isRemote && hintsOnly) {
             return false;
         }
