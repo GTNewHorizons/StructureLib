@@ -32,8 +32,8 @@ import com.gtnewhorizon.structurelib.item.ItemConstructableTriggerV2;
 import com.gtnewhorizon.structurelib.item.ItemDebugConstructableTrigger;
 import com.gtnewhorizon.structurelib.item.ItemFrontRotationTool;
 import com.gtnewhorizon.structurelib.net.AlignmentMessage;
-import com.gtnewhorizon.structurelib.net.DismantleInputMessage;
 import com.gtnewhorizon.structurelib.net.DismantleHoldResolvedMessage;
+import com.gtnewhorizon.structurelib.net.DismantleInputMessage;
 import com.gtnewhorizon.structurelib.net.ErrorHintParticleMessage;
 import com.gtnewhorizon.structurelib.net.RegistryOrderSyncMessage;
 import com.gtnewhorizon.structurelib.net.SetChannelDataMessage;
@@ -42,9 +42,9 @@ import com.gtnewhorizon.structurelib.net.WirelessLinkMessage;
 import com.gtnewhorizon.structurelib.util.InventoryUtility;
 import com.gtnewhorizon.structurelib.util.XSTR;
 
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
-import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLInterModComms;
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
@@ -92,7 +92,11 @@ public class StructureLib {
         net.registerMessage(RegistryOrderSyncMessage.Handler.class, RegistryOrderSyncMessage.class, 5, Side.SERVER);
         net.registerMessage(DismantleInputMessage.Handler.class, DismantleInputMessage.class, 6, Side.SERVER);
         net.registerMessage(WirelessLinkMessage.Handler.class, WirelessLinkMessage.class, 7, Side.CLIENT);
-        net.registerMessage(DismantleHoldResolvedMessage.Handler.class, DismantleHoldResolvedMessage.class, 8, Side.CLIENT);
+        net.registerMessage(
+                DismantleHoldResolvedMessage.Handler.class,
+                DismantleHoldResolvedMessage.class,
+                8,
+                Side.CLIENT);
 
         try {
             DEBUG_MODE = Boolean.parseBoolean(System.getProperty("structurelib.debug"));
@@ -137,7 +141,9 @@ public class StructureLib {
         GameRegistry.registerItem(
                 itemConstructableTrigger = new ItemConstructableTrigger(),
                 itemConstructableTrigger.getUnlocalizedName());
-        GameRegistry.registerItem(itemConstructableTriggerV2 = new ItemConstructableTriggerV2(), "constructableTriggerMKII");
+        GameRegistry.registerItem(
+                itemConstructableTriggerV2 = new ItemConstructableTriggerV2(),
+                "constructableTriggerMKII");
         GameRegistry.registerItem(
                 itemDebugConstructableTrigger = new ItemDebugConstructableTrigger(),
                 itemDebugConstructableTrigger.getUnlocalizedName());
@@ -163,37 +169,42 @@ public class StructureLib {
     }
 
     /**
-     * GTNH-only upgrade recipe. Resolve ingredients by registry name instead of their
-     * world-dependent numeric NEI IDs. Five shapeless ingredients require a 3x3 crafting table.
-     * Only an uncharged MKI Matter Manipulator is accepted.
+     * GTNH-only upgrade recipe. Resolve ingredients by registry name instead of their world-dependent numeric NEI IDs.
+     * Five shapeless ingredients require a 3x3 crafting table. Only an uncharged MKI Matter Manipulator is accepted.
      */
     private static void registerProjectorMKIIRecipe() {
         Item monitorCover = GameRegistry.findItem("gregtech", "gt.metaitem.01");
         Block openComputersHologram = GameRegistry.findBlock("OpenComputers", "hologram1");
         Item matterManipulatorMK1 = GameRegistry.findItem("matter-manipulator", "itemMatterManipulator1");
         if (monitorCover == null || OreDictionary.getOres("circuitZPM").isEmpty()
-                || openComputersHologram == null || matterManipulatorMK1 == null) {
+                || openComputersHologram == null
+                || matterManipulatorMK1 == null) {
             LOGGER.warn("Skipping Projector MKII recipe: a required GTNH crafting ingredient is unavailable");
             return;
         }
         // Both hologram projectors and the uncharged Matter Manipulator MKI are consumed.
-        GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(itemConstructableTriggerV2),
-                new ItemStack(monitorCover, 1, 32740), "circuitZPM", new ItemStack(itemConstructableTrigger),
-                new ItemStack(openComputersHologram), new ItemStack(matterManipulatorMK1)) {
+        GameRegistry.addRecipe(
+                new ShapelessOreRecipe(
+                        new ItemStack(itemConstructableTriggerV2),
+                        new ItemStack(monitorCover, 1, 32740),
+                        "circuitZPM",
+                        new ItemStack(itemConstructableTrigger),
+                        new ItemStack(openComputersHologram),
+                        new ItemStack(matterManipulatorMK1)) {
 
-            @Override
-            public boolean matches(InventoryCrafting crafting, World world) {
-                if (!super.matches(crafting, world)) return false;
-                for (int i = 0; i < crafting.getSizeInventory(); i++) {
-                    ItemStack ingredient = crafting.getStackInSlot(i);
-                    if (ingredient != null && ingredient.getItem() == matterManipulatorMK1) {
-                        NBTTagCompound tag = ingredient.getTagCompound();
-                        return tag == null || tag.getDouble("charge") == 0.0D;
+                    @Override
+                    public boolean matches(InventoryCrafting crafting, World world) {
+                        if (!super.matches(crafting, world)) return false;
+                        for (int i = 0; i < crafting.getSizeInventory(); i++) {
+                            ItemStack ingredient = crafting.getStackInSlot(i);
+                            if (ingredient != null && ingredient.getItem() == matterManipulatorMK1) {
+                                NBTTagCompound tag = ingredient.getTagCompound();
+                                return tag == null || tag.getDouble("charge") == 0.0D;
+                            }
+                        }
+                        return false;
                     }
-                }
-                return false;
-            }
-        });
+                });
     }
 
     @Mod.EventHandler

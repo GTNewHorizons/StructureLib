@@ -113,24 +113,24 @@ public enum ConfigurationHandler {
                 "dismantleProtectSharedBlocks",
                 "common.hologram",
                 true,
-                "Experimental: Before dismantling, preserve matching casing blocks belonging to other formed GT"
-                        + " multiblocks whose controllers are loaded. If the scan cannot finish safely, dismantling"
-                        + " will not start. Does not guarantee protection for unsupported multiblocks.");
+                "Before dismantling, preserve occupied structure positions that also belong to other loaded"
+                        + " constructable controllers. If the scan cannot finish safely, dismantling will not"
+                        + " start. Unloaded controllers cannot be detected; back up shared structures first.");
         dismantleSharedScanRadius = config.getInt(
                 "dismantleSharedScanRadius",
                 "common.hologram",
-                48,
+                128,
                 0,
                 256,
-                "Additional blocks around the selected multiblock's bounding box searched for formed GT controllers."
-                        + " Increase this for very large machines; a larger area can make scanning slower.");
+                "Additional blocks around the selected multiblock's bounding box searched for other controllers."
+                        + " A minimum of 128 blocks is enforced for safety; larger values increase scan time.");
         dismantleSharedScanLimit = config.getInt(
                 "dismantleSharedScanLimit",
                 "common.hologram",
                 32,
                 1,
                 256,
-                "Maximum number of nearby formed GT controllers to inspect before dismantling is stopped."
+                "Maximum number of nearby constructable controllers to inspect before dismantling is stopped."
                         + " This limits lag from shared-block scanning.");
 
         loadRegistryOrder();

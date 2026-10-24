@@ -61,12 +61,16 @@ public class ItemConstructableTriggerV2 extends ItemConstructableTrigger {
         boolean wireless = ProjectorMode.isWireless(stack);
         boolean dismantle = ProjectorMode.get(stack) == ProjectorMode.DISMANTLE;
 
-        tooltip.add(translateToLocal(
-                dismantle ? "item.structurelib.constructableTrigger.mode.selected.dismantle"
-                        : "item.structurelib.constructableTrigger.mode.selected.build"));
+        tooltip.add(
+                translateToLocal(
+                        dismantle ? "item.structurelib.constructableTrigger.mode.selected.dismantle"
+                                : "item.structurelib.constructableTrigger.mode.selected.build"));
         if (wireless) tooltip.add(translateToLocal("item.structurelib.constructableTrigger.mode.wireless"));
 
-        tooltip.add(translateToLocalFormatted("item.structurelib.constructableTriggerV2.tier", ProjectorTier.getTier(stack)));
+        tooltip.add(
+                translateToLocalFormatted(
+                        "item.structurelib.constructableTriggerV2.tier",
+                        ProjectorTier.getTier(stack)));
 
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.mode.separator"));
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.mode.build"));
@@ -79,14 +83,13 @@ public class ItemConstructableTriggerV2 extends ItemConstructableTrigger {
                     .forEach(tooltip::add);
         } else {
             tooltip.add(translateToLocal("item.structurelib.constructableTrigger.desc.0"));
-            tooltip.add(translateToLocal("item.structurelib.constructableTrigger.desc.1"));
-            tooltip.add(translateToLocal("item.structurelib.constructableTrigger.desc.2"));
+            tooltip.add(translateToLocal("item.structurelib.constructableTriggerV2.build.desc.1"));
+            tooltip.add(translateToLocal("item.structurelib.constructableTriggerV2.build.desc.2"));
             tooltip.add(translateToLocal("item.structurelib.constructableTriggerV2.build.desc.3"));
             tooltip.add(translateToLocal("item.structurelib.constructableTriggerV2.tier.desc"));
             if (ChannelDataAccessor.hasSubChannel(stack))
                 tooltip.add(translateToLocal("item.structurelib.constructableTriggerV2.desc.5"));
         }
-        if (wireless) tooltip.add(translateToLocal("item.structurelib.constructableTrigger.wireless.desc.1"));
         if (!dismantle && !wireless) {
             tooltip.add(translateToLocal("item.structurelib.constructableTrigger.build.menu.subchannels"));
             tooltip.add(translateToLocal("item.structurelib.constructableTrigger.build.menu.registries"));
@@ -95,11 +98,8 @@ public class ItemConstructableTriggerV2 extends ItemConstructableTrigger {
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.mode.separator"));
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.mode.dismantle"));
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.dismantle.desc.0"));
-        if (wireless) tooltip.add(translateToLocal("item.structurelib.constructableTrigger.wireless.desc.2"));
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.dismantle.desc.1"));
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.dismantle.desc.3"));
-        tooltip.add(translateToLocal("item.structurelib.constructableTrigger.dismantle.desc.4"));
-        tooltip.add(translateToLocal("item.structurelib.constructableTrigger.dismantle.desc.7"));
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.dismantle.desc.5"));
         tooltip.add(translateToLocal("item.structurelib.constructableTrigger.dismantle.desc.6"));
 

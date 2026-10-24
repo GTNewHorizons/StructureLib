@@ -1,7 +1,5 @@
 package com.gtnewhorizon.structurelib.dismantle;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -19,15 +17,15 @@ import com.gtnewhorizon.structurelib.structure.StructureCapture.Candidate;
 import com.gtnewhorizon.structurelib.structure.StructureCapture.Position;
 
 /**
- * Experimental wall-sharing guard. A block is only protected when another loaded, formed GT
- * controller's structure definition positively recognizes that exact world position. Unformed
- * controllers are deliberately ignored: their blueprints do not establish ownership of casings.
+ * Conservative wall-sharing guard. Protect any occupied primary position included in another loaded constructable
+ * controller's structure traversal. A controller can temporarily report itself unformed while still owning shared
+ * casings; never use that flag to exclude it.
  */
 final class SharedBlockProtection {
 
     private SharedBlockProtection() {}
 
-    /** @return the protected positions, or null if a nearby formed machine cannot be scanned safely. */
+    /** @return the protected positions, or null if a nearby constructable cannot be scanned safely. */
     static Set<Position> findShared(World world, TileEntity primaryController, StructureCapture primary,
             ItemStack trigger) {
         Set<Position> selected = new LinkedHashSet<>();
@@ -45,7 +43,9 @@ final class SharedBlockProtection {
         }
 
         Set<Position> shared = new LinkedHashSet<>();
-        int radius = ConfigurationHandler.INSTANCE.getDismantleSharedScanRadius();
+        // A secondary controller can be on the opposite end of a tall Exo Foundry. Never use
+        // an old 48-block config value to silently skip it when the structures overlap.
+        int radius = Math.max(128, ConfigurationHandler.INSTANCE.getDismantleSharedScanRadius());
         int scanLimit = ConfigurationHandler.INSTANCE.getDismantleSharedScanLimit();
         int inspected = 0;
         // Cover the God Forge's optional rings, as well as the tier selected on this projector.
@@ -59,17 +59,20 @@ final class SharedBlockProtection {
         for (Object candidate : new ArrayList<>(world.loadedTileEntityList)) {
             if (!(candidate instanceof TileEntity)) continue;
             TileEntity tile = (TileEntity) candidate;
-            if (tile == primaryController || tile.isInvalid() || tile.getWorldObj() != world
-                    || tile.xCoord < minX - radius || tile.xCoord > maxX + radius
-                    || tile.yCoord < minY - radius || tile.yCoord > maxY + radius
-                    || tile.zCoord < minZ - radius || tile.zCoord > maxZ + radius
+            if (tile == primaryController || tile.isInvalid()
+                    || tile.getWorldObj() != world
+                    || tile.xCoord < minX - radius
+                    || tile.xCoord > maxX + radius
+                    || tile.yCoord < minY - radius
+                    || tile.yCoord > maxY + radius
+                    || tile.zCoord < minZ - radius
+                    || tile.zCoord > maxZ + radius
                     || !world.blockExists(tile.xCoord, tile.yCoord, tile.zCoord)
-                    || world.getTileEntity(tile.xCoord, tile.yCoord, tile.zCoord) != tile) continue;
+                    || world.getTileEntity(tile.xCoord, tile.yCoord, tile.zCoord) != tile)
+                continue;
 
-            // GT multiblock controllers expose mMachine on their meta tile entity. Reading it
-            // avoids treating nearby unbuilt controllers as owners of unrelated blocks.
-            Object meta = invokeNoArgs(tile, "getMetaTileEntity");
-            if (!isFormedGtMultiblock(meta)) continue;
+            // Include unformed controllers too: mMachine can be false during structure updates,
+            // and using it as a filter caused shared blocks to be destroyed.
             IConstructable constructable = ConstructableUtility.getConstructable(tile, 2);
             if (constructable == null) continue;
             if (++inspected > scanLimit) {
@@ -84,40 +87,31 @@ final class SharedBlockProtection {
             for (int tier : probeTiers) {
                 ItemStack variant = trigger.copy();
                 variant.stackSize = tier;
-                Set<Position> recognized = StructureCapture.collectOverlaps(
-                        constructable, variant, world, otherController, selected);
+                Set<Position> recognized = StructureCapture
+                        .collectOverlaps(constructable, variant, world, otherController, selected);
                 if (recognized == null) continue;
                 traversed = true;
                 shared.addAll(recognized);
             }
             if (!traversed) {
                 StructureLib.LOGGER.warn(
-                        "Dismantle wall-sharing scan could not read formed controller {} at ({}, {}, {})",
-                        meta.getClass().getName(), tile.xCoord, tile.yCoord, tile.zCoord);
+                        "Dismantle wall-sharing scan could not read controller {} at ({}, {}, {})",
+                        tile.getClass().getName(),
+                        tile.xCoord,
+                        tile.yCoord,
+                        tile.zCoord);
                 return null;
             }
             if (shared.size() == selected.size()) break;
         }
 
+        StructureLib.LOGGER.info(
+                "Dismantle wall-sharing scan at ({}, {}, {}): {} nearby constructable controllers, {} protected positions",
+                primaryController.xCoord,
+                primaryController.yCoord,
+                primaryController.zCoord,
+                inspected,
+                shared.size());
         return shared;
-    }
-
-    private static Object invokeNoArgs(Object target, String name) {
-        try {
-            Method method = target.getClass().getMethod(name);
-            return method.invoke(target);
-        } catch (ReflectiveOperationException | SecurityException e) {
-            return null;
-        }
-    }
-
-    private static boolean isFormedGtMultiblock(Object meta) {
-        if (meta == null) return false;
-        try {
-            Field formed = meta.getClass().getField("mMachine");
-            return formed.getType() == boolean.class && formed.getBoolean(meta);
-        } catch (ReflectiveOperationException | SecurityException e) {
-            return false;
-        }
     }
 }
