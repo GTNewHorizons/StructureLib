@@ -44,6 +44,7 @@ item.structurelib.constructableTrigger.gui.info=Many multiblocks support some de
 item.structurelib.debugConstructableTrigger.name=Debug Multiblock Structure Hologram Projector
 
 channels.structurelib.show_errors=When set, will highlight parts of the multiblock that is definitely wrong
+channels.structurelib.master=Overrides the projector stack size, i.e. the value used by every sub channel that is not set
 
 structurelib.tooltip.channelvalue=§7Value §b%d§r§7 for subchannel §b%s
 structurelib.tooltip.indicator_dnd=Drop into GUI or middle-click to select this value for this channel

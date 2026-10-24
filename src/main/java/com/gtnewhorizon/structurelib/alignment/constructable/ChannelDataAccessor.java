@@ -25,8 +25,88 @@ import com.gtnewhorizon.structurelib.StructureLibAPI;
 public class ChannelDataAccessor {
 
     private static final String SECONDARY_HINT_TAG = "channels";
+    private static final String MASTER_OVERRIDE_TAG = "master";
 
     private ChannelDataAccessor() {}
+
+    /**
+     * Return a trigger item that
+     * <ul>
+     * <li>Still carry all the subchannel in some unspecified ways</li>
+     * <li>Have its master channel data replaced with master channel override</li>
+     * <li>No longer carry the master channel override</li>
+     * </ul>
+     *
+     * If given trigger item has no master channel override, masterStack may or may not be returned to save performance.
+     * Code within StructureLib can depend on this behavior, you cannot.
+     * <p>
+     * Should be called once on the raw trigger item before any {@link #withChannel(ItemStack, String)} call.
+     * StructureLib already does this for hologram projector. If you call
+     * {@link IConstructable#construct(ItemStack, boolean)} or similar methods with a raw trigger item yourself, call
+     * this first.
+     *
+     * @param masterStack raw trigger item
+     * @return a trigger item with new master channel
+     */
+    public static ItemStack withMasterData(ItemStack masterStack) {
+        if (masterStack == null) throw new IllegalArgumentException();
+        if (!hasMasterData(masterStack)) return masterStack;
+        NBTTagCompound tag = (NBTTagCompound) masterStack.stackTagCompound.copy();
+        ItemStack ret = new ItemStack(
+                masterStack.getItem(),
+                tag.getInteger(MASTER_OVERRIDE_TAG),
+                Items.feather.getDamage(masterStack));
+        tag.removeTag(MASTER_OVERRIDE_TAG);
+        if (!tag.hasNoTags()) ret.setTagCompound(tag);
+        return ret;
+    }
+
+    /**
+     * Check if given trigger item contains master channel override
+     * 
+     * @param masterStack trigger stack to check
+     * @return true if contains master channel override
+     */
+    public static boolean hasMasterData(ItemStack masterStack) {
+        if (masterStack == null) throw new IllegalArgumentException();
+        return masterStack.hasTagCompound() && masterStack.stackTagCompound.hasKey(MASTER_OVERRIDE_TAG, NBT.TAG_INT);
+    }
+
+    /**
+     * Get the master channel data from given trigger item. Will use stack size instead if not overridden.
+     * 
+     * @param masterStack trigger stack to query from
+     * @return master channel data
+     */
+    public static int getMasterData(ItemStack masterStack) {
+        if (!hasMasterData(masterStack)) return masterStack.stackSize;
+        return masterStack.stackTagCompound.getInteger(MASTER_OVERRIDE_TAG);
+    }
+
+    /**
+     * Set the master channel override on given trigger item
+     * 
+     * @param masterStack trigger stack to set
+     * @param data        positive master channel data
+     */
+    public static void setMasterData(ItemStack masterStack, int data) {
+        if (masterStack == null) throw new IllegalArgumentException();
+        if (data < 1) throw new IllegalArgumentException("Channel data must be positive");
+        if (masterStack.stackTagCompound == null) masterStack.stackTagCompound = new NBTTagCompound();
+        masterStack.stackTagCompound.setInteger(MASTER_OVERRIDE_TAG, data);
+    }
+
+    /**
+     * Clear the master channel override from given trigger item, if it exists
+     * 
+     * @param masterStack trigger stack to unset
+     */
+    public static void unsetMasterData(ItemStack masterStack) {
+        if (masterStack == null) throw new IllegalArgumentException();
+        if (masterStack.stackTagCompound == null) return;
+        masterStack.stackTagCompound.removeTag(MASTER_OVERRIDE_TAG);
+        if (masterStack.stackTagCompound.hasNoTags()) masterStack.stackTagCompound = null;
+    }
 
     /**
      * Return a trigger item that
@@ -142,14 +222,15 @@ public class ChannelDataAccessor {
     }
 
     /**
-     * Wipe all subchannel data on given trigger item
-     * 
+     * Wipe all subchannel data and master channel override on given trigger item
+     *
      * @param masterStack trigger stack to wipe
      */
     public static void wipeChannelData(ItemStack masterStack) {
         if (masterStack == null) throw new IllegalArgumentException();
         if (masterStack.stackTagCompound != null) {
             masterStack.stackTagCompound.removeTag(SECONDARY_HINT_TAG);
+            masterStack.stackTagCompound.removeTag(MASTER_OVERRIDE_TAG);
             if (masterStack.stackTagCompound.hasNoTags()) {
                 masterStack.stackTagCompound = null;
             }
