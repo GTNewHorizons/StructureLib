@@ -12,6 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 
+import com.gtnewhorizon.structurelib.ChannelDescription;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.item.ItemConstructableTrigger;
 
@@ -26,7 +27,10 @@ public class CommandConfigureChannels extends CommandBase {
     public String getCommandUsage(ICommandSender p_71518_1_) {
         return "/sl_channel <wipe/getall>\n" + "/sl_channel <get/unset> <channel name>\n"
                 + "/sl_channel <set> <channel name> <value>\n"
-                + "<channel name> can have space in it. Values below 1 clear the channel";
+                + "<channel name> can have space in it. Values below 1 clear the channel\n"
+                + "Use "
+                + ChannelDescription.MASTER_KEY
+                + " as <channel name> to override the projector stack size";
     }
 
     @Override
@@ -56,14 +60,14 @@ public class CommandConfigureChannels extends CommandBase {
 
         switch (args[0]) {
             case "getall":
-                if (!ChannelDataAccessor.hasSubChannel(heldItem)) {
+                if (ChannelDescription.countData(heldItem) == 0) {
                     sender.addChatMessage(new ChatComponentText("No subchannel"));
                 } else {
                     sender.addChatMessage(
                             new ChatComponentTranslation(
                                     "item.structurelib.constructableTrigger.desc.lshift.0",
                                     ChannelDataAccessor.countChannelData(heldItem)));
-                    ChannelDataAccessor.iterateChannelData(heldItem).map(e -> e.getKey() + ": " + e.getValue())
+                    ChannelDescription.iterateData(heldItem).map(e -> e.getKey() + ": " + e.getValue())
                             .map(ChatComponentText::new).forEach(player::addChatMessage);
                 }
                 return;
@@ -86,9 +90,12 @@ public class CommandConfigureChannels extends CommandBase {
 
         switch (args[0]) {
             case "get":
-                if (ChannelDataAccessor.hasSubChannel(heldItem, channel)) sender.addChatMessage(
+                if (ChannelDescription.isSet(heldItem, channel)) sender.addChatMessage(
                         new ChatComponentText(
-                                channel + " value: " + ChannelDataAccessor.getChannelData(heldItem, channel)));
+                                channel + " value: "
+                                        + (ChannelDescription.MASTER_KEY.equals(channel)
+                                                ? ChannelDataAccessor.getMasterData(heldItem)
+                                                : ChannelDataAccessor.getChannelData(heldItem, channel))));
                 else sender.addChatMessage(new ChatComponentText(channel + " value: N/A"));
                 break;
             case "clear":
@@ -109,9 +116,9 @@ public class CommandConfigureChannels extends CommandBase {
                 }
 
                 if (value < 1) {
-                    ChannelDataAccessor.unsetChannelData(heldItem, channel);
+                    ChannelDescription.unsetData(heldItem, channel);
                 } else {
-                    ChannelDataAccessor.setChannelData(heldItem, channel, value);
+                    ChannelDescription.setData(heldItem, channel, value);
                 }
                 player.inventoryContainer.detectAndSendChanges();
                 sender.addChatMessage(

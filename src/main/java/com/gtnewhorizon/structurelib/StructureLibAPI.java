@@ -44,7 +44,6 @@ public class StructureLibAPI {
     public static final int HINT_BLOCK_META_AIR = 13;
     public static final int HINT_BLOCK_META_NOT_AIR = 14;
     public static final int HINT_BLOCK_META_ERROR = 15;
-    public static final String CHANNEL_TIER = "tier";
     public static final String CHANNEL_SHOW_ERROR = "show_error";
     static final ThreadLocal<Object> instrument = new ThreadLocal<>();
 

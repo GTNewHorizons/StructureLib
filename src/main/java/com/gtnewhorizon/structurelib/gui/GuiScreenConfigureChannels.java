@@ -317,7 +317,7 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
         // this will be called from setText of key and value. NEVER UPDATE THE VALUE OF THESE HERE OR GET A
         // STACKOVERFLOW!
         String keyText = key.getText();
-        boolean existing = !StringUtils.isEmpty(keyText) && ChannelDataAccessor.hasSubChannel(trigger, keyText);
+        boolean existing = !StringUtils.isEmpty(keyText) && ChannelDescription.isSet(trigger, keyText);
         getButtonList().get(ADD_BTN).displayString = existing ? I18n.format(I18N_PREFIX + "set")
                 : I18n.format(I18N_PREFIX + "add");
         getButtonList().get(ADD_BTN).enabled = !StringUtils.isBlank(key.getText())
@@ -343,10 +343,10 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
             case ADD_BTN:
                 int value = getValue();
                 if (value <= 0) return;
-                ChannelDataAccessor.setChannelData(trigger, key.getText(), value);
+                ChannelDescription.setData(trigger, key.getText(), value);
                 break;
             case UNSET_BTN:
-                ChannelDataAccessor.unsetChannelData(trigger, key.getText());
+                ChannelDescription.unsetData(trigger, key.getText());
                 break;
             case WIPE_BTN:
                 if (!wipePending) {
@@ -501,7 +501,7 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
             case 1:
             default: // TODO implement a GUI to select which pair to use, instead of blindly using the first
                 Entry<String, Integer> e = channels.iterator().next();
-                ChannelDataAccessor.setChannelData(trigger, e.getKey(), e.getValue());
+                ChannelDescription.setData(trigger, e.getKey(), e.getValue());
                 key.setText(e.getKey());
                 value.setText(e.getValue().toString());
                 draggedStack.stackSize = 0;
@@ -625,12 +625,12 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
 
         @Override
         public Entry<String, Integer> getElementAt(int index) {
-            return ChannelDataAccessor.iterateChannelData(trigger).sorted().skip(index).findFirst().orElse(null);
+            return ChannelDescription.iterateData(trigger).skip(index).findFirst().orElse(null);
         }
 
         @Override
         public int getNumElements() {
-            return ChannelDataAccessor.countChannelData(trigger);
+            return ChannelDescription.countData(trigger);
         }
 
         @Override
@@ -640,7 +640,7 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
                     && mYRelative <= margin / 2 + 5) {
                 Entry<String, Integer> e = getElementAt(elementIndex);
                 if (e != null) {
-                    ChannelDataAccessor.unsetChannelData(trigger, e.getKey());
+                    ChannelDescription.unsetData(trigger, e.getKey());
                     updateButtons();
                     return false;
                 }
@@ -650,7 +650,7 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
 
         @Override
         protected void prepareDrawElements() {
-            cache = ChannelDataAccessor.iterateChannelData(trigger).sorted().collect(Collectors.toList());
+            cache = ChannelDescription.iterateData(trigger).collect(Collectors.toList());
         }
 
         @Override
@@ -671,7 +671,8 @@ public class GuiScreenConfigureChannels extends GuiContainer implements IGuiScre
                 GL11.glColor4f(1, 1, 1, 1);
                 drawTexturedModalRect(x + margin + 1, y + margin / 2 + 1, 251, 251, 5, 5);
             }
-            fontRendererObj.drawString(trim(e.getKey(), keyMaxWidth - 9), x + margin + 8, y + margin / 2, 0xffffff);
+            int keyColor = ChannelDescription.MASTER_KEY.equals(e.getKey()) ? 0xffaa00 : 0xffffff;
+            fontRendererObj.drawString(trim(e.getKey(), keyMaxWidth - 9), x + margin + 8, y + margin / 2, keyColor);
             int valueX = x + margin + keyMaxWidth + margin;
             fontRendererObj.drawString(trim(e.getValue().toString(), maxX - valueX), valueX, y + margin / 2, 0xffffff);
         }

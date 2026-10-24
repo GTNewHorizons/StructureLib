@@ -28,7 +28,7 @@ public class ConstructableUtility {
 
     public static boolean handle(ItemStack aStack, EntityPlayer aPlayer, World aWorld, int aX, int aY, int aZ,
             int aSide) {
-        ItemStack effectiveStack = ChannelDataAccessor.withChannel(aStack, StructureLibAPI.CHANNEL_TIER);
+        ItemStack effectiveStack = ChannelDataAccessor.withMasterData(aStack);
         StructureLibAPI.startHinting(aWorld);
         boolean ret = handle0(effectiveStack, aPlayer, aWorld, aX, aY, aZ, aSide);
         StructureLibAPI.endHinting(aWorld);
