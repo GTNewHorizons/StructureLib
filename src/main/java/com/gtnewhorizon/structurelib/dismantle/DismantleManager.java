@@ -365,6 +365,14 @@ public enum DismantleManager {
         }
     }
 
+    private static String controllerDisplayName(TileEntity controller) {
+        // Real, localized in-game name (e.g. Exo-Foundry Controller).
+        Object meta = invokeNoArgs(controller, "getMetaTileEntity");
+        Object name = meta == null ? null : invokeNoArgs(meta, "getLocalName");
+        if (name instanceof String && !((String) name).trim().isEmpty()) return (String) name;
+        return controller.getBlockType().getLocalizedName();
+    }
+
     private void bind(EntityPlayerMP player, Position requested) {
         ItemStack projector = player.getHeldItem();
         if (projector == null || !(projector.getItem() instanceof ItemConstructableTriggerV2) || player.isSneaking())
@@ -391,11 +399,10 @@ public enum DismantleManager {
         say(
                 player,
                 "structurelib.wireless.linked",
-                controller.getBlockType().getLocalizedName(),
+                controllerDisplayName(controller),
                 requested.x,
                 requested.y,
-                requested.z,
-                player.dimension);
+                requested.z);
     }
 
     private WirelessLink validLink(EntityPlayerMP player) {
