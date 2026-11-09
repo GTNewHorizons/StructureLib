@@ -41,6 +41,7 @@ item.structurelib.constructableTrigger.gui.channels.from=§r模组: §9§o%s
 item.structurelib.constructableTrigger.gui.info=许多多方块的结构都是可变的，在自动放置时，可以使用子信道来向多方块指明该使用哪一个变体。\n子信道由一个字符串标识、并拥有一个正整数作为值。这个GUI中的信道名支持自动补全到绝大多数已知的子信道。\n你也可以将部分物品从NEI中拖拽至GUI内来设置子信道值为该物品表示的值。这些物品的物品说明中都带有§o表示子信道 X 为 Y§r。
 
 channels.structurelib.show_errors=添加后，在投影时会高亮标出必然错误的部分
+channels.structurelib.master=覆盖投影仪堆叠数量，即所有未设置的子信道所使用的值
 
 structurelib.tooltip.channelvalue=§7表示子信道 §b%2$s§r§7 为 §b%d§r
 structurelib.tooltip.indicator_dnd=拖入GUI中来选择该值

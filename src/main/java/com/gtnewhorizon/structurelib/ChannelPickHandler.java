@@ -70,7 +70,7 @@ public final class ChannelPickHandler {
 
         // Assuming there's only 1 channel per item for now (same behavior as drag and drop)
         Map.Entry<String, Integer> first = channels.iterator().next();
-        ChannelDataAccessor.setChannelData(holoStack, first.getKey(), first.getValue());
+        ChannelDescription.setData(holoStack, first.getKey(), first.getValue());
         sendChannelData(player, holoStack, onCursor);
         player.addChatMessage(
                 new ChatComponentTranslation("structurelib.pickchannel.success", first.getKey(), first.getValue()));

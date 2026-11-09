@@ -24,6 +24,8 @@ public class SetChannelDataMessage implements IMessage {
 
     private final List<Map.Entry<String, Integer>> data = new ArrayList<>();
     private boolean onCursor;
+    // 0 means no master override
+    private int master;
 
     public SetChannelDataMessage() {}
 
@@ -34,11 +36,13 @@ public class SetChannelDataMessage implements IMessage {
     public SetChannelDataMessage(ItemStack trigger, final boolean onCursor) {
         this.onCursor = onCursor;
         ChannelDataAccessor.iterateChannelData(trigger).forEach(data::add);
+        master = ChannelDataAccessor.hasMasterData(trigger) ? ChannelDataAccessor.getMasterData(trigger) : 0;
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
         onCursor = buf.readBoolean();
+        master = ByteBufUtils.readVarInt(buf, 5);
         data.clear();
         int size = ByteBufUtils.readVarShort(buf);
         for (int i = 0; i < size; i++) {
@@ -49,6 +53,7 @@ public class SetChannelDataMessage implements IMessage {
     @Override
     public void toBytes(ByteBuf buf) {
         buf.writeBoolean(onCursor);
+        ByteBufUtils.writeVarInt(buf, master, 5);
         ByteBufUtils.writeVarShort(buf, data.size());
         for (Entry<String, Integer> e : data) {
             ByteBufUtils.writeUTF8String(buf, e.getKey());
@@ -64,6 +69,7 @@ public class SetChannelDataMessage implements IMessage {
             ItemStack target = message.onCursor ? player.inventory.getItemStack() : player.getHeldItem();
             if (target != null && target.getItem() instanceof ItemConstructableTrigger) {
                 ChannelDataAccessor.wipeChannelData(target);
+                if (message.master > 0) ChannelDataAccessor.setMasterData(target, message.master);
                 for (Entry<String, Integer> e : message.data) {
                     ChannelDataAccessor.setChannelData(target, e.getKey(), e.getValue());
                 }

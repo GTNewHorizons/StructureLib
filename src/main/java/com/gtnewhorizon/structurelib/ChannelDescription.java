@@ -9,15 +9,21 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import net.minecraft.item.ItemStack;
 
 import com.gtnewhorizon.gtnhlib.util.map.ItemStackMap;
+import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 
 import cpw.mods.fml.common.Loader;
 
 // this is not an API! go check StructureLibAPI instead!
 public class ChannelDescription {
+
+    // pseudo channel key for editing master channel override from GUI and command. '#' is never allowed in a real
+    // channel name, so this can never collide with a subchannel
+    public static final String MASTER_KEY = "#master";
 
     private static final ItemStackMap<Set<ChannelDescription>> itemToChannels = new ItemStackMap<>(true);
     private static final Map<String, ChannelDescription> registry = new HashMap<>();
@@ -62,6 +68,34 @@ public class ChannelDescription {
         ChannelDescription inst = registry.computeIfAbsent(channel, ChannelDescription::new);
         inst.items.put(stack, channelValue);
         itemToChannels.computeIfAbsent(stack, s -> new HashSet<>()).add(inst);
+    }
+
+    public static boolean isSet(ItemStack trigger, String key) {
+        return MASTER_KEY.equals(key) ? ChannelDataAccessor.hasMasterData(trigger)
+                : ChannelDataAccessor.hasSubChannel(trigger, key);
+    }
+
+    public static void setData(ItemStack trigger, String key, int value) {
+        if (MASTER_KEY.equals(key)) ChannelDataAccessor.setMasterData(trigger, value);
+        else ChannelDataAccessor.setChannelData(trigger, key, value);
+    }
+
+    public static void unsetData(ItemStack trigger, String key) {
+        if (MASTER_KEY.equals(key)) ChannelDataAccessor.unsetMasterData(trigger);
+        else ChannelDataAccessor.unsetChannelData(trigger, key);
+    }
+
+    public static Stream<Map.Entry<String, Integer>> iterateData(ItemStack trigger) {
+        Stream<Map.Entry<String, Integer>> channels = ChannelDataAccessor.iterateChannelData(trigger).sorted();
+        if (!ChannelDataAccessor.hasMasterData(trigger)) return channels;
+        return Stream.concat(
+                Stream.of(
+                        new AbstractMap.SimpleImmutableEntry<>(MASTER_KEY, ChannelDataAccessor.getMasterData(trigger))),
+                channels);
+    }
+
+    public static int countData(ItemStack trigger) {
+        return ChannelDataAccessor.countChannelData(trigger) + (ChannelDataAccessor.hasMasterData(trigger) ? 1 : 0);
     }
 
     public static Map<String, ChannelDescription> getAll() {

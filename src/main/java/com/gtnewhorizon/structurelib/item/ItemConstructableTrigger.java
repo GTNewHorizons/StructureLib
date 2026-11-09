@@ -14,6 +14,7 @@ import net.minecraft.world.World;
 
 import org.lwjgl.input.Keyboard;
 
+import com.gtnewhorizon.structurelib.ChannelDescription;
 import com.gtnewhorizon.structurelib.StructureLib;
 import com.gtnewhorizon.structurelib.alignment.constructable.ChannelDataAccessor;
 import com.gtnewhorizon.structurelib.alignment.constructable.ConstructableUtility;
@@ -52,8 +53,7 @@ public class ItemConstructableTrigger extends Item {
                     translateToLocalFormatted(
                             "item.structurelib.constructableTrigger.desc.lshift.0",
                             ChannelDataAccessor.countChannelData(stack)));
-            ChannelDataAccessor.iterateChannelData(stack).map(e -> e.getKey() + ": " + e.getValue())
-                    .forEach(tooltip::add);
+            ChannelDescription.iterateData(stack).map(e -> e.getKey() + ": " + e.getValue()).forEach(tooltip::add);
         } else {
             // Tooltip text:
             // Triggers Constructable Interface
@@ -67,7 +67,7 @@ public class ItemConstructableTrigger extends Item {
             tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.2"));
             tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.3"));
             tooltip.add(BLUE + translateToLocal("item.structurelib.constructableTrigger.desc.4"));
-            if (ChannelDataAccessor.hasSubChannel(stack))
+            if (ChannelDataAccessor.hasSubChannel(stack) || ChannelDataAccessor.hasMasterData(stack))
                 tooltip.add(translateToLocal("item.structurelib.constructableTrigger.desc.5"));
         }
     }
