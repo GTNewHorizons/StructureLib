@@ -28,7 +28,10 @@ public enum ConfigurationHandler {
 
     private Configuration config;
     private int maxCoexistingHologram;
+    private int maxRenderRadius;
+    private int maxRenderCount;
     private boolean removeCollidingHologram;
+    private boolean skipCorrectlyPlacedHints;
     private int hintLifespan;
     private int hintTransparency;
     private int autoPlaceBudget;
@@ -64,6 +67,31 @@ public enum ConfigurationHandler {
                 1,
                 100,
                 "An attempt will be made to prune old holograms when a new hologram is about to be projected");
+        maxRenderRadius = config.getInt(
+                "maxRenderRadius",
+                "client.hologram",
+                512,
+                1,
+                Integer.MAX_VALUE,
+                "Maximum distance from the client player at which projected blocks are kept and rendered.");
+        maxRenderCount = config.getInt(
+                "maxRenderCount",
+                "client.hologram",
+                1_000_000,
+                1,
+                Integer.MAX_VALUE,
+                "Maximum number of projected blocks kept for rendering across all holograms.\n"
+                        + "Blocks that are already placed correctly are not projected and do not count towards this.\n"
+                        + "When a hologram exceeds this, the blocks nearest to the player are the ones kept.");
+        skipCorrectlyPlacedHints = config.getBoolean(
+                "skipCorrectlyPlaced",
+                "client.hologram",
+                true,
+                "Do not project a block that is already placed correctly, so the render budget is spent on the blocks\n"
+                        + "that are actually still missing.\n"
+                        + "This needs each structure element to be checked while the hologram is built. Elements are\n"
+                        + "not strictly required to have a side effect free check, so turn this off if a multiblock\n"
+                        + "misbehaves while being projected.");
         removeCollidingHologram = config.getBoolean(
                 "removeColliding",
                 "client.hologram",
@@ -156,8 +184,20 @@ public enum ConfigurationHandler {
         return maxCoexistingHologram;
     }
 
+    public int getMaxRenderRadius() {
+        return maxRenderRadius;
+    }
+
+    public int getMaxRenderCount() {
+        return maxRenderCount;
+    }
+
     public boolean isRemoveCollidingHologram() {
         return removeCollidingHologram;
+    }
+
+    public boolean isSkipCorrectlyPlacedHints() {
+        return skipCorrectlyPlacedHints;
     }
 
     public int getHintLifespan() {
